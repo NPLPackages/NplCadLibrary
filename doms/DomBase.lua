@@ -5,12 +5,12 @@ Date: 2016/8/17
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/doms/DomBase.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomBase.lua");
 local DomBase = commonlib.gettable("NplCad.doms.DomBase");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/vector.lua");
-NPL.load("(gl)NplCadLibrary/doms/DomParser.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomParser.lua");
 NPL.load("(gl)script/ide/math/Quaternion.lua");
 local DomParser = commonlib.gettable("NplCad.doms.DomParser");
 local vector3d = commonlib.gettable("mathlib.vector3d");

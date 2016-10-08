@@ -5,12 +5,12 @@ Date: 2016/3/29
 Desc: 
 Represents a plane in 3D space.
 -------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/csg/CSGPlane.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPlane.lua");
 local CSGPlane = commonlib.gettable("CSG.CSGPlane");
 -------------------------------------------------------
 ]]
-NPL.load("(gl)NplCadLibrary/csg/CSGVector.lua");
-NPL.load("(gl)NplCadLibrary/csg/CSGPolygon.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPolygon.lua");
 local CSGVector = commonlib.gettable("CSG.CSGVector");
 local CSGPolygon = commonlib.gettable("CSG.CSGPolygon");
 local CSGPlane = commonlib.inherit(nil, commonlib.gettable("CSG.CSGPlane"));

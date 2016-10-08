@@ -7,17 +7,17 @@ based on http://evanw.github.com/csg.js/
 Holds a binary space partition tree representing a 3D solid. Two solids can
 be combined using the `union()`, `subtract()`, and `intersect()` methods.
 -------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/csg/CSG.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSG.lua");
 local CSG = commonlib.gettable("CSG.CSG");
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/vector.lua");
 NPL.load("(gl)script/ide/math/bit.lua");
-NPL.load("(gl)NplCadLibrary/csg/CSGVector.lua");
-NPL.load("(gl)NplCadLibrary/csg/CSGVertex.lua");
-NPL.load("(gl)NplCadLibrary/csg/CSGPlane.lua");
-NPL.load("(gl)NplCadLibrary/csg/CSGPolygon.lua");
-NPL.load("(gl)NplCadLibrary/csg/CSGNode.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVertex.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPlane.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPolygon.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGNode.lua");
 
 local vector3d = commonlib.gettable("mathlib.vector3d");
 local CSGVector = commonlib.gettable("CSG.CSGVector");

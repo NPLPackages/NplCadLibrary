@@ -5,18 +5,18 @@ Date: 2016/8/23
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/services/NplCadEnvironment.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/services/NplCadEnvironment.lua");
 local NplCadEnvironment = commonlib.gettable("NplCad.services.NplCadEnvironment");
 ------------------------------------------------------------
 ]]
 
 NPL.load("(gl)script/ide/math/Quaternion.lua");
-NPL.load("(gl)NplCadLibrary/core/Transform.lua");
-NPL.load("(gl)NplCadLibrary/core/Node.lua");
-NPL.load("(gl)NplCadLibrary/core/Scene.lua");
-NPL.load("(gl)NplCadLibrary/drawables/CSGModel.lua");
-NPL.load("(gl)NplCadLibrary/doms/DomParser.lua");
-NPL.load("(gl)NplCadLibrary/services/CSGService.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/core/Transform.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/core/Node.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/core/Scene.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/drawables/CSGModel.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomParser.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/services/CSGService.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("NplCad.core.Transform");
 local Node = commonlib.gettable("NplCad.core.Node");

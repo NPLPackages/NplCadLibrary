@@ -6,7 +6,7 @@ Desc:
 Defines a 3-dimensional transformation.
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/core/Transform.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/core/Transform.lua");
 local Transform = commonlib.gettable("NplCad.core.Transform");
 ------------------------------------------------------------
 ]]

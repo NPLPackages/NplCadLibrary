@@ -5,7 +5,7 @@ Date: 2016/3/29
 Desc: 
 Represents a plane in 3D space.
 -------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
 local CSGVector = commonlib.gettable("CSG.CSGVector");
 
 local v1 = CSGVector:new():init(1,1,1);

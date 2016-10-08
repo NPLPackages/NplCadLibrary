@@ -5,16 +5,16 @@ Date: 2016/8/23
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/services/CSGService.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/services/CSGService.lua");
 local CSGService = commonlib.gettable("NplCad.services.CSGService");
 local output = CSGService.buildPageContent("cube();")
 commonlib.echo(output);
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
 NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)script/ide/math/math3d.lua");
-NPL.load("(gl)NplCadLibrary/services/NplCadEnvironment.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/services/NplCadEnvironment.lua");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 local CSGVector = commonlib.gettable("CSG.CSGVector");
 local CSGService = commonlib.gettable("NplCad.services.CSGService");

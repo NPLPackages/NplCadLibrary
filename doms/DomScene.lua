@@ -5,13 +5,13 @@ Date: 2016/8/17
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/doms/DomScene.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomScene.lua");
 local DomScene = commonlib.gettable("NplCad.doms.DomScene");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)NplCadLibrary/core/Scene.lua");
-NPL.load("(gl)NplCadLibrary/doms/DomBase.lua");
-NPL.load("(gl)NplCadLibrary/doms/DomNode.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/core/Scene.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomBase.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomNode.lua");
 local DomNode = commonlib.gettable("NplCad.doms.DomNode");
 local Scene = commonlib.gettable("NplCad.core.Scene");
 local DomScene = commonlib.inherit(commonlib.gettable("NplCad.doms.DomNode"), commonlib.gettable("NplCad.doms.DomScene"));

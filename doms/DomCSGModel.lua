@@ -5,11 +5,11 @@ Date: 2016/8/17
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/doms/DomCSGModel.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomCSGModel.lua");
 local DomCSGModel = commonlib.gettable("NplCad.doms.DomCSGModel");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)NplCadLibrary/drawables/CSGModel.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/drawables/CSGModel.lua");
 local CSGModel = commonlib.gettable("NplCad.drawables.CSGModel");
 local DomCSGModel = commonlib.inherit(commonlib.gettable("NplCad.doms.DomBase"), commonlib.gettable("NplCad.doms.DomCSGModel"));
 function DomCSGModel:ctor()

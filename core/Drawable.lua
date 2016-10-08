@@ -6,7 +6,7 @@ Desc:
 Defines a drawable object that can be attached to a Node.
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/core/Drawable.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/core/Drawable.lua");
 local Drawable = commonlib.gettable("NplCad.core.Drawable");
 ------------------------------------------------------------
 ]]

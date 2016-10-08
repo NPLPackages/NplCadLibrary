@@ -6,16 +6,16 @@ Desc:
 Defines a drawable object that can be attached to a Node.
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/drawables/CSGModel.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/drawables/CSGModel.lua");
 local CSGModel = commonlib.gettable("NplCad.drawables.CSGModel");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)NplCadLibrary/core/Drawable.lua");
-NPL.load("(gl)NplCadLibrary/csg/CSG.lua");
-NPL.load("(gl)NplCadLibrary/csg/CSGVector.lua");
-NPL.load("(gl)NplCadLibrary/csg/CSGVertex.lua");
-NPL.load("(gl)NplCadLibrary/csg/CSGPolygon.lua");
-NPL.load("(gl)NplCadLibrary/services/CSGService.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/core/Drawable.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSG.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVertex.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPolygon.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/services/CSGService.lua");
 local CSGService = commonlib.gettable("NplCad.services.CSGService");
 local CSGVector = commonlib.gettable("CSG.CSGVector");
 local CSGVertex = commonlib.gettable("CSG.CSGVertex");

@@ -5,14 +5,14 @@ Date: 2016/8/17
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)NplCadLibrary/doms/DomParser.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomParser.lua");
 local DomParser = commonlib.gettable("NplCad.doms.DomParser");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/XPath.lua");
-NPL.load("(gl)NplCadLibrary/doms/DomScene.lua");
-NPL.load("(gl)NplCadLibrary/doms/DomNode.lua");
-NPL.load("(gl)NplCadLibrary/doms/DomCSGModel.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomScene.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomNode.lua");
+NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomCSGModel.lua");
 local DomScene = commonlib.gettable("NplCad.doms.DomScene");
 local DomNode = commonlib.gettable("NplCad.doms.DomNode");
 local DomCSGModel = commonlib.gettable("NplCad.doms.DomCSGModel");
