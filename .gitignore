@@ -1,0 +1,9 @@
+.vs
+*.db
+*.opendb
+*.user
+*.sdf
+*.suo
+*.log
+*.txt
+Debug
