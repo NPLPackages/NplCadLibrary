@@ -11,14 +11,14 @@ defined by `CSG.Vertex`. This class provides `normal` so convenience
 functions like `CSG.sphere()` can return a smooth vertex normal, but `normal`
 is not used anywhere else.
 -------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVertex.lua");
-local CSGVertex = commonlib.gettable("CSG.CSGVertex");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
+local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 -------------------------------------------------------
 ]]
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
-local CSGVector = commonlib.gettable("CSG.CSGVector");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
+local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 
-local CSGVertex = commonlib.inherit(nil, commonlib.gettable("CSG.CSGVertex"));
+local CSGVertex = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex"));
 function CSGVertex:ctor()
 	self.pos = CSGVector:new();
 	self.normal = CSGVector:new();

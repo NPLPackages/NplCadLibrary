@@ -6,11 +6,11 @@ Desc:
 Defines a drawable object that can be attached to a Node.
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Drawable.lua");
-local Drawable = commonlib.gettable("NplCad.core.Drawable");
+NPL.load("(gl)Mod/NplCadLibrary/core/Drawable.lua");
+local Drawable = commonlib.gettable("Mod.NplCadLibrary.core.Drawable");
 ------------------------------------------------------------
 ]]
-local Drawable = commonlib.inherit(nil, commonlib.gettable("NplCad.core.Drawable"));
+local Drawable = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.core.Drawable"));
 function Drawable:ctor()
 	self.node = nil;
 end

@@ -1,76 +1,82 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup>
-    <Filter Include="csg">
-      <UniqueIdentifier>{4d6bb20b-71bf-4efc-841c-3592dfd50876}</UniqueIdentifier>
+    <Filter Include="Mod">
+      <UniqueIdentifier>{0b461611-c558-4ee5-82e7-f608f2572bd8}</UniqueIdentifier>
     </Filter>
-    <Filter Include="core">
-      <UniqueIdentifier>{96281b66-69ef-4d89-9a4a-7fb38418e306}</UniqueIdentifier>
+    <Filter Include="Mod\NplCadLibrary">
+      <UniqueIdentifier>{76fc98d7-51e3-48ed-a95b-7e3f1cbf6ea0}</UniqueIdentifier>
     </Filter>
-    <Filter Include="doms">
-      <UniqueIdentifier>{2976554f-bb1b-4ef9-995a-139979c5516e}</UniqueIdentifier>
+    <Filter Include="Mod\NplCadLibrary\core">
+      <UniqueIdentifier>{e47df9a8-8fcc-4dd9-af09-6d02250ab114}</UniqueIdentifier>
     </Filter>
-    <Filter Include="drawables">
-      <UniqueIdentifier>{dca4e4d8-1350-4e65-b9b4-7cfeffd5e272}</UniqueIdentifier>
+    <Filter Include="Mod\NplCadLibrary\csg">
+      <UniqueIdentifier>{30a92252-d6f8-4ede-8f0e-9755b528db11}</UniqueIdentifier>
     </Filter>
-    <Filter Include="services">
-      <UniqueIdentifier>{118389a3-2eab-49bf-a58e-8d6b86c89caa}</UniqueIdentifier>
+    <Filter Include="Mod\NplCadLibrary\doms">
+      <UniqueIdentifier>{ac7e5fef-7b30-46eb-8709-3dc97f302367}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mod\NplCadLibrary\drawables">
+      <UniqueIdentifier>{b108ac06-dec2-4750-8ff7-82d97a7f0989}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mod\NplCadLibrary\services">
+      <UniqueIdentifier>{0ca2fcdf-b4fc-407f-b32a-9980a52d0449}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <None Include="csg\CSG.lua">
-      <Filter>csg</Filter>
+    <None Include="Mod\NplCadLibrary\core\Drawable.lua">
+      <Filter>Mod\NplCadLibrary\core</Filter>
     </None>
-    <None Include="csg\CSGNode.lua">
-      <Filter>csg</Filter>
+    <None Include="Mod\NplCadLibrary\core\Node.lua">
+      <Filter>Mod\NplCadLibrary\core</Filter>
     </None>
-    <None Include="csg\CSGPlane.lua">
-      <Filter>csg</Filter>
+    <None Include="Mod\NplCadLibrary\core\Scene.lua">
+      <Filter>Mod\NplCadLibrary\core</Filter>
     </None>
-    <None Include="csg\CSGPolygon.lua">
-      <Filter>csg</Filter>
+    <None Include="Mod\NplCadLibrary\core\Transform.lua">
+      <Filter>Mod\NplCadLibrary\core</Filter>
     </None>
-    <None Include="csg\CSGVector.lua">
-      <Filter>csg</Filter>
+    <None Include="Mod\NplCadLibrary\csg\CSG.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
-    <None Include="csg\CSGVertex.lua">
-      <Filter>csg</Filter>
+    <None Include="Mod\NplCadLibrary\csg\CSGNode.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
-    <None Include="core\Drawable.lua">
-      <Filter>core</Filter>
+    <None Include="Mod\NplCadLibrary\csg\CSGPlane.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
-    <None Include="core\Node.lua">
-      <Filter>core</Filter>
+    <None Include="Mod\NplCadLibrary\csg\CSGPolygon.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
-    <None Include="core\Scene.lua">
-      <Filter>core</Filter>
+    <None Include="Mod\NplCadLibrary\csg\CSGVector.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
-    <None Include="core\Transform.lua">
-      <Filter>core</Filter>
+    <None Include="Mod\NplCadLibrary\csg\CSGVertex.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
-    <None Include="doms\DomBase.lua">
-      <Filter>doms</Filter>
+    <None Include="Mod\NplCadLibrary\doms\DomBase.lua">
+      <Filter>Mod\NplCadLibrary\doms</Filter>
     </None>
-    <None Include="doms\DomCSGModel.lua">
-      <Filter>doms</Filter>
+    <None Include="Mod\NplCadLibrary\doms\DomCSGModel.lua">
+      <Filter>Mod\NplCadLibrary\doms</Filter>
     </None>
-    <None Include="doms\DomNode.lua">
-      <Filter>doms</Filter>
+    <None Include="Mod\NplCadLibrary\doms\DomNode.lua">
+      <Filter>Mod\NplCadLibrary\doms</Filter>
     </None>
-    <None Include="doms\DomParser.lua">
-      <Filter>doms</Filter>
+    <None Include="Mod\NplCadLibrary\doms\DomParser.lua">
+      <Filter>Mod\NplCadLibrary\doms</Filter>
     </None>
-    <None Include="doms\DomScene.lua">
-      <Filter>doms</Filter>
+    <None Include="Mod\NplCadLibrary\doms\DomScene.lua">
+      <Filter>Mod\NplCadLibrary\doms</Filter>
     </None>
-    <None Include="drawables\CSGModel.lua">
-      <Filter>drawables</Filter>
+    <None Include="Mod\NplCadLibrary\drawables\CSGModel.lua">
+      <Filter>Mod\NplCadLibrary\drawables</Filter>
     </None>
-    <None Include="services\CSGService.lua">
-      <Filter>services</Filter>
+    <None Include="Mod\NplCadLibrary\services\CSGService.lua">
+      <Filter>Mod\NplCadLibrary\services</Filter>
     </None>
-    <None Include="services\NplCadEnvironment.lua">
-      <Filter>services</Filter>
+    <None Include="Mod\NplCadLibrary\services\NplCadEnvironment.lua">
+      <Filter>Mod\NplCadLibrary\services</Filter>
     </None>
   </ItemGroup>
 </Project>

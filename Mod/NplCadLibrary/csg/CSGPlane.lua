@@ -5,15 +5,15 @@ Date: 2016/3/29
 Desc: 
 Represents a plane in 3D space.
 -------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPlane.lua");
-local CSGPlane = commonlib.gettable("CSG.CSGPlane");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPlane.lua");
+local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
 -------------------------------------------------------
 ]]
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPolygon.lua");
-local CSGVector = commonlib.gettable("CSG.CSGVector");
-local CSGPolygon = commonlib.gettable("CSG.CSGPolygon");
-local CSGPlane = commonlib.inherit(nil, commonlib.gettable("CSG.CSGPlane"));
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
+local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
+local CSGPlane = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane"));
 --`CSG.Plane.EPSILON` is the tolerance used by `splitPolygon()` to decide if a
 -- point is on the plane.
 CSGPlane.EPSILON = 0.00001;

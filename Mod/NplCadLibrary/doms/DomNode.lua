@@ -5,15 +5,15 @@ Date: 2016/8/17
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomNode.lua");
-local DomNode = commonlib.gettable("NplCad.doms.DomNode");
+NPL.load("(gl)Mod/NplCadLibrary/doms/DomNode.lua");
+local DomNode = commonlib.gettable("Mod.NplCadLibrary.doms.DomNode");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/Quaternion.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Node.lua");
-local Node = commonlib.gettable("NplCad.core.Node");
-local DomNode = commonlib.inherit(commonlib.gettable("NplCad.doms.DomBase"), commonlib.gettable("NplCad.doms.DomNode"));
+NPL.load("(gl)Mod/NplCadLibrary/core/Node.lua");
+local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
+local DomNode = commonlib.inherit(commonlib.gettable("Mod.NplCadLibrary.doms.DomBase"), commonlib.gettable("Mod.NplCadLibrary.doms.DomNode"));
 function DomNode:ctor()
 end
 function DomNode:read(xmlnode,parentObj)

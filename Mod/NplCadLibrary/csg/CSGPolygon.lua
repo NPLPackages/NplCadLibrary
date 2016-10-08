@@ -12,13 +12,13 @@ Each convex polygon has a `shared` property, which is shared between all
 polygons that are clones of each other or were split from the same polygon.
 This can be used to define per-polygon properties (such as surface color).
 -------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPolygon.lua");
-local CSGPolygon = commonlib.gettable("CSG.CSGPolygon");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 -------------------------------------------------------
 ]]
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPlane.lua");
-local CSGPlane = commonlib.gettable("CSG.CSGPlane");
-local CSGPolygon = commonlib.inherit(nil, commonlib.gettable("CSG.CSGPolygon"));
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPlane.lua");
+local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
+local CSGPolygon = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon"));
 function CSGPolygon:ctor()
 end
 function CSGPolygon:init(vertices, shared)

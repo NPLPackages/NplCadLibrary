@@ -5,27 +5,27 @@ Date: 2016/8/23
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/services/NplCadEnvironment.lua");
-local NplCadEnvironment = commonlib.gettable("NplCad.services.NplCadEnvironment");
+NPL.load("(gl)Mod/NplCadLibrary/services/NplCadEnvironment.lua");
+local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 ------------------------------------------------------------
 ]]
 
 NPL.load("(gl)script/ide/math/Quaternion.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Transform.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Node.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Scene.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/drawables/CSGModel.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomParser.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/services/CSGService.lua");
+NPL.load("(gl)Mod/NplCadLibrary/core/Transform.lua");
+NPL.load("(gl)Mod/NplCadLibrary/core/Node.lua");
+NPL.load("(gl)Mod/NplCadLibrary/core/Scene.lua");
+NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
+NPL.load("(gl)Mod/NplCadLibrary/doms/DomParser.lua");
+NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
-local Transform = commonlib.gettable("NplCad.core.Transform");
-local Node = commonlib.gettable("NplCad.core.Node");
-local Scene = commonlib.gettable("NplCad.core.Scene");
-local CSGModel = commonlib.gettable("NplCad.drawables.CSGModel");
-local DomParser = commonlib.gettable("NplCad.doms.DomParser");
-local CSGService = commonlib.gettable("NplCad.services.CSGService");
+local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
+local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
+local Scene = commonlib.gettable("Mod.NplCadLibrary.core.Scene");
+local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
+local DomParser = commonlib.gettable("Mod.NplCadLibrary.doms.DomParser");
+local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 
-local NplCadEnvironment = commonlib.gettable("NplCad.services.NplCadEnvironment");
+local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 function NplCadEnvironment:new()
 	local o = {
 		scene =  Scene.create("nplcad_scene");

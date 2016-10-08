@@ -6,22 +6,22 @@ Desc:
 Defines a drawable object that can be attached to a Node.
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/drawables/CSGModel.lua");
-local CSGModel = commonlib.gettable("NplCad.drawables.CSGModel");
+NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
+local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Drawable.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSG.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVertex.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPolygon.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/services/CSGService.lua");
-local CSGService = commonlib.gettable("NplCad.services.CSGService");
-local CSGVector = commonlib.gettable("CSG.CSGVector");
-local CSGVertex = commonlib.gettable("CSG.CSGVertex");
-local CSGPolygon = commonlib.gettable("CSG.CSGPolygon");
-local CSG = commonlib.gettable("CSG.CSG");
-local CSGModel = commonlib.inherit(commonlib.gettable("NplCad.core.Drawable"), commonlib.gettable("NplCad.drawables.CSGModel"));
+NPL.load("(gl)Mod/NplCadLibrary/core/Drawable.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
+local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
+local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
+local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
+local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
+local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
+local CSGModel = commonlib.inherit(commonlib.gettable("Mod.NplCadLibrary.core.Drawable"), commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel"));
 CSGModel.csg_node = nil;
 CSGModel.model_type = nil;
 CSGModel.options = nil;

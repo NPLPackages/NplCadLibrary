@@ -5,12 +5,12 @@ Date: 2016/8/16
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Scene.lua");
-local Scene = commonlib.gettable("NplCad.core.Scene");
+NPL.load("(gl)Mod/NplCadLibrary/core/Scene.lua");
+local Scene = commonlib.gettable("Mod.NplCadLibrary.core.Scene");
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Node.lua");
-local Scene = commonlib.inherit(commonlib.gettable("NplCad.core.Node"), commonlib.gettable("NplCad.core.Scene"));
+NPL.load("(gl)Mod/NplCadLibrary/core/Node.lua");
+local Scene = commonlib.inherit(commonlib.gettable("Mod.NplCadLibrary.core.Node"), commonlib.gettable("Mod.NplCadLibrary.core.Scene"));
 function Scene.create(id)
 	local scene = Scene:new();
 	scene:setId(id);

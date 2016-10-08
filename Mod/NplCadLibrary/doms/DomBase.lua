@@ -5,17 +5,17 @@ Date: 2016/8/17
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomBase.lua");
-local DomBase = commonlib.gettable("NplCad.doms.DomBase");
+NPL.load("(gl)Mod/NplCadLibrary/doms/DomBase.lua");
+local DomBase = commonlib.gettable("Mod.NplCadLibrary.doms.DomBase");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/vector.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomParser.lua");
+NPL.load("(gl)Mod/NplCadLibrary/doms/DomParser.lua");
 NPL.load("(gl)script/ide/math/Quaternion.lua");
-local DomParser = commonlib.gettable("NplCad.doms.DomParser");
+local DomParser = commonlib.gettable("Mod.NplCadLibrary.doms.DomParser");
 local vector3d = commonlib.gettable("mathlib.vector3d");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
-local DomBase = commonlib.inherit(nil, commonlib.gettable("NplCad.doms.DomBase"));
+local DomBase = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.doms.DomBase"));
 function DomBase:ctor()
 end
 function DomBase:read(xmlnode,parentObj)

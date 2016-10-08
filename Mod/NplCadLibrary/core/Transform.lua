@@ -6,8 +6,8 @@ Desc:
 Defines a 3-dimensional transformation.
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Transform.lua");
-local Transform = commonlib.gettable("NplCad.core.Transform");
+NPL.load("(gl)Mod/NplCadLibrary/core/Transform.lua");
+local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/Matrix4.lua");
@@ -20,7 +20,7 @@ local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local vector3d = commonlib.gettable("mathlib.vector3d");
 local EventSystem = commonlib.gettable("commonlib.EventSystem");
-local Transform = commonlib.inherit(nil, commonlib.gettable("NplCad.core.Transform"));
+local Transform = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.core.Transform"));
 
 local DIRTY_TRANSLATION		= 0x01;
 local DIRTY_SCALE			= 0x02;

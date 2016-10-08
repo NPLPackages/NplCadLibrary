@@ -19,24 +19,24 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
-    <None Include="core\Drawable.lua" />
-    <None Include="core\Node.lua" />
-    <None Include="core\Scene.lua" />
-    <None Include="core\Transform.lua" />
-    <None Include="csg\CSG.lua" />
-    <None Include="csg\CSGNode.lua" />
-    <None Include="csg\CSGPlane.lua" />
-    <None Include="csg\CSGPolygon.lua" />
-    <None Include="csg\CSGVector.lua" />
-    <None Include="csg\CSGVertex.lua" />
-    <None Include="doms\DomBase.lua" />
-    <None Include="doms\DomCSGModel.lua" />
-    <None Include="doms\DomNode.lua" />
-    <None Include="doms\DomParser.lua" />
-    <None Include="doms\DomScene.lua" />
-    <None Include="drawables\CSGModel.lua" />
-    <None Include="services\CSGService.lua" />
-    <None Include="services\NplCadEnvironment.lua" />
+    <None Include="Mod\NplCadLibrary\core\Drawable.lua" />
+    <None Include="Mod\NplCadLibrary\core\Node.lua" />
+    <None Include="Mod\NplCadLibrary\core\Scene.lua" />
+    <None Include="Mod\NplCadLibrary\core\Transform.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSG.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGNode.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGPlane.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGPolygon.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGVector.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGVertex.lua" />
+    <None Include="Mod\NplCadLibrary\doms\DomBase.lua" />
+    <None Include="Mod\NplCadLibrary\doms\DomCSGModel.lua" />
+    <None Include="Mod\NplCadLibrary\doms\DomNode.lua" />
+    <None Include="Mod\NplCadLibrary\doms\DomParser.lua" />
+    <None Include="Mod\NplCadLibrary\doms\DomScene.lua" />
+    <None Include="Mod\NplCadLibrary\drawables\CSGModel.lua" />
+    <None Include="Mod\NplCadLibrary\services\CSGService.lua" />
+    <None Include="Mod\NplCadLibrary\services\NplCadEnvironment.lua" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AF211159-FD04-4C43-A272-FFF915D5B24D}</ProjectGuid>

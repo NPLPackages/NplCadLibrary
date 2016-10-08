@@ -6,14 +6,14 @@ Desc:
 Defines a hierarchical structrue of objects in 3D transformation spaces.
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Node.lua");
-local Node = commonlib.gettable("NplCad.core.Node");
+NPL.load("(gl)Mod/NplCadLibrary/core/Node.lua");
+local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/bit.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/core/Transform.lua");
+NPL.load("(gl)Mod/NplCadLibrary/core/Transform.lua");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
-local Node = commonlib.inherit(commonlib.gettable("NplCad.core.Transform"), commonlib.gettable("NplCad.core.Node"));
+local Node = commonlib.inherit(commonlib.gettable("Mod.NplCadLibrary.core.Transform"), commonlib.gettable("Mod.NplCadLibrary.core.Node"));
 local NODE_DIRTY_WORLD = 1;
 local NODE_DIRTY_BOUNDS = 2;
 local NODE_DIRTY_HIERARCHY = 4;

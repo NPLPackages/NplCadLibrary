@@ -7,25 +7,25 @@ based on http://evanw.github.com/csg.js/
 Holds a binary space partition tree representing a 3D solid. Two solids can
 be combined using the `union()`, `subtract()`, and `intersect()` methods.
 -------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSG.lua");
-local CSG = commonlib.gettable("CSG.CSG");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
+local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/vector.lua");
 NPL.load("(gl)script/ide/math/bit.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVertex.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPlane.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGPolygon.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGNode.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPlane.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGNode.lua");
 
 local vector3d = commonlib.gettable("mathlib.vector3d");
-local CSGVector = commonlib.gettable("CSG.CSGVector");
-local CSGVertex = commonlib.gettable("CSG.CSGVertex");
-local CSGPlane = commonlib.gettable("CSG.CSGPlane");
-local CSGPolygon = commonlib.gettable("CSG.CSGPolygon");
-local CSGNode = commonlib.gettable("CSG.CSGNode");
-local CSG = commonlib.inherit(nil, commonlib.gettable("CSG.CSG"));
+local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
+local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
+local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
+local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
+local CSGNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGNode");
+local CSG = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSG"));
 function CSG:ctor()
 	self.polygons = {};
 end

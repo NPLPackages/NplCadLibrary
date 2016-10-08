@@ -9,11 +9,11 @@ polygons) are added directly to that node and the other polygons are added to
 the front and/or back subtrees. This is not a leafy BSP tree since there is
 no distinction between internal and leaf nodes.
 -------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGNode.lua");
-local CSGNode = commonlib.gettable("CSG.CSGNode");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGNode.lua");
+local CSGNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGNode");
 -------------------------------------------------------
 ]]
-local CSGNode = commonlib.inherit(nil, commonlib.gettable("CSG.CSGNode"));
+local CSGNode = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGNode"));
 local function slice(source)
 	if(not source)then
 		return

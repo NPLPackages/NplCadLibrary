@@ -5,18 +5,18 @@ Date: 2016/8/17
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomParser.lua");
-local DomParser = commonlib.gettable("NplCad.doms.DomParser");
+NPL.load("(gl)Mod/NplCadLibrary/doms/DomParser.lua");
+local DomParser = commonlib.gettable("Mod.NplCadLibrary.doms.DomParser");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/XPath.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomScene.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomNode.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/doms/DomCSGModel.lua");
-local DomScene = commonlib.gettable("NplCad.doms.DomScene");
-local DomNode = commonlib.gettable("NplCad.doms.DomNode");
-local DomCSGModel = commonlib.gettable("NplCad.doms.DomCSGModel");
-local DomParser = commonlib.gettable("NplCad.doms.DomParser");
+NPL.load("(gl)Mod/NplCadLibrary/doms/DomScene.lua");
+NPL.load("(gl)Mod/NplCadLibrary/doms/DomNode.lua");
+NPL.load("(gl)Mod/NplCadLibrary/doms/DomCSGModel.lua");
+local DomScene = commonlib.gettable("Mod.NplCadLibrary.doms.DomScene");
+local DomNode = commonlib.gettable("Mod.NplCadLibrary.doms.DomNode");
+local DomCSGModel = commonlib.gettable("Mod.NplCadLibrary.doms.DomCSGModel");
+local DomParser = commonlib.gettable("Mod.NplCadLibrary.doms.DomParser");
 DomParser.parsers = {};
 function DomParser.initParser()
 	if(not DomParser.is_init)then

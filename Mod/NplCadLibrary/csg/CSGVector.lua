@@ -5,8 +5,8 @@ Date: 2016/3/29
 Desc: 
 Represents a plane in 3D space.
 -------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
-local CSGVector = commonlib.gettable("CSG.CSGVector");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
+local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 
 local v1 = CSGVector:new():init(1,1,1);
 local v2 = CSGVector:new():init(2,2,2);
@@ -14,7 +14,7 @@ echo(v1:plus(v2));
 echo(v1:minus(v2));
 -------------------------------------------------------
 ]]
-local CSGVector = commonlib.inherit(nil, commonlib.gettable("CSG.CSGVector"));
+local CSGVector = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector"));
 function CSGVector:ctor()
 	self.x = 0;
 	self.y = 0;

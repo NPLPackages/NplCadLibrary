@@ -5,21 +5,21 @@ Date: 2016/8/23
 Desc: 
 use the lib:
 ------------------------------------------------------------
-NPL.load("(gl)npl_packages/NplCadLibrary/services/CSGService.lua");
-local CSGService = commonlib.gettable("NplCad.services.CSGService");
+NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
+local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local output = CSGService.buildPageContent("cube();")
 commonlib.echo(output);
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)npl_packages/NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
 NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)script/ide/math/math3d.lua");
-NPL.load("(gl)npl_packages/NplCadLibrary/services/NplCadEnvironment.lua");
+NPL.load("(gl)Mod/NplCadLibrary/services/NplCadEnvironment.lua");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
-local CSGVector = commonlib.gettable("CSG.CSGVector");
-local CSGService = commonlib.gettable("NplCad.services.CSGService");
+local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
+local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local math3d = commonlib.gettable("mathlib.math3d");
-local NplCadEnvironment = commonlib.gettable("NplCad.services.NplCadEnvironment");
+local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 CSGService.default_color = {1,1,1};
 function CSGService.setColor(csg_node,color)
 	if(not csg_node or  not csg_node.polygons)then return end
