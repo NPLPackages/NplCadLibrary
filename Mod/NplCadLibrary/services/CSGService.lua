@@ -40,9 +40,10 @@ function CSGService.toMesh(csg_node)
 	local colors = {};
 	for __,polygon in ipairs(csg_node.polygons) do
 		local start_index = #vertices+1;
+		local normal = polygon.plane.normal;
 		for __,vertex in ipairs(polygon.vertices) do
 			table.insert(vertices,{vertex.pos.x,vertex.pos.y,vertex.pos.z});
-			table.insert(normals,{vertex.normal.x,vertex.normal.y,vertex.normal.z});
+			table.insert(normals,{normal.x,normal.y,normal.z});
 			local shared = polygon.shared or {};
 			local color = shared.color or {1,1,1};
 			table.insert(colors,color);
@@ -110,40 +111,6 @@ function CSGService.equalsColor(color_1,color_2)
 	if(color_1 and color_2)then
 		return (color_1[1] == color_2[1] and color_1[2] == color_2[2] and color_1[3] == color_2[3]);
 	end
-end
-function CSGService.getRenderList2(scene)
-	if(not scene)then
-		return
-	end
-	local render_list = {};
-	scene:visit(function(node)
-		if(node)then
-			local csg_action = node:getTag("csg_action");
-			local drawable = node:getDrawable();
-			if(drawable and drawable.getCSGNode)then
-				local csg_node = drawable:getCSGNode();
-				if(csg_node)then
-					local color = CSGService.findTagValue(node,"color");
-					if(color)then
-						if(not CSGService.equalsColor(color,CSGService.default_color))then
-							drawable:setColor(color);
-						end
-					end
-					local world_matrix = node:getWorldMatrix();
-					drawable:applyMatrix(world_matrix);
-					local vertices,indices,normals,colors = drawable:toMesh();
-					
-					table.insert(render_list,{
-						vertices = vertices,
-						indices = indices,
-						normals = normals,
-						colors = colors,
-					});
-				end
-			end
-		end
-	end);
-	return render_list;
 end
 --[[
 	return {

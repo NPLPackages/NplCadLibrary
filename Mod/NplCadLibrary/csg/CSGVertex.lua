@@ -24,8 +24,12 @@ function CSGVertex:ctor()
 	self.normal = CSGVector:new();
 end
 function CSGVertex:init(pos, normal)
-	self.pos = pos;
-	self.normal = normal;
+	if(pos)then
+		self.pos = pos;
+	end
+	if(normal)then
+		self.normal = normal;
+	end
 	return self;
 end
 function CSGVertex:clone()

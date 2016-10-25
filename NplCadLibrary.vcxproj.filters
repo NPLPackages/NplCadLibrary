@@ -78,5 +78,8 @@
     <None Include="Mod\NplCadLibrary\services\NplCadEnvironment.lua">
       <Filter>Mod\NplCadLibrary\services</Filter>
     </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGFactory.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -14,6 +14,7 @@ echo(v1:plus(v2));
 echo(v1:minus(v2));
 -------------------------------------------------------
 ]]
+local math_abs = math.abs;
 local CSGVector = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector"));
 function CSGVector:ctor()
 	self.x = 0;
@@ -22,13 +23,19 @@ function CSGVector:ctor()
 end
 function CSGVector:init(x,y,z)
 	if y == nil then
-        self.x = x[1]
-        self.y = x[2]
-        self.z = x[3]        
+		if(type(x) == "table")then
+        self.x = x[1];
+        self.y = x[2];
+        self.z = x[3];       
+		elseif(type(x) == "number")then
+			self.x = x;
+			self.y = x;
+			self.z = x;
+		end
     else
-        self.x = x
-        self.y = y
-        self.z = z
+        self.x = x;
+        self.y = y;
+        self.z = z;
     end
 	return self;
 end
@@ -67,4 +74,7 @@ function CSGVector:cross(a)
 		self.y * a.z - self.z * a.y,
 		self.z * a.x - self.x * a.z,
 		self.x * a.y - self.y * a.x);
+end
+function CSGVector:abs()
+	return CSGVector:new():init(math_abs(self.x),math_abs(self.y),math_abs(self.z));
 end
