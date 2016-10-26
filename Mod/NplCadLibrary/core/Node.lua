@@ -238,7 +238,7 @@ function Node:getWorldMatrix()
 		if(not self:isStatic())then
 			local parent = self:getParent();
 			if(parent)then
-				self.world = parent:getWorldMatrix() * self:getMatrix();
+				self.world =  self:getMatrix() * parent:getWorldMatrix();
 			else
 				self.world = self:getMatrix();
 			end

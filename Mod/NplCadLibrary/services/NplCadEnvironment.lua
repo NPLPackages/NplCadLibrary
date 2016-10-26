@@ -27,9 +27,14 @@ local DomParser = commonlib.gettable("Mod.NplCadLibrary.doms.DomParser");
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
-
+local math_pi = 3.1415926;
 local function is_table(input)
 	if(input and type(input) == "table")then
+		return true;
+	end
+end
+local function is_number(input)
+	if(input and type(input) == "number")then
 		return true;
 	end
 end
@@ -100,6 +105,11 @@ function NplCadEnvironment:pop__(bSpecified)
 		end
 	end
 end
+function NplCadEnvironment.current()
+	local self = getfenv(2);
+	local node = self:getNode__();
+	return node;
+end
 function NplCadEnvironment.union()
 	local self = getfenv(2);
 	self:union__();
@@ -132,7 +142,7 @@ function NplCadEnvironment:intersection__()
 end
 function NplCadEnvironment.cube(options)
 	local self = getfenv(2);
-	self:cube__(options);
+	return self:cube__(options);
 end
 
 function NplCadEnvironment.read_cube(p)
@@ -215,10 +225,11 @@ function NplCadEnvironment:cube__(options)
 
 	local node = NplCadEnvironment.read_cube(options);
 	parent:addChild(node);
+	return node;
 end
 function NplCadEnvironment.sphere(options)
 	local self = getfenv(2);
-	self:sphere__(options);
+	return self:sphere__(options);
 end
 function NplCadEnvironment.read_sphere(p)
 	local node = Node.create("");
@@ -291,11 +302,12 @@ function NplCadEnvironment:sphere__(options)
 	local parent = self:getNode__();
 	local node = NplCadEnvironment.read_sphere(options);
 	parent:addChild(node);
+	return node;
 end
 
 function NplCadEnvironment.cylinder(options,...)
 	local self = getfenv(2);
-	self:cylinder__(options);
+	return self:cylinder__(options);
 end
 
 function NplCadEnvironment.read_cylinder(p,...)
@@ -412,59 +424,124 @@ function NplCadEnvironment:cylinder__(options,...)
 	local parent = self:getNode__();
 	local node = NplCadEnvironment.read_cylinder(options,...)
 	parent:addChild(node);
+	return node;
 end
-function NplCadEnvironment.translate(x,y,z)
+--[[
+translate({0,0,10});		--create a new parent node and set translation value 
+translate({0,0,10},obj);	--set translation value with obj          
+--]]
+function NplCadEnvironment.translate(options,obj)
 	local self = getfenv(2);
-	self:translate__(x,y,z);
+	self:translate__(options,obj);
 end
-function NplCadEnvironment:translate__(x,y,z)
-	if(not x or not y or not z)then
-		return
-	end
-	local node = self:push__();
-	if(node)then
-		node:setTranslation(x,y,z);
+function NplCadEnvironment:translate__(options,obj)
+	if(not options)then return end
+
+	if(is_array(options))then
+		local x = options[1] or 0;
+		local y = options[2] or 0;
+		local z = options[3] or 0;
+
+		if(not obj)then
+			obj = self:push__();
+		end
+
+		if(obj and obj.setTranslation)then
+			obj:setTranslation(x,y,z);
+		end
 	end
 end
-function NplCadEnvironment.rotate(x,y,z)
+--[[
+rotate(2);				--create a new parent node and set rotation value          
+rotate(2,obj);			--set rotation value with obj          
+rotate({1,2,3});		--create a new parent node and set rotation value          
+rotate({1,2,3},obj);	--set rotation value with obj  
+--]]
+function NplCadEnvironment.rotate(options,obj)
 	local self = getfenv(2);
-	self:rotate__(x,y,z);
+	self:rotate__(options,obj);
 end
-function NplCadEnvironment:rotate__(x,y,z)
-	if(not x or not y or not z)then
-		return
+function NplCadEnvironment:rotate__(options,obj)
+	if(not options)then return end
+	local x_angle,y_angle,z_angle;
+	if(is_number(options))then
+		x_angle = options;
+		y_angle = options;
+		z_angle = options;
 	end
-	local node = self:push__();
-	if(node)then
+	if(is_array(options))then
+		x_angle = options[1] or 0;
+		y_angle = options[2] or 0;
+		z_angle = options[3] or 0;
+	end
+	if(not obj)then
+		obj = self:push__();
+	end
+	local x = x_angle * math_pi / 180;
+	local y = y_angle * math_pi / 180;
+	local z = z_angle * math_pi / 180;
+
+	if(obj and obj.setRotation)then
 		local q =  Quaternion:new();
-		q =  q:FromEulerAngles(x,y,z) 
-		node:setRotation(q[1],q[2],q[3],q[4]);
+		local yaw = y;
+		local roll = z;
+		local pitch = x;
+		q =  q:FromEulerAngles(yaw,roll,pitch);
+		obj:setRotation(q[1],q[2],q[3],q[4]);
 	end
 end
-function NplCadEnvironment.scale(x,y,z)
+--[[
+scale(2);			--create a new parent node and set scale value          
+scale(2,obj);		--set scale value with obj          
+scale({1,2,3});		--create a new parent node and set scale value          
+scale({1,2,3},obj); --set scale value with obj          
+--]]
+function NplCadEnvironment.scale(options,obj)
 	local self = getfenv(2);
-	self:scale__(x,y,z);
+	self:scale__(options,obj);
 end
-function NplCadEnvironment:scale__(x,y,z)
-	if(not x or not y or not z)then
-		return
+function NplCadEnvironment:scale__(options,obj)
+	if(not options)then return end
+	local x,y,z;
+	if(is_number(options))then
+		x = options;
+		y = options;
+		z = options;
 	end
-	local node = self:push__();
-	if(node)then
-		node:setScale(x,y,z);
+	if(is_array(options))then
+		x = options[1] or 1;
+		y = options[2] or 1;
+		z = options[3] or 1;
+	end
+	if(not obj)then
+		obj = self:push__();
+	end
+	if(obj and obj.setScale)then
+		obj:setScale(x,y,z);
 	end
 end
-function NplCadEnvironment.color(r,g,b)
+--[[
+color({r,g,b});		--create a new parent node and set color value 
+color({r,g,b},obj); --set color value with obj 
+--]]
+function NplCadEnvironment.color(options,obj)
 	local self = getfenv(2);
-	self:color__(r,g,b);
+	self:color__(options,obj);
 end
-function NplCadEnvironment:color__(r,g,b)
-	if(not r or not g or not b)then
-		return
-	end
-	local node = self:push__();
-	if(node)then
-		node:setTag("color",{r,g,b});
+function NplCadEnvironment:color__(options,obj)
+	if(not options)then return end
+	local r,g,b;
+	if(is_array(options))then
+		r = options[1] or 1;
+		g = options[2] or 1;
+		b = options[3] or 1;
+
+		if(not obj)then
+			obj = self:push__();
+		end
+		if(obj and obj.setTag)then
+			obj:setTag("color",{r,g,b});
+		end
 	end
 end
 function NplCadEnvironment.loadXml(str)
