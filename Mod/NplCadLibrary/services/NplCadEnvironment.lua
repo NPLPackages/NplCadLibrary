@@ -18,6 +18,7 @@ NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/doms/DomParser.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/Color.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
@@ -27,7 +28,13 @@ local DomParser = commonlib.gettable("Mod.NplCadLibrary.doms.DomParser");
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
+local Color = commonlib.gettable("Mod.NplCadLibrary.utils.Color");
 local math_pi = 3.1415926;
+local function is_string(input)
+	if(input and type(input) == "string")then
+		return true;
+	end
+end
 local function is_table(input)
 	if(input and type(input) == "table")then
 		return true;
@@ -523,6 +530,8 @@ end
 --[[
 color({r,g,b});		--create a new parent node and set color value 
 color({r,g,b},obj); --set color value with obj 
+color(color_name);		--create a new parent node and set color value with color name
+color(color_name,obj)		--set color value with obj 
 --]]
 function NplCadEnvironment.color(options,obj)
 	local self = getfenv(2);
@@ -531,17 +540,22 @@ end
 function NplCadEnvironment:color__(options,obj)
 	if(not options)then return end
 	local r,g,b;
+	if(is_string(options))then
+		local v = Color.getValue(options);
+		r = v[1];
+		g = v[2];
+		b = v[3];
+	end
 	if(is_array(options))then
 		r = options[1] or 1;
 		g = options[2] or 1;
 		b = options[3] or 1;
-
-		if(not obj)then
-			obj = self:push__();
-		end
-		if(obj and obj.setTag)then
-			obj:setTag("color",{r,g,b});
-		end
+	end
+	if(not obj)then
+		obj = self:push__();
+	end
+	if(obj and obj.setTag)then
+		obj:setTag("color",{r,g,b});
 	end
 end
 function NplCadEnvironment.loadXml(str)

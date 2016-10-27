@@ -22,6 +22,9 @@
     <Filter Include="Mod\NplCadLibrary\services">
       <UniqueIdentifier>{0ca2fcdf-b4fc-407f-b32a-9980a52d0449}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mod\NplCadLibrary\utils">
+      <UniqueIdentifier>{cd38d36e-1829-4a72-bd4f-befe161a9a9b}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Mod\NplCadLibrary\core\Drawable.lua">
@@ -80,6 +83,9 @@
     </None>
     <None Include="Mod\NplCadLibrary\csg\CSGFactory.lua">
       <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\utils\Color.lua">
+      <Filter>Mod\NplCadLibrary\utils</Filter>
     </None>
   </ItemGroup>
 </Project>
