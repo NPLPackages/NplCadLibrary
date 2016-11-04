@@ -290,3 +290,25 @@ function CSGService.cloneCsgNode(child)
 		return csg_node;
 	end
 end
+-- Read csg code from a file.
+function CSGService.readFile(filepath)
+	if(not filepath)then return end
+	local file = ParaIO.open(filepath, "r");
+	if(file:IsValid()) then
+		local text = file:GetText();
+		file:close();
+		return text;
+	end
+end
+function CSGService.saveFile(filepath,content)
+	if(filepath and content)then
+		ParaIO.CreateDirectory(filepath);
+		local file = ParaIO.open(filepath, "w");
+		if(file:IsValid()) then
+			file:WriteString(content);
+			file:close();
+
+			return true;
+		end
+	end
+end
