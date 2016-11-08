@@ -29,11 +29,19 @@ local CSG = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSG
 function CSG:ctor()
 	self.polygons = {};
 end
+
 --Construct a CSG solid from a list of `CSG.Polygon` instances.
 function CSG.fromPolygons(polygons)
 	local csg = CSG:new();
 	csg.polygons = polygons;
 	return csg;
+end
+function CSG:getVertexCnt()
+	local cnt = 0;
+	for k,p in ipairs(self.polygons) do
+		cnt  = cnt  + p:getVertexCnt();
+	end
+	return cnt;
 end
 function CSG:clone()
 	local csg = CSG:new();
@@ -62,8 +70,14 @@ end
 --          +-------+            +-------+
 -- 
 function CSG:union(csg)
-	local a = CSGNode:new():init(self:clone().polygons);
-	local b = CSGNode:new():init(csg:clone().polygons);
+	LOG.std(nil, "info", "CSG:union", "==============");
+	LOG.std(nil, "info", "CSG:union", "vertex length of self:%d,csg:%d", self:getVertexCnt(), csg:getVertexCnt());
+	local aa = self:clone();
+	local bb = csg:clone();
+	LOG.std(nil, "info", "CSG:union", "vertex length of aa:%d,bb:%d", aa:getVertexCnt(), bb:getVertexCnt());
+	local a = CSGNode:new():init(aa.polygons);
+	local b = CSGNode:new():init(bb.polygons);
+	LOG.std(nil, "info", "CSG:union", "vertex length of a:%d,b:%d", a:getVertexCnt(), b:getVertexCnt());
 	a:clipTo(b);
     b:clipTo(a);
     b:invert();
@@ -87,8 +101,14 @@ end
 --          +-------+
 -- 
 function CSG:subtract(csg)
-	local a = CSGNode:new():init(self:clone().polygons);
-	local b = CSGNode:new():init(csg:clone().polygons);
+	LOG.std(nil, "info", "CSG:subtract", "==============");
+	LOG.std(nil, "info", "CSG:subtract", "vertex length of self:%d,csg:%d", self:getVertexCnt(), csg:getVertexCnt());
+	local aa = self:clone();
+	local bb = csg:clone();
+	LOG.std(nil, "info", "CSG:subtract", "vertex length of aa:%d,bb:%d", aa:getVertexCnt(), bb:getVertexCnt());
+	local a = CSGNode:new():init(aa.polygons);
+	local b = CSGNode:new():init(bb.polygons);
+	LOG.std(nil, "info", "CSG:subtract", "vertex length of a:%d,b:%d", a:getVertexCnt(), b:getVertexCnt());
 	a:invert();
     a:clipTo(b);
     b:clipTo(a);
@@ -114,8 +134,14 @@ end
 --          +-------+
 -- 
 function CSG:intersect(csg)
-	local a = CSGNode:new():init(self:clone().polygons);
-	local b = CSGNode:new():init(csg:clone().polygons);
+	LOG.std(nil, "info", "CSG:intersect", "==============");
+	LOG.std(nil, "info", "CSG:intersect", "vertex length of self:%d,csg:%d", self:getVertexCnt(), csg:getVertexCnt());
+	local aa = self:clone();
+	local bb = csg:clone();
+	LOG.std(nil, "info", "CSG:intersect", "vertex length of aa:%d,bb:%d", aa:getVertexCnt(), bb:getVertexCnt());
+	local a = CSGNode:new():init(aa.polygons);
+	local b = CSGNode:new():init(bb.polygons);
+	LOG.std(nil, "info", "CSG:intersect", "vertex length of a:%d,b:%d", a:getVertexCnt(), b:getVertexCnt());
 	a:invert();
     b:clipTo(a);
     b:invert();

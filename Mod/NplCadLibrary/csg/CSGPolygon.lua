@@ -48,3 +48,9 @@ function CSGPolygon:flip()
 	self.vertices = result;
 	self.plane:flip();
 end
+function CSGPolygon:getVertexCnt()
+	if(self.vertices)then
+		return #self.vertices;
+	end
+	return 0;
+end

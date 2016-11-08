@@ -173,7 +173,6 @@ end
     //       resolution: 32,
     //     });
 
-NOTE:Where is normal of CSGVertex?
 --]]
 function CSGFactory.sphere(options)
         options = options or {};

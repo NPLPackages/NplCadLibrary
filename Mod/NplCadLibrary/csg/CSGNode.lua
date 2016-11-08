@@ -156,3 +156,10 @@ function CSGNode:build(polygons)
 		self.back:build(back);
 	end
 end
+function CSGNode:getVertexCnt()
+	local cnt = 0;
+	for k,p in ipairs(self.polygons) do
+		cnt  = cnt  + p:getVertexCnt();
+	end
+	return cnt;
+end
