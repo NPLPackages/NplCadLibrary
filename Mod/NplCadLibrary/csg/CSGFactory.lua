@@ -131,10 +131,11 @@ function CSGFactory.sphere2(options)
 	local function vertex(theta, phi) 
 		theta = theta * math.pi * 2;
 		phi = phi * math.pi;
+		local sinPhi = math.sin(phi);
 		local dir = CSGVector:new():init(
-		  math.cos(theta) * math.sin(phi),
-		  math.cos(phi),
-		  math.sin(theta) * math.sin(phi)
+		  math.cos(theta) * sinPhi,
+		  math.sin(theta) * sinPhi,
+		  math.cos(phi)
 		);
 		table.insert(vertices,CSGVertex:new():init(c:plus(dir:times(r)), dir));
 	end
@@ -186,7 +187,7 @@ function CSGFactory.sphere(options)
             zvector = options.axes[2]:unit():times(radius);
         else
             xvector = CSGVector:new():init({1, 0, 0}):times(radius);
-            yvector = CSGVector:new():init({0, -1, 0}):times(radius);
+            yvector = CSGVector:new():init({0, 1, 0}):times(radius);
             zvector = CSGVector:new():init({0, 0, 1}):times(radius);
         end
         if (resolution < 4) then
@@ -197,7 +198,7 @@ function CSGFactory.sphere(options)
         local polygons = {};
 		for slice1 = 0, resolution do
 			local angle = math_pi * 2.0 * slice1 / resolution;
-            local cylinderpoint = xvector:times(math_cos(angle)):plus(yvector:times(math_sin(angle)));
+            local cylinderpoint = xvector:times(math_cos(angle)):plus(zvector:times(math_sin(angle)));
             if (slice1 > 0) then
                 -- cylinder vertices:
                 local vertices = {};
@@ -208,21 +209,21 @@ function CSGFactory.sphere(options)
                     local sinpitch = math_sin(pitch);
                     if (slice2 > 0) then
                         vertices = {};
-						table.insert(vertices,CSGVertex:new():init(center:plus(prevcylinderpoint:times(prevcospitch):minus(zvector:times(prevsinpitch)))));
-                        table.insert(vertices,CSGVertex:new():init(center:plus(cylinderpoint:times(prevcospitch):minus(zvector:times(prevsinpitch)))));
+						table.insert(vertices,CSGVertex:new():init(center:plus(prevcylinderpoint:times(prevcospitch):minus(yvector:times(prevsinpitch)))));
+                        table.insert(vertices,CSGVertex:new():init(center:plus(cylinderpoint:times(prevcospitch):minus(yvector:times(prevsinpitch)))));
                         
                         if (slice2 < qresolution) then
-                            table.insert(vertices,CSGVertex:new():init(center:plus(cylinderpoint:times(cospitch):minus(zvector:times(sinpitch)))));
+                            table.insert(vertices,CSGVertex:new():init(center:plus(cylinderpoint:times(cospitch):minus(yvector:times(sinpitch)))));
                         end
-                        table.insert(vertices,CSGVertex:new():init(center:plus(prevcylinderpoint:times(cospitch):minus(zvector:times(sinpitch)))));
+                        table.insert(vertices,CSGVertex:new():init(center:plus(prevcylinderpoint:times(cospitch):minus(yvector:times(sinpitch)))));
 						table.insert(polygons,CSGPolygon:new():init(vertices));
                         vertices = {};
-                        table.insert(vertices,CSGVertex:new():init(center:plus(prevcylinderpoint:times(prevcospitch):plus(zvector:times(prevsinpitch)))));
-                        table.insert(vertices,CSGVertex:new():init(center:plus(cylinderpoint:times(prevcospitch):plus(zvector:times(prevsinpitch)))));
+                        table.insert(vertices,CSGVertex:new():init(center:plus(prevcylinderpoint:times(prevcospitch):plus(yvector:times(prevsinpitch)))));
+                        table.insert(vertices,CSGVertex:new():init(center:plus(cylinderpoint:times(prevcospitch):plus(yvector:times(prevsinpitch)))));
                         if (slice2 < qresolution) then
-                            table.insert(vertices,CSGVertex:new():init(center:plus(cylinderpoint:times(cospitch):plus(zvector:times(sinpitch)))));
+                            table.insert(vertices,CSGVertex:new():init(center:plus(cylinderpoint:times(cospitch):plus(yvector:times(sinpitch)))));
                         end
-                        table.insert(vertices,CSGVertex:new():init(center:plus(prevcylinderpoint:times(cospitch):plus(zvector:times(sinpitch)))));
+                        table.insert(vertices,CSGVertex:new():init(center:plus(prevcylinderpoint:times(cospitch):plus(yvector:times(sinpitch)))));
 
 						vertices = CSGFactory.reverseTable(vertices);
 						table.insert(polygons,CSGPolygon:new():init(vertices));

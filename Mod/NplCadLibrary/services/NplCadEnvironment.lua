@@ -378,9 +378,9 @@ function NplCadEnvironment.read_cylinder(p,...)
 		if(round)then
 			--NOTE:Unimplemented
 			--o = CSGModel:new():init(CSGFactory.roundedCylinder({from = {0,0,0}, to = {0,0,h},radiusStart = r1, radiusEnd = r2, resolution = fn}),"roundedCylinder");
-			o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,0,h}, radiusStart = r1, radiusEnd = r2, resolution = fn}),"cylinder");
+			o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,h,0}, radiusStart = r1, radiusEnd = r2, resolution = fn}),"cylinder");
 		else
-			o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,0,h}, radiusStart = r1, radiusEnd = r2, resolution = fn}),"cylinder");
+			o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,h,0}, radiusStart = r1, radiusEnd = r2, resolution = fn}),"cylinder");
 		end
 		local r;
 		if(r1>r2)then
