@@ -436,26 +436,31 @@ end
 --[[
 translate({0,0,10});		--create a new parent node and set translation value 
 translate({0,0,10},obj);	--set translation value with obj          
+translate(0,1,0, obj);		--set translation 
 --]]
-function NplCadEnvironment.translate(options,obj)
+function NplCadEnvironment.translate(...)
 	local self = getfenv(2);
-	self:translate__(options,obj);
+	self:translate__(...);
 end
-function NplCadEnvironment:translate__(options,obj)
-	if(not options)then return end
-
-	if(is_array(options))then
-		local x = options[1] or 0;
-		local y = options[2] or 0;
-		local z = options[3] or 0;
-
-		if(not obj)then
-			obj = self:push__();
-		end
-
-		if(obj and obj.setTranslation)then
-			obj:setTranslation(x,y,z);
-		end
+function NplCadEnvironment:translate__(p1,p2,p3,p4)
+	local x,y,z, options,obj;
+	if(type(p1) == "table") then
+		options = p1;
+		x = options[1];
+		y = options[2];
+		z = options[3];
+		obj = p2;
+	elseif(type(p1) == "number") then
+		x=p1;
+		y=tonumber(p2);
+		z=tonumber(p3);
+		obj = p4;
+	end
+	if(not obj)then
+		obj = self:push__();
+	end
+	if(obj and obj.setTranslation)then
+		obj:setTranslation(x or 0, y or 0, z or 0);
 	end
 end
 --[[

@@ -214,30 +214,20 @@ function CSGService.getRenderList(scene)
 	end
 	return render_list;
 end
+
 function CSGService.doOperator(csg_nodes,csg_action)
 	local len = #csg_nodes;
 	if(len == 0)then
 		return;
 	end
-	local pre_node = csg_nodes[len-1];
-	local cur_node = csg_nodes[len];
-	local cur_csg_node = cur_node["csg_node"];
-
-	-- if it is only one node,we do nothing
-	if(not pre_node)then
-		return cur_csg_node;
-	else
-		len = len - 1;
-		while(pre_node) do
-			local pre_csg_node = pre_node["csg_node"];
-
-			cur_csg_node = CSGService.operateTwoNodes(pre_csg_node,cur_csg_node,csg_action);
-			len = len - 1;
-			pre_node = csg_nodes[len];
-		end
+	local first_node = csg_nodes[1];
+	local result_node = first_node.csg_node;
+	for i=2, len do
+		result_node = CSGService.operateTwoNodes(result_node, csg_nodes[i].csg_node, csg_action);
 	end
-	return cur_csg_node;
+	return result_node;
 end
+
 function CSGService.findCsgNode(node)
 		if(not node)then return end
 		local drawable = node:getDrawable();
