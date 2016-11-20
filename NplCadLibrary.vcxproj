@@ -24,8 +24,8 @@
     <None Include="Mod\NplCadLibrary\core\Scene.lua" />
     <None Include="Mod\NplCadLibrary\core\Transform.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSG.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGBSPNode.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGFactory.lua" />
-    <None Include="Mod\NplCadLibrary\csg\CSGNode.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGPlane.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGPolygon.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGVector.lua" />

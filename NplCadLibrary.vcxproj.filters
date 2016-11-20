@@ -42,9 +42,6 @@
     <None Include="Mod\NplCadLibrary\csg\CSG.lua">
       <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
-    <None Include="Mod\NplCadLibrary\csg\CSGNode.lua">
-      <Filter>Mod\NplCadLibrary\csg</Filter>
-    </None>
     <None Include="Mod\NplCadLibrary\csg\CSGPlane.lua">
       <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
@@ -86,6 +83,9 @@
     </None>
     <None Include="Mod\NplCadLibrary\utils\Color.lua">
       <Filter>Mod\NplCadLibrary\utils</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGBSPNode.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
   </ItemGroup>
 </Project>
