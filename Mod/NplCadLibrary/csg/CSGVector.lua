@@ -14,6 +14,7 @@ echo(v1:plus(v2));
 echo(v1:minus(v2));
 -------------------------------------------------------
 ]]
+NPL.load("(gl)script/ide/STL.lua");
 local math_abs = math.abs;
 local CSGVector = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector"));
 
