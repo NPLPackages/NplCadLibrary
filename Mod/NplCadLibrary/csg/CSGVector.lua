@@ -186,3 +186,4 @@ function CSGVector:absInplace()
 	self.x, self.y, self.z = math_abs(self.x),math_abs(self.y),math_abs(self.z);
 	return self;
 end
+

@@ -32,6 +32,14 @@ function CSGPlane:init(normal, w)
 	self.w = w;
 	return self;
 end
+
+-- performs a deep copy of all its internal data. 
+-- used whenever data is about to be modified for implicit copy-on-write object.
+function CSGPlane:detach()
+	self.normal = self.normal:clone();
+	return self;
+end
+
 function CSGPlane.fromPoints(a, b, c)
 	local n = b:minus(a):crossInplace(c:clone_from_pool():minusInplace(a)):unitInplace();
 	local plane = CSGPlane:new():init(n,n:dot(a));
@@ -41,9 +49,11 @@ function CSGPlane:clone()
 	local plane = CSGPlane:new():init(self.normal,self.w);
 	return plane;
 end
+
 function CSGPlane:flip()
 	self.normal = self.normal:negated();
 	self.w = -self.w;
+	return self;
 end
 
 local types = {};
@@ -60,13 +70,15 @@ local SPANNING = 3;
 -- either `front` or `back`.
 -- @param front: inout parameter.  if nil, it will be created and returned.
 -- @param back: inout parameter.  if nil, it will be created and returned.
--- @return front, back
+-- @return front, back, coplanarFront, coplanarBack
 function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back)
     --Classify each point as well as the entire polygon into one of the above four classes.
     local polygonType = 0;
     
 	local EPSILON = CSGPlane.EPSILON;
-	for i,v in ipairs(polygon.vertices) do
+	local vertices = polygon.vertices;
+	for i = 1, #vertices do
+		local v = vertices[i];
 		local t = self.normal:dot(v.pos) - self.w;
 		local type;
 		if(t < -EPSILON)then
@@ -80,9 +92,11 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 		types[i] = type;
 	end
 	if(polygonType == COPLANAR)then
-		if(self.normal:dot(polygon.plane.normal) > 0)then
+		if(self.normal:dot(polygon:GetPlane().normal) > 0)then
+			coplanarFront = coplanarFront or {};
 			coplanarFront[#coplanarFront+1] = polygon;
 		else
+			coplanarBack = coplanarBack or {};
 			coplanarBack[#coplanarBack+1] = polygon;
 		end
 	elseif(polygonType == FRONT)then
@@ -95,13 +109,13 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 		local backCount, frontCount = 0, 0;
 		local f = {};
 		local b = {};
-		local size = #polygon.vertices;
+		local size = #vertices;
 		for i = 1, size do
 			local j = (i % size) + 1;
 			local ti = types[i];
 			local tj = types[j];
-			local vi = polygon.vertices[i]
-			local vj = polygon.vertices[j];
+			local vi = vertices[i]
+			local vj = vertices[j];
 			if(ti ~= BACK)then
 				frontCount = frontCount + 1;
 				f[frontCount] = vi;
@@ -133,5 +147,5 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 			back[#back+1] = CSGPolygon:new():init(b,polygon.shared);
 		end
 	end
-	return front, back;
+	return front, back, coplanarFront, coplanarBack;
 end

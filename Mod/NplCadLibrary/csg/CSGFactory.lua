@@ -308,16 +308,16 @@ function CSGFactory.cylinder(options)
 		local t0 = i / slices;
 		local t1 = (i + 1) / slices;
 		if(radiusStart == radiusEnd)then
-			table.insert(polygons,CSGPolygon:new():init({start_value:clone(), point(0, t0, radiusEnd, -1), point(0, t1, radiusEnd, -1)}));
+			table.insert(polygons,CSGPolygon:new():init({start_value:clone(true), point(0, t0, radiusEnd, -1), point(0, t1, radiusEnd, -1)}));
 			table.insert(polygons,CSGPolygon:new():init({point(0, t1, radiusEnd), point(0, t0, radiusEnd, 0), point(1, t0, radiusEnd, 0), point(1, t1, radiusEnd, 0)}));
-			table.insert(polygons,CSGPolygon:new():init({end_value:clone(), point(1, t1, radiusEnd, 1), point(1, t0, radiusEnd, 1)}));
+			table.insert(polygons,CSGPolygon:new():init({end_value:clone(true), point(1, t1, radiusEnd, 1), point(1, t0, radiusEnd, 1)}));
 		else
 			if(radiusStart > 0)then
-				table.insert(polygons,CSGPolygon:new():init({start_value:clone(), point(0, t0, radiusStart, -1), point(0, t1, radiusStart, -1)}));
+				table.insert(polygons,CSGPolygon:new():init({start_value:clone(true), point(0, t0, radiusStart, -1), point(0, t1, radiusStart, -1)}));
 				table.insert(polygons,CSGPolygon:new():init({point(0, t0, radiusStart), point(1, t0, radiusEnd, 0), point(0, t1, radiusStart, 0)}));
 			end
 			if(radiusEnd > 0)then
-				table.insert(polygons,CSGPolygon:new():init({end_value:clone(), point(1, t1, radiusEnd, 0), point(1, t0, radiusEnd, 0)}));
+				table.insert(polygons,CSGPolygon:new():init({end_value:clone(true), point(1, t1, radiusEnd, 0), point(1, t0, radiusEnd, 0)}));
 				table.insert(polygons,CSGPolygon:new():init({point(1, t0, radiusEnd, 1), point(1, t1, radiusEnd, 1), point(0, t1, radiusStart, 1)}));
 			end
 		end

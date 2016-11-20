@@ -32,20 +32,24 @@ function CSGService.setColor(csg_node,color)
 		v.shared.color = color;
 	end
 end
+
+local white = {1,1,1};
+
 function CSGService.toMesh(csg_node)
 	if(not csg_node)then return end
 	local vertices = {};
 	local indices = {};
 	local normals = {};
 	local colors = {};
+	
 	for __,polygon in ipairs(csg_node.polygons) do
 		local start_index = #vertices+1;
-		local normal = polygon.plane.normal;
+		local normal = polygon:GetPlane().normal;
 		for __,vertex in ipairs(polygon.vertices) do
 			vertices[#vertices+1] = {vertex.pos.x,vertex.pos.y,vertex.pos.z};
 			normals[#normals+1] = {normal.x,normal.y,normal.z} 
 			local shared = polygon.shared or {};
-			local color = shared.color or {1,1,1};
+			local color = shared.color or white;
 			colors[#colors+1] = color;
 		end
 		local size = #(polygon.vertices) - 1;
@@ -61,6 +65,7 @@ end
 local pos = {};
 function CSGService.applyMatrix(csg_node,matrix)
 	if(not matrix or not csg_node)then return end
+
 	for __,polygon in ipairs(csg_node.polygons) do
 		for __,vertex in ipairs(polygon.vertices) do
 			pos[1], pos[2], pos[3] = vertex.pos.x,vertex.pos.y,vertex.pos.z;
@@ -75,6 +80,7 @@ function CSGService.applyMatrix(csg_node,matrix)
 			--vertex.normal.y = normal[2];
 			--vertex.normal.z = normal[3];
 		end
+		polygon.plane = nil;
 	end
 end
 function CSGService.operateTwoNodes(pre_csg_node,cur_csg_node,csg_action)

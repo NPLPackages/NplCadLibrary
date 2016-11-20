@@ -7,7 +7,7 @@ A CSG node stores array of polygons, representing a solid, and exposing boolean 
 Internally, it uses temporary BSP node(a binary space partition tree representing a 3D solid) to perform csg operations. 
 Two solids can be combined using the `union()`, `subtract()`, and `intersect()` methods.
 
-CSG node's polygons are read only. We use copy on write policy.
+We use copy on write policy for all CSG stuffs, like vertext, polygon, plane, bsp node, csg node, etc.
 -------------------------------------------------------
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
 local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
@@ -32,12 +32,14 @@ function CSG:ctor()
 	self.polygons = {};
 end
 
---Construct a CSG solid from a list of `CSG.Polygon` instances.
+--Construct a CSG solid from an array of Polygons
 function CSG.fromPolygons(polygons)
 	local csg = CSG:new();
 	csg.polygons = polygons;
 	return csg;
 end
+
+-- compute total number of vertices
 function CSG:getVertexCnt()
 	local cnt = 0;
 	for k,p in ipairs(self.polygons) do
@@ -45,18 +47,33 @@ function CSG:getVertexCnt()
 	end
 	return cnt;
 end
-function CSG:clone()
-	local csg = CSG:new();
+
+-- performs a deep copy of all its internal data. 
+-- used whenever data is about to be modified for implicit copy-on-write object.
+function CSG:detach()
 	local result = {};
 	for k,p in ipairs(self.polygons) do
 		result[#result+1] = p:clone();
 	end
-	csg.polygons = result;
-	return csg;
+	self.polygons = result;
+	return self;
 end
-function CSG:toPolygons()
+
+-- clone csg node and polygons
+-- @param bDeepCopy: if true, we will perform deep copy, otherwise it is a shallow copy on write clone
+function CSG:clone(bDeepCopy)
+	local o = CSG.fromPolygons(self.polygons);
+	if(bDeepCopy) then
+		-- almost never called
+		o:detach();
+	end
+	return o;
+end
+
+function CSG:GetPolygons()
 	return self.polygons;
 end
+
 -- Return a new CSG solid representing space in either this solid or in the
 -- solid `csg`. Neither this solid nor the solid `csg` are modified.
 -- 
@@ -81,7 +98,7 @@ function CSG:union(csg)
 	local b = CSGBSPNode:new():init(bb.polygons);
 	LOG.std(nil, "info", "CSG:union", "vertex length of a:%d,b:%d", a:getVertexCnt(), b:getVertexCnt());
 	a:clipTo(b);
-    b:clipTo(a);
+	b:clipTo(a);
     b:invert();
     b:clipTo(a);
     b:invert();
@@ -153,10 +170,11 @@ function CSG:intersect(csg)
     a:invert();
     return CSG.fromPolygons(a:allPolygons());
 end
+
+
 --Return a new CSG solid with solid and empty space switched. This solid is not modified.
 function CSG:inverse()
-	local csg = self:clone();
-	local k,p;
+	local csg = self:clone(true);
 	for k,p in ipairs(self.polygons) do
 		p:flip();
 	end
