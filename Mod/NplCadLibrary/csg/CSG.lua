@@ -1,11 +1,13 @@
 --[[
-Title: CSG
-Author(s): leio
+Title: CSG Node
+Author(s): leio, LiXizhi, based on http://evanw.github.com/csg.js/
 Date: 2016/3/29
 Desc: 
-based on http://evanw.github.com/csg.js/
-Holds a binary space partition tree representing a 3D solid. Two solids can
-be combined using the `union()`, `subtract()`, and `intersect()` methods.
+A CSG node stores array of polygons, representing a solid, and exposing boolean operations. 
+Internally, it uses temporary BSP node(a binary space partition tree representing a 3D solid) to perform csg operations. 
+Two solids can be combined using the `union()`, `subtract()`, and `intersect()` methods.
+
+CSG node's polygons are read only. We use copy on write policy.
 -------------------------------------------------------
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
 local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
@@ -47,7 +49,7 @@ function CSG:clone()
 	local csg = CSG:new();
 	local result = {};
 	for k,p in ipairs(self.polygons) do
-		table.insert(result,p:clone());
+		result[#result+1] = p:clone();
 	end
 	csg.polygons = result;
 	return csg;

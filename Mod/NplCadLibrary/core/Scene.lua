@@ -20,6 +20,9 @@ end
 function Scene:getTypeName()
 	return "Scene";
 end
+
+-- depth first traversal 
+-- @param visitMethod: callback function to be called for each node. 
 function Scene:visit(visitMethod)
 	local node = self:getFirstChild();
 	while(node) do
@@ -27,6 +30,11 @@ function Scene:visit(visitMethod)
 		node = node:getNextSibling();
 	end
 end
+
+-- private: 
+-- depth first traversal, visiting a single node. 
+-- @param visitMethod: callback function to be called for each node. 
+-- @param 
 function Scene:visitNode(node,visitMethod)
 	if(not node)then
 		return;

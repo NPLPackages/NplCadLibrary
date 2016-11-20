@@ -166,6 +166,7 @@ function CSGService.appendLoadXmlFunction(code)
 	end
 end
 
+-- this is the main render function, which traverse the scene and compute csg polygons. 
 function CSGService.getRenderList(scene)
 	if(not scene)then
 		return
