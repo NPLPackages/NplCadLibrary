@@ -14,7 +14,7 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPlane.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGNode.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGBSPNode.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
 
 local vector3d = commonlib.gettable("mathlib.vector3d");
@@ -22,7 +22,7 @@ local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
-local CSGNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGNode");
+local CSGBSPNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode");
 local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
 
 local math_floor = math.floor;

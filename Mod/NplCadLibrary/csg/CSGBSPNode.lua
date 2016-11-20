@@ -1,5 +1,5 @@
 --[[
-Title: CSGNode
+Title: CSGBSPNode
 Author(s): leio
 Date: 2016/3/29
 Desc: 
@@ -9,35 +9,30 @@ polygons) are added directly to that node and the other polygons are added to
 the front and/or back subtrees. This is not a leafy BSP tree since there is
 no distinction between internal and leaf nodes.
 -------------------------------------------------------
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGNode.lua");
-local CSGNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGNode");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGBSPNode.lua");
+local CSGBSPNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode");
 -------------------------------------------------------
 ]]
-local CSGNode = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGNode"));
-local function slice(source)
+local CSGBSPNode = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode"));
+
+-- move polygons from source to result, if result is nil, a new table is created. 
+-- @param source: array of polygons
+-- @param result: [inout] nil or target polygon tables.
+-- @return result
+local function movePolygons(source, result)
 	if(not source)then
 		return
 	end
-	local result = {};
-	local k,v;
+	result = result or {};
 	for k,v in ipairs(source) do
-		table.insert(result,v);
+		result[#result+1] = v;
 	end
 	return result;
 end
-local function concat(a,b)
-	if(a and b)then
-		a = slice(a);
-		local k,v;
-		for k,v in ipairs(b) do
-			table.insert(a,v);
-		end
-		return a;
-	end
+
+function CSGBSPNode:ctor()
 end
-function CSGNode:ctor()
-end
-function CSGNode:init(polygons)
+function CSGBSPNode:init(polygons)
 	self.plane = nil;
 	self.front = nil;
 	self.back = nil;
@@ -47,8 +42,8 @@ function CSGNode:init(polygons)
 	end
 	return self;
 end
-function CSGNode:clone()
-	local node = CSGNode:new();
+function CSGBSPNode:clone()
+	local node = CSGBSPNode:new();
 	if(self.plane)then
 		node.plane = self.plane:clone();
 	end
@@ -59,7 +54,6 @@ function CSGNode:clone()
 		node.back = self.back:clone();
 	end
 	local polygons = {};
-	local k,p;
 	for k,p in ipairs(self.polygons) do
 		table.insert(polygons,p:clone());
 	end
@@ -67,7 +61,7 @@ function CSGNode:clone()
 	return node;
 end
 --Convert solid space to empty space and empty space to solid space.
-function CSGNode:invert()
+function CSGBSPNode:invert()
 	for k,p in ipairs(self.polygons) do
 		p:flip();
 	end
@@ -85,13 +79,12 @@ function CSGNode:invert()
 	self.back = temp;
 end
 --Recursively remove all polygons in `polygons` that are inside this BSP tree.
-function CSGNode:clipPolygons(polygons)
+function CSGBSPNode:clipPolygons(polygons)
 	if(not self.plane)then
-		return slice(polygons);
+		return movePolygons(polygons);
 	end
 	local front = {};
 	local back = {};
-	local k,p;
 	for k,p in ipairs(polygons) do
 		self.plane:splitPolygon(p,front, back, front, back);
 	end
@@ -103,10 +96,10 @@ function CSGNode:clipPolygons(polygons)
 	else
 		back = {};
 	end
-	return concat(front,back);
+	return movePolygons(front,back);
 end
 --Remove all polygons in this BSP tree that are inside the other BSP tree 'bsp'.
-function CSGNode:clipTo(bsp)
+function CSGBSPNode:clipTo(bsp)
 	if(not bsp)then return end
 	self.polygons = bsp:clipPolygons(self.polygons);
 	if(self.front)then
@@ -117,46 +110,49 @@ function CSGNode:clipTo(bsp)
 	end
 end
 --Return a list of all polygons in this BSP tree.
-function CSGNode:allPolygons()
-	local polygons = slice(self.polygons);
+-- @param result: inout, array of polygons
+function CSGBSPNode:allPolygons(result)
+	result = result or {};
+	movePolygons(self.polygons, result);
 	if(self.front)then
-		polygons = concat(polygons,self.front:allPolygons());
+		self.front:allPolygons(result);
 	end
 	if(self.back)then
-		polygons = concat(polygons,self.back:allPolygons());
+		self.back:allPolygons(result);
 	end
-	return polygons;
+	return result;
 end
 --Build a BSP tree out of `polygons`. When called on an existing tree, the
 --new polygons are filtered down to the bottom of the tree and become new
 --nodes there. Each set of polygons is partitioned using the first polygon
 --(no heuristic is used to pick a good split).
-function CSGNode:build(polygons)
+function CSGBSPNode:build(polygons)
 	if(not polygons or #polygons == 0)then
 		return;
 	end
+	local front;
+	local back;
+
 	if(not self.plane)then
 		self.plane = polygons[1].plane:clone();
 	end
-	local front = {};
-	local back = {};
-	for k,p in ipairs(polygons) do
-		self.plane:splitPolygon(p, self.polygons, self.polygons, front, back);
+	for i = 1, #polygons do
+		front, back = self.plane:splitPolygon(polygons[i], self.polygons, self.polygons, front, back);
 	end
-	if((#front) > 0)then
+	if(front)then
 		if(not self.front)then
-			self.front = CSGNode:new():init();
+			self.front = CSGBSPNode:new():init();
 		end
 		self.front:build(front);
 	end
-	if((#back) > 0)then
+	if(back)then
 		if(not self.back)then
-			self.back = CSGNode:new():init();
+			self.back = CSGBSPNode:new():init();
 		end
 		self.back:build(back);
 	end
 end
-function CSGNode:getVertexCnt()
+function CSGBSPNode:getVertexCnt()
 	local cnt = 0;
 	for k,p in ipairs(self.polygons) do
 		cnt  = cnt  + p:getVertexCnt();

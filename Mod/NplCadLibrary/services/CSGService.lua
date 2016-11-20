@@ -42,27 +42,29 @@ function CSGService.toMesh(csg_node)
 		local start_index = #vertices+1;
 		local normal = polygon.plane.normal;
 		for __,vertex in ipairs(polygon.vertices) do
-			table.insert(vertices,{vertex.pos.x,vertex.pos.y,vertex.pos.z});
-			table.insert(normals,{normal.x,normal.y,normal.z});
+			vertices[#vertices+1] = {vertex.pos.x,vertex.pos.y,vertex.pos.z};
+			normals[#normals+1] = {normal.x,normal.y,normal.z} 
 			local shared = polygon.shared or {};
 			local color = shared.color or {1,1,1};
-			table.insert(colors,color);
+			colors[#colors+1] = color;
 		end
 		local size = #(polygon.vertices) - 1;
 		for i = 2,size do
-			table.insert(indices,start_index);
-			table.insert(indices,start_index + i-1);
-			table.insert(indices,start_index + i);
+			indices[#indices+1] = start_index;
+			indices[#indices+1] = start_index + i-1;
+			indices[#indices+1] = start_index + i;
 		end
 	end
 	return vertices,indices,normals,colors;
 end
+
+local pos = {};
 function CSGService.applyMatrix(csg_node,matrix)
 	if(not matrix or not csg_node)then return end
 	for __,polygon in ipairs(csg_node.polygons) do
 		for __,vertex in ipairs(polygon.vertices) do
-			local pos = {vertex.pos.x,vertex.pos.y,vertex.pos.z};
-			pos = math3d.VectorMultiplyMatrix(nil, pos, matrix);
+			pos[1], pos[2], pos[3] = vertex.pos.x,vertex.pos.y,vertex.pos.z;
+			math3d.VectorMultiplyMatrix(pos, pos, matrix);
 			vertex.pos.x = pos[1];
 			vertex.pos.y = pos[2];
 			vertex.pos.z = pos[3];

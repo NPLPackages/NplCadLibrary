@@ -58,6 +58,9 @@ local SPANNING = 3;
 -- `coplanarFront` or `coplanarBack` depending on their orientation with
 -- respect to this plane. Polygons in front or in back of this plane go into
 -- either `front` or `back`.
+-- @param front: inout parameter.  if nil, it will be created and returned.
+-- @param back: inout parameter.  if nil, it will be created and returned.
+-- @return front, back
 function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back)
     --Classify each point as well as the entire polygon into one of the above four classes.
     local polygonType = 0;
@@ -83,8 +86,10 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 			coplanarBack[#coplanarBack+1] = polygon;
 		end
 	elseif(polygonType == FRONT)then
+		front = front or {};
 		front[#front+1] = polygon;
 	elseif(polygonType == BACK)then
+		back = back or {};
 		back[#back+1] = polygon;
 	elseif(polygonType == SPANNING)then
 		local backCount, frontCount = 0, 0;
@@ -120,10 +125,13 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 			end
 		end
 		if(frontCount >= 3)then
+			front = front or {};
 			front[#front+1] = CSGPolygon:new():init(f,polygon.shared);
 		end
 		if(backCount >= 3)then
+			back = back or {};
 			back[#back+1] = CSGPolygon:new():init(b,polygon.shared);
 		end
 	end
+	return front, back;
 end
