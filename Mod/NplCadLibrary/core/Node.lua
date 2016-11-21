@@ -256,8 +256,21 @@ end
 function Node:getDrawable()
 	return self.drawable;
 end
--- Set the drawable object to be attached to this node.
 
+-- for storing temporary csg_node parameter during scene traversal.
+function Node:pushActionParam(param)
+	self.action_params_ = self.action_params_ or {};
+	table.insert(self.action_params_, param);
+end
+
+-- return all action params as array or nil, and clear them all.
+function Node:popAllActionParams()
+	local params = self.action_params_;
+	self.action_params_ = nil;
+	return params;
+end
+
+-- Set the drawable object to be attached to this node.
 -- @param drawable The new drawable component. Maybe nil
 function Node:setDrawable(drawable)
 	if(self.drawable ~= drawable)then

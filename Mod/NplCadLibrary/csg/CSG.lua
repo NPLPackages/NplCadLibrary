@@ -74,6 +74,10 @@ function CSG:GetPolygons()
 	return self.polygons;
 end
 
+function CSG:GetPolygonCount()
+	return self.polygons and #(self.polygons) or 0;
+end
+
 -- Return a new CSG solid representing space in either this solid or in the
 -- solid `csg`. Neither this solid nor the solid `csg` are modified.
 -- 

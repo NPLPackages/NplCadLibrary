@@ -102,19 +102,26 @@ function CSGService.operateTwoNodes(pre_csg_node,cur_csg_node,csg_action)
 	end
 	return cur_csg_node,bResult;
 end
+
+-- find tag value in all of its parent recursively
+-- @return tagValue, sceneNode: if no tagValue is found, the sceneNode is the rootNode.
 function CSGService.findTagValue(node,name)
 	if(not node)then
 		return
 	end
 	local p = node;
+	local lastNode;
 	while(p) do
 		local v = p:getTag(name);
 		if(v)then
 			return v,p;
 		end
+		lastNode = p;
 		p = p:getParent();
 	end
+	return nil, lastNode;
 end
+
 function CSGService.equalsColor(color_1,color_2)
 	if(color_1 and color_2)then
 		return (color_1[1] == color_2[1] and color_1[2] == color_2[2] and color_1[3] == color_2[3]);
@@ -172,37 +179,49 @@ function CSGService.appendLoadXmlFunction(code)
 	end
 end
 
--- this is the main render function, which traverse the scene and compute csg polygons. 
 function CSGService.getRenderList(scene)
 	if(not scene)then
 		return
 	end
-	local render_list = {};
-	local nodes_map = {};
-	local nodes_list = {};
-	scene:visit(function(node)
-		if(node)then
-			local csg_node = CSGService.cloneCsgNode(node);
-			
-			nodes_map[node] = {
-				csg_node = csg_node,
-			};
-			table.insert(nodes_list,node);
+	local fromTime = ParaGlobal.timeGetTime();
+	LOG.std(nil, "info", "CSG", "\n------------------------------\nbegin render scene\n");
+
+	local function BeforeChildVisit_(node)
+		local csg_node = CSGService.getTransformedCSGNode(node);
+		if(csg_node)then
+			local actionName, actionNode = CSGService.findTagValue(node,"csg_action");
+			actionNode:pushActionParam(csg_node);
+			LOG.std(nil, "info", "CSG", "begin csg_node with %d polygons", csg_node:GetPolygonCount());
+		else
+			LOG.std(nil, "info", "CSG", "begin node with (%s) tag", node:getTag("csg_action") or "empty");
 		end
-	end);
-	local input_params = {
-		nodes_map = nodes_map,
-		result = {};
-	};
-	local len = #nodes_list;
-	while(len > 0) do
-		CSGService.visitNode(nodes_list[len],input_params)
-		len = len - 1;
 	end
 
-	local function write(csg_node)
-		if(csg_node)then
-			local vertices,indices,normals,colors = CSGService.toMesh(csg_node);
+	local function AfterChildVisit_(node)
+		local action_params = node:popAllActionParams();
+		if(action_params) then
+			local actionName = node:getTag("csg_action");
+			local fromTime = ParaGlobal.timeGetTime();
+			local result_csg_node = CSGService.doCSGNodeAction(actionName, action_params);
+			LOG.std(nil, "info", "CSG", "csg_node action (%s: with %d nodes) finished in %.3f seconds with %d polygons", 
+				actionName or "none", action_params and #action_params or 0, 
+				(ParaGlobal.timeGetTime()-fromTime)/1000, result_csg_node and result_csg_node:GetPolygonCount() or 0);
+			local actionName, actionNode = CSGService.findTagValue(node:getParent() or scene,"csg_action");
+			if(actionNode ~= node) then
+				actionNode:pushActionParam(result_csg_node);
+			end
+		end
+	end
+
+	scene:visit(BeforeChildVisit_, AfterChildVisit_);
+
+	-- convert all resulting csg_nodes to meshes
+	local render_list = {};
+
+	local result = scene:popAllActionParams();
+	if(result) then
+		for i = 1, #result do
+			local vertices,indices,normals,colors = CSGService.toMesh(result[i]);
 			table.insert(render_list,{
 				vertices = vertices,
 				indices = indices,
@@ -211,30 +230,28 @@ function CSGService.getRenderList(scene)
 			});
 		end
 	end
-	for k,v in pairs(nodes_map) do
-		local csg_node = v["csg_node"];
-		write(csg_node);
-	end
-	local result = input_params.result;
-	local len = #result;
-	for k =1,len do
-		local csg_node = result[k]["csg_node"];
-		write(csg_node);
-	end
+	LOG.std(nil, "info", "CSG", "\n\nfinished render scene in .3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
 	return render_list;
 end
 
-function CSGService.doOperator(csg_nodes,csg_action)
+-- @param csg_action: name of the operation. 
+-- @param csg_nodes: array of csg node operands
+-- @return csgNode, bSucceed:  csgNode is the result.
+function CSGService.doCSGNodeAction(csg_action, csg_nodes)
 	local len = #csg_nodes;
 	if(len == 0)then
 		return;
 	end
 	local first_node = csg_nodes[1];
-	local result_node = first_node.csg_node;
+	local result_node = first_node;
+	local bSucceed = true;
 	for i=2, len do
-		result_node = CSGService.operateTwoNodes(result_node, csg_nodes[i].csg_node, csg_action);
+		result_node, bSucceed = CSGService.operateTwoNodes(result_node, csg_nodes[i], csg_action);
+		if(not bSucceed) then
+			break;
+		end
 	end
-	return result_node;
+	return result_node, bSucceed;
 end
 
 function CSGService.findCsgNode(node)
@@ -271,20 +288,23 @@ function CSGService.visitNode(node,input_params)
 		nodes_map[child]["csg_node"] = nil;
 		child = child:getNextSibling();
 	end	
-	local csg_node = CSGService.doOperator(temp_list,top_csg_action);
+	local csg_node = CSGService.doCSGOperation(top_csg_action, temp_list);
 	nodes_map[node]["csg_node"] = csg_node;
 end
-function CSGService.cloneCsgNode(child)
-	local csg_node = CSGService.findCsgNode(child);
+
+-- @param node: a scene node
+-- @return csg_node, if scene node is a csg node and world transformation is applied to it. 
+function CSGService.getTransformedCSGNode(node)
+	local csg_node = CSGService.findCsgNode(node);
 	if(csg_node)then
 		csg_node = csg_node:clone();-- clone a new node for operation. 
-		local color = CSGService.findTagValue(child,"color");
+		local color = CSGService.findTagValue(node,"color");
 		if(color)then
 			if(not CSGService.equalsColor(color,CSGService.default_color))then
 				CSGService.setColor(csg_node,color);
 			end
 		end
-		local world_matrix = child:getWorldMatrix();
+		local world_matrix = node:getWorldMatrix();
 		CSGService.applyMatrix(csg_node,world_matrix);
 		return csg_node;
 	end

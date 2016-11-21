@@ -22,29 +22,33 @@ function Scene:getTypeName()
 end
 
 -- depth first traversal 
--- @param visitMethod: callback function to be called for each node. 
-function Scene:visit(visitMethod)
+-- @param preVisitMethod: callback function to be called for each node before child callback invocations. can be nil.
+-- @param postVisitMethod: callback function to be called for each node after child callback invocations. can be nil. 
+function Scene:visit(preVisitMethod, postVisitMethod)
 	local node = self:getFirstChild();
 	while(node) do
-		self:visitNode(node,visitMethod);
+		self:visitNode(node,preVisitMethod, postVisitMethod);
 		node = node:getNextSibling();
 	end
 end
 
 -- private: 
 -- depth first traversal, visiting a single node. 
--- @param visitMethod: callback function to be called for each node. 
--- @param 
-function Scene:visitNode(node,visitMethod)
+-- @param preVisitMethod: callback function to be called for each node before child callback invocations. can be nil. 
+-- @param postVisitMethod: callback function to be called for each node after child callback invocations. can be nil. 
+function Scene:visitNode(node,preVisitMethod, postVisitMethod)
 	if(not node)then
 		return;
 	end
-	if(visitMethod)then
-		visitMethod(node);
+	if(preVisitMethod)then
+		preVisitMethod(node);
 	end
 	local child = node:getFirstChild();
 	while(child) do
-		self:visitNode(child,visitMethod);
+		self:visitNode(child,preVisitMethod, postVisitMethod);
 		child = child:getNextSibling();
+	end
+	if(postVisitMethod)then
+		postVisitMethod(node);
 	end
 end
