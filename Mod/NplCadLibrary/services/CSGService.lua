@@ -230,7 +230,7 @@ function CSGService.getRenderList(scene)
 			});
 		end
 	end
-	LOG.std(nil, "info", "CSG", "\n\nfinished render scene in .3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
+	LOG.std(nil, "info", "CSG", "\n\nfinished render scene in %.3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
 	return render_list;
 end
 
