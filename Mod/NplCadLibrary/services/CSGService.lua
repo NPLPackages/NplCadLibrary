@@ -46,11 +46,9 @@ function CSGService.toMesh(csg_node)
 		local start_index = #vertices+1;
 		local normal = polygon:GetPlane().normal;
 		for __,vertex in ipairs(polygon.vertices) do
-			vertices[#vertices+1] = {vertex.pos[1],vertex.pos[2],vertex.pos[3]};
-			normals[#normals+1] = {normal[1],normal[2],normal[3]} 
-			local shared = polygon.shared or {};
-			local color = shared.color or white;
-			colors[#colors+1] = color;
+			vertices[#vertices+1] = vertex.pos;
+			normals[#normals+1] = normal;
+			colors[#colors+1] = polygon.shared and polygon.shared.color or white;
 		end
 		local size = #(polygon.vertices) - 1;
 		for i = 2,size do
@@ -62,23 +60,13 @@ function CSGService.toMesh(csg_node)
 	return vertices,indices,normals,colors;
 end
 
-local pos = {};
 function CSGService.applyMatrix(csg_node,matrix)
 	if(not matrix or not csg_node)then return end
 
 	for __,polygon in ipairs(csg_node.polygons) do
 		for __,vertex in ipairs(polygon.vertices) do
-			pos[1], pos[2], pos[3] = vertex.pos[1],vertex.pos[2],vertex.pos[3];
-			math3d.VectorMultiplyMatrix(pos, pos, matrix);
-			vertex.pos[1] = pos[1];
-			vertex.pos[2] = pos[2];
-			vertex.pos[3] = pos[3];
-
-			--local normal = {vertex.normal[1],vertex.normal[2],vertex.normal[3]};
-			--normal = math3d.VectorMultiplyMatrix(nil, normal, matrix);
-			--vertex.normal[1] = normal[1];
-			--vertex.normal[2] = normal[2];
-			--vertex.normal[3] = normal[3];
+			math3d.VectorMultiplyMatrix(vertex.pos, vertex.pos, matrix);
+			-- math3d.VectorMultiplyMatrix(vertex.normal, vertex.normal, matrix);
 		end
 		polygon.plane = nil;
 	end
@@ -123,10 +111,9 @@ function CSGService.findTagValue(node,name)
 end
 
 function CSGService.equalsColor(color_1,color_2)
-	if(color_1 and color_2)then
-		return (color_1[1] == color_2[1] and color_1[2] == color_2[2] and color_1[3] == color_2[3]);
-	end
+	return color_1 and color_2 and (color_1[1] == color_2[1] and color_1[2] == color_2[2] and color_1[3] == color_2[3]);
 end
+
 --[[
 	return {
 		successful = successful,

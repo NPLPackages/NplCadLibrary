@@ -130,7 +130,7 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 				end
 			end
 			if(bor(ti, tj) == SPANNING)then
-				local t = (self.w - self.normal:dot(vi.pos)) / self.normal:dot(vj.pos:minus(vi.pos));
+				local t = (self.w - self.normal:dot(vi.pos)) / self.normal:dot(vj.pos:clone_from_pool():minusInplace(vi.pos));
 				local v = vi:interpolate(vj, t);
 				frontCount = frontCount + 1;
 				f[frontCount] = v;
