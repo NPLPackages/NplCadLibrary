@@ -46,8 +46,8 @@ function CSGService.toMesh(csg_node)
 		local start_index = #vertices+1;
 		local normal = polygon:GetPlane().normal;
 		for __,vertex in ipairs(polygon.vertices) do
-			vertices[#vertices+1] = {vertex.pos.x,vertex.pos.y,vertex.pos.z};
-			normals[#normals+1] = {normal.x,normal.y,normal.z} 
+			vertices[#vertices+1] = {vertex.pos[1],vertex.pos[2],vertex.pos[3]};
+			normals[#normals+1] = {normal[1],normal[2],normal[3]} 
 			local shared = polygon.shared or {};
 			local color = shared.color or white;
 			colors[#colors+1] = color;
@@ -68,17 +68,17 @@ function CSGService.applyMatrix(csg_node,matrix)
 
 	for __,polygon in ipairs(csg_node.polygons) do
 		for __,vertex in ipairs(polygon.vertices) do
-			pos[1], pos[2], pos[3] = vertex.pos.x,vertex.pos.y,vertex.pos.z;
+			pos[1], pos[2], pos[3] = vertex.pos[1],vertex.pos[2],vertex.pos[3];
 			math3d.VectorMultiplyMatrix(pos, pos, matrix);
-			vertex.pos.x = pos[1];
-			vertex.pos.y = pos[2];
-			vertex.pos.z = pos[3];
+			vertex.pos[1] = pos[1];
+			vertex.pos[2] = pos[2];
+			vertex.pos[3] = pos[3];
 
-			--local normal = {vertex.normal.x,vertex.normal.y,vertex.normal.z};
+			--local normal = {vertex.normal[1],vertex.normal[2],vertex.normal[3]};
 			--normal = math3d.VectorMultiplyMatrix(nil, normal, matrix);
-			--vertex.normal.x = normal[1];
-			--vertex.normal.y = normal[2];
-			--vertex.normal.z = normal[3];
+			--vertex.normal[1] = normal[1];
+			--vertex.normal[2] = normal[2];
+			--vertex.normal[3] = normal[3];
 		end
 		polygon.plane = nil;
 	end

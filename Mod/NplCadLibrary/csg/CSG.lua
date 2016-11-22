@@ -194,8 +194,8 @@ function CSG.toMesh(csg,r,g,b)
 	for __,polygon in ipairs(csg.polygons) do
 		local start_index = #vertices+1;
 		for __,vertex in ipairs(polygon.vertices) do
-			table.insert(vertices,{vertex.pos.x,vertex.pos.y,vertex.pos.z});
-			table.insert(normals,{vertex.normal.x,vertex.normal.y,vertex.normal.z});
+			table.insert(vertices,{vertex.pos[1],vertex.pos[2],vertex.pos[3]});
+			table.insert(normals,{vertex.normal[1],vertex.normal[2],vertex.normal[3]});
 			table.insert(colors,{r,g,b});
 		end
 		local size = #(polygon.vertices) - 1;

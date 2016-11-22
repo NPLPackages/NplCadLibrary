@@ -72,26 +72,26 @@ local default_pool = VectorPool:new();
 -- CSG Vector
 ------------------------------------------
 function CSGVector:ctor()
-	self.x = 0;
-	self.y = 0;
-	self.z = 0;
+	self[1] = 0;
+	self[2] = 0;
+	self[3] = 0;
 end
 
 function CSGVector:init(x,y,z)
 	if y == nil then
 		if(type(x) == "table")then
-        self.x = x[1];
-        self.y = x[2];
-        self.z = x[3];       
+        self[1] = x[1];
+        self[2] = x[2];
+        self[3] = x[3];       
 		elseif(type(x) == "number")then
-			self.x = x;
-			self.y = x;
-			self.z = x;
+			self[1] = x;
+			self[2] = x;
+			self[3] = x;
 		end
     else
-        self.x = x;
-        self.y = y;
-        self.z = z;
+        self[1] = x;
+        self[2] = y;
+        self[3] = z;
     end
 	return self;
 end
@@ -99,7 +99,7 @@ end
 CSGVector.set = CSGVector.init;
 
 function CSGVector:clone()
-	return CSGVector:new():init(self.x,self.y,self.z);
+	return CSGVector:new():init(self[1],self[2],self[3]);
 end
 
 function CSGVector:new_from_pool(x,y,z)
@@ -107,49 +107,49 @@ function CSGVector:new_from_pool(x,y,z)
 end
 
 function CSGVector:clone_from_pool()
-	return default_pool:GetVector(self.x,self.y,self.z);
+	return default_pool:GetVector(self[1],self[2],self[3]);
 end
 
 function CSGVector:negated()
-	return CSGVector:new():init(-self.x,-self.y,-self.z);
+	return CSGVector:new():init(-self[1],-self[2],-self[3]);
 end
 function CSGVector:negatedInplace()
-	self.x, self.y, self.z = -self.x,-self.y,-self.z;
+	self[1], self[2], self[3] = -self[1],-self[2],-self[3];
 	return self;
 end
 function CSGVector:plus(a)
-	return CSGVector:new():init(self.x + a.x,self.y + a.y,self.z + a.z);
+	return CSGVector:new():init(self[1] + a[1],self[2] + a[2],self[3] + a[3]);
 end
 function CSGVector:plusInplace(a)
-	self.x, self.y, self.z = self.x + a.x,self.y + a.y,self.z + a.z;
+	self[1], self[2], self[3] = self[1] + a[1],self[2] + a[2],self[3] + a[3];
 	return self;
 end
 function CSGVector:minus(a)
-	return CSGVector:new():init(self.x - a.x,self.y - a.y,self.z - a.z);
+	return CSGVector:new():init(self[1] - a[1],self[2] - a[2],self[3] - a[3]);
 end
 function CSGVector:minusInplace(a)
-	self.x, self.y, self.z = self.x - a.x,self.y - a.y,self.z - a.z;
+	self[1], self[2], self[3] = self[1] - a[1],self[2] - a[2],self[3] - a[3];
 	return self;
 end
 function CSGVector:times(a)
-	return CSGVector:new():init(self.x * a,self.y * a,self.z * a);
+	return CSGVector:new():init(self[1] * a,self[2] * a,self[3] * a);
 end
 function CSGVector:timesInplace(a)
-	self.x, self.y, self.z = self.x * a,self.y * a,self.z * a;
+	self[1], self[2], self[3] = self[1] * a,self[2] * a,self[3] * a;
 	return self;
 end
 
 function CSGVector:dividedBy(a)
-	return CSGVector:new():init(self.x / a,self.y / a,self.z / a);
+	return CSGVector:new():init(self[1] / a,self[2] / a,self[3] / a);
 end
 
 function CSGVector:dividedByInplace(a)
-	self.x, self.y, self.z = self.x / a,self.y / a,self.z / a;
+	self[1], self[2], self[3] = self[1] / a,self[2] / a,self[3] / a;
 	return self;
 end
 
 function CSGVector:dot(a)
-	return self.x * a.x + self.y * a.y + self.z * a.z;
+	return self[1] * a[1] + self[2] * a[2] + self[3] * a[3];
 end
 function CSGVector:lerp(a,t)
 	return a:minus(self):timesInplace(t):plusInplace(self);
@@ -166,25 +166,25 @@ end
 
 function CSGVector:cross(a)
 	return CSGVector:new():init( 
-		self.y * a.z - self.z * a.y,
-		self.z * a.x - self.x * a.z,
-		self.x * a.y - self.y * a.x);
+		self[2] * a[3] - self[3] * a[2],
+		self[3] * a[1] - self[1] * a[3],
+		self[1] * a[2] - self[2] * a[1]);
 end
 
 function CSGVector:crossInplace(a)
-	self.x, self.y, self.z = 
-			self.y * a.z - self.z * a.y,
-			self.z * a.x - self.x * a.z,
-			self.x * a.y - self.y * a.x;
+	self[1], self[2], self[3] = 
+			self[2] * a[3] - self[3] * a[2],
+			self[3] * a[1] - self[1] * a[3],
+			self[1] * a[2] - self[2] * a[1];
 	return self;
 end
 
 function CSGVector:abs()
-	return CSGVector:new():init(math_abs(self.x),math_abs(self.y),math_abs(self.z));
+	return CSGVector:new():init(math_abs(self[1]),math_abs(self[2]),math_abs(self[3]));
 end
 
 function CSGVector:absInplace()
-	self.x, self.y, self.z = math_abs(self.x),math_abs(self.y),math_abs(self.z);
+	self[1], self[2], self[3] = math_abs(self[1]),math_abs(self[2]),math_abs(self[3]);
 	return self;
 end
 

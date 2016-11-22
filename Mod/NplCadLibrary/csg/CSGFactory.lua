@@ -8,7 +8,6 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 -------------------------------------------------------
 ]]
-NPL.load("(gl)script/ide/math/vector.lua");
 NPL.load("(gl)script/ide/math/bit.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
@@ -17,7 +16,6 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGBSPNode.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
 
-local vector3d = commonlib.gettable("mathlib.vector3d");
 local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
@@ -85,9 +83,9 @@ function CSGFactory.cube(options)
 		local normal = CSGVector:new():init(info[2]);
 		local vertices = {};
 		for kk,vv in ipairs(info[1]) do
-			local x = c.x + r.x * (2 * (tmp(vv, 1)) - 1);
-			local y = c.y + r.y * (2 * (tmp(vv, 2)) - 1);
-			local z = c.z + r.z * (2 * (tmp(vv, 4)) - 1);
+			local x = c[1] + r[1] * (2 * (tmp(vv, 1)) - 1);
+			local y = c[2] + r[2] * (2 * (tmp(vv, 2)) - 1);
+			local z = c[3] + r[3] * (2 * (tmp(vv, 4)) - 1);
 
 			local pos = CSGVector:new():init(x,y,z);
 			local vertex = CSGVertex:new():init(pos,normal);
@@ -278,7 +276,7 @@ function CSGFactory.cylinder(options)
     local ray = e:minus(s);
 
 	local axisZ = ray:unit()
-	local isY = (math.abs(axisZ.y) > 0.5);
+	local isY = (math.abs(axisZ[2]) > 0.5);
 	local isY_v1;
 	local isY_v2;
 	if(isY)then
@@ -372,28 +370,28 @@ function CSGFactory.roundedCube(options)
 		end
         local roundradius = CSGFactory.parseOptionAs3DVector(options, "roundradius", {0.2, 0.2, 0.2});
         -- slight hack for now - total radius stays ok
-        roundradius = CSGVector:new():init(math_max(roundradius.x, minRR), math_max(roundradius.y, minRR), math_max(roundradius.z, minRR));
+        roundradius = CSGVector:new():init(math_max(roundradius[1], minRR), math_max(roundradius[2], minRR), math_max(roundradius[3], minRR));
         local innerradius = cuberadius:minus(roundradius);
-        if (innerradius.x < 0 or innerradius.y < 0 or innerradius.z < 0)then
+        if (innerradius[1] < 0 or innerradius[2] < 0 or innerradius[3] < 0)then
 			LOG.std(nil, "error", "CSGFactory.roundedCube", "roundradius <= radius!");
 			return
         end
         local res = CSGFactory.sphere({radius = 1, resolution = resolution});
         --res = res:scale(roundradius);
-        --innerradius.x > EPS && (res = res.stretchAtPlane([1, 0, 0], [0, 0, 0], 2*innerradius.x));
-        --innerradius.y > EPS && (res = res.stretchAtPlane([0, 1, 0], [0, 0, 0], 2*innerradius.y));
-        --innerradius.z > EPS && (res = res.stretchAtPlane([0, 0, 1], [0, 0, 0], 2*innerradius.z));
-        --res = res.translate([-innerradius.x+center.x, -innerradius.y+center.y, -innerradius.z+center.z]);
+        --innerradius[1] > EPS && (res = res.stretchAtPlane([1, 0, 0], [0, 0, 0], 2*innerradius[1]));
+        --innerradius[2] > EPS && (res = res.stretchAtPlane([0, 1, 0], [0, 0, 0], 2*innerradius[2]));
+        --innerradius[3] > EPS && (res = res.stretchAtPlane([0, 0, 1], [0, 0, 0], 2*innerradius[3]));
+        --res = res.translate([-innerradius[1]+center[1], -innerradius[2]+center[2], -innerradius[3]+center[3]]);
         --res = res.reTesselated();
         --res.properties.roundedCube = new CSG.Properties();
         --res.properties.roundedCube.center = new CSG.Vertex(center);
         --res.properties.roundedCube.facecenters = [
-            --new CSG.Connector(new CSG.Vector3D([cuberadius.x, 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([-cuberadius.x, 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([0, cuberadius.y, 0]).plus(center), [0, 1, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([0, -cuberadius.y, 0]).plus(center), [0, -1, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([0, 0, cuberadius.z]).plus(center), [0, 0, 1], [1, 0, 0]),
-            --new CSG.Connector(new CSG.Vector3D([0, 0, -cuberadius.z]).plus(center), [0, 0, -1], [1, 0, 0])
+            --new CSG.Connector(new CSG.Vector3D([cuberadius[1], 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]),
+            --new CSG.Connector(new CSG.Vector3D([-cuberadius[1], 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]),
+            --new CSG.Connector(new CSG.Vector3D([0, cuberadius[2], 0]).plus(center), [0, 1, 0], [0, 0, 1]),
+            --new CSG.Connector(new CSG.Vector3D([0, -cuberadius[2], 0]).plus(center), [0, -1, 0], [0, 0, 1]),
+            --new CSG.Connector(new CSG.Vector3D([0, 0, cuberadius[3]]).plus(center), [0, 0, 1], [1, 0, 0]),
+            --new CSG.Connector(new CSG.Vector3D([0, 0, -cuberadius[3]]).plus(center), [0, 0, -1], [1, 0, 0])
         --];
         return res;
 
