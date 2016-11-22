@@ -51,6 +51,10 @@ local function is_array(input)
 	end
 end
 
+-- number pi are exposed
+NplCadEnvironment.PI = 3.1415926;
+NplCadEnvironment.pi = NplCadEnvironment.PI;
+
 function NplCadEnvironment:new()
 	local o = {
 		scene =  Scene.create("nplcad_scene");
