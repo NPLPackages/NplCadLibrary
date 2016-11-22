@@ -119,6 +119,7 @@ end
 		successful = successful,
 		csg_node_values = csg_node_values,
 		compile_error = compile_error,
+		log = string, 
 	}
 --]]
 function CSGService.buildPageContent(code)
@@ -129,6 +130,9 @@ function CSGService.buildPageContent(code)
 	local output = {}
 	local code_func, errormsg = loadstring(code);
 	if(code_func) then
+		local fromTime = ParaGlobal.timeGetTime();
+		LOG.std(nil, "info", "CSG", "\n------------------------------\nbegin render scene\n");
+
 		local env = NplCadEnvironment:new();
 		setfenv(code_func, env);
 		local ok, result = pcall(code_func);
@@ -139,13 +143,23 @@ function CSGService.buildPageContent(code)
 			end
 		end
 		CSGService.scene = env.scene;
+		env.scene:log("finished compile scene in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
+		LOG.std(nil, "info", "CSG", "\nfinished compile scene in %.3f seconds\n", (ParaGlobal.timeGetTime()-fromTime)/1000);
+		
 		local render_list = CSGService.getRenderList(env.scene)
+
+		env.scene:log("finished render scene in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
+		LOG.std(nil, "info", "CSG", "\n\nfinished render scene in %.3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
+
 		output.successful = ok;
 		output.csg_node_values = render_list;
 		output.compile_error = result;
+		output.log = table.concat(env.scene:GetAllLogs() or {}, "\n");
+
 	else
 		output.successful = false;
 		output.compile_error =  errormsg;
+		output.log = errormsg;
 	end
 	return output;
 end
@@ -170,9 +184,7 @@ function CSGService.getRenderList(scene)
 	if(not scene)then
 		return
 	end
-	local fromTime = ParaGlobal.timeGetTime();
-	LOG.std(nil, "info", "CSG", "\n------------------------------\nbegin render scene\n");
-
+	
 	local function BeforeChildVisit_(node)
 		local csg_node = CSGService.getTransformedCSGNode(node);
 		if(csg_node)then
@@ -217,7 +229,7 @@ function CSGService.getRenderList(scene)
 			});
 		end
 	end
-	LOG.std(nil, "info", "CSG", "\n\nfinished render scene in %.3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
+	
 	return render_list;
 end
 

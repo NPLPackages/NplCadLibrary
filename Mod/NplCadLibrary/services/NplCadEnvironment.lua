@@ -117,6 +117,16 @@ function NplCadEnvironment.current()
 	local node = self:getNode__();
 	return node;
 end
+
+function NplCadEnvironment.log(...)
+	local self = getfenv(2);
+	self:log__(...);
+end
+
+function NplCadEnvironment:log__(...)
+	self.scene:log(...);
+end
+
 function NplCadEnvironment.union()
 	local self = getfenv(2);
 	self:union__();
