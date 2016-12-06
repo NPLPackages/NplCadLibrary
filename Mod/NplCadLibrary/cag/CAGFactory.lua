@@ -1,0 +1,153 @@
+--[[
+Title: CSGFactory
+Author(s): Skeleton
+Date: 2016/11/27
+Desc: This is a factory to create CAG object.
+-------------------------------------------------------
+NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
+local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
+-------------------------------------------------------
+]]
+
+
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
+
+local math_pi = 3.1415926;
+local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
+local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
+local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
+
+--[[ 
+Construct a circle
+options:
+    center: a 2D center point
+    radius: a scalar
+    resolution: number of sides per 360 degree rotation
+returns a CAG object
+--]]
+function CAGFactory.circle(options)
+    options = options or {};
+    local center = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
+    local radius = CSGFactory.parseOptionAsFloat(options, "radius", 1);
+    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSG.defaultResolution2D);
+    local sides = {};
+    local prevvertex;
+
+	local i;
+	for i=0,resolution do
+        local radians = 2 * math.pi * i / resolution;
+		local point = CSGVector2D.fromAngleRadians(radians).times(radius).plus(center);
+		local vertex = CAGVertex:new():init(point);
+        if (i > 0) then
+			local side = CAGSide:new():init(prevvertex, vertex);
+			table.insert(side);
+		end
+		prevvertex = vertex;	
+	end
+    return CAG.fromSides(sides);
+end
+
+--[[ Construct an ellispe
+options:
+    center: a 2D center point
+    radius: a 2D vector with width and height
+    resolution: number of sides per 360 degree rotation
+returns a CAG object
+--]]
+function CAGFactory.ellipse(options)
+    options = options or {};
+    local c = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
+    local r = CSGFactory.parseOptionAs2DVector(options, "radius", {1, 1});
+    r = r.abs(); --  negative radii make no sense
+    local res = CSGFactory.parseOptionAsInt(options, "resolution", CSG.defaultResolution2D);
+
+    local e2 = CSGPath2D:new():init({{c.x,c.y + r.y}});
+    e2 = e2.appendArc({c.x,c.y - r.y}, {
+        xradius = r.x,
+        yradius =  r.y,
+        xaxisrotation =  0,
+        resolution =  res,
+        clockwise =  true,
+        large =  false,
+    });
+    e2 = e2.appendArc({c.x,c.y + r.y}, {
+        xradius =  r.x,
+        yradius =  r.y,
+        xaxisrotation =  0,
+        resolution =  res,
+        clockwise =  true,
+        large =  false,
+    });
+    e2 = e2.close();
+    return e2.innerToCAG();
+end 
+--[[ Construct a rectangle
+options:
+    center: a 2D center point
+    radius: a 2D vector with width and height
+    returns a CAG object
+--]]
+function CAGFactory.rectangle(options)
+    options = options or {};
+    local c, r;
+    if ((options.corner1) or (options.corner2)) then
+        if ((options.center) or (options.radius)) then
+			LOG.std(nil, "error", "CAGFactory.rectangle", "should either give a radius and center parameter, or a corner1 and corner2 parameter");
+			return nil;
+        end
+        corner1 = CSGFactory.parseOptionAs2DVector(options, "corner1", {0, 0});
+        corner2 = CSGFactory.parseOptionAs2DVector(options, "corner2", {1, 1});
+        c = corner1.plus(corner2).times(0.5);
+        r = corner2.minus(corner1).times(0.5);
+	else
+        c = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
+        r = CSGFactory.parseOptionAs2DVector(options, "radius", {1, 1});
+    end
+    r = r.abs(); -- negative radii make no sense
+    local rswap = CSGVector2D:new():init(r.x, -r.y);
+    local points = {
+        c.plus(r), c.plus(rswap), c.minus(r), c.minus(rswap)
+    };
+    return CAG.fromPoints(points);
+end
+
+--     local r = CSG.roundedRectangle({
+--       center: [0, 0],
+--       radius: [2, 1],
+--       roundradius: 0.2,
+--       resolution: 8,
+--     });
+function CAGFactory.roundedRectangle(options)
+    options = options or {};
+    local center, radius;
+    if ((options.corner1) or (options.corner2)) then
+        if ((options.center) or (options.radius)) then
+			LOG.std(nil, "error", "CAGFactory.roundedRectangle", "should either give a radius and center parameter, or a corner1 and corner2 parameter");
+			return nil;
+        end
+        corner1 = CSGFactory.parseOptionAs2DVector(options, "corner1", {0, 0});
+        corner2 = CSGFactory.parseOptionAs2DVector(options, "corner2", {1, 1});
+        center = corner1.plus(corner2).times(0.5);
+        radius = corner2.minus(corner1).times(0.5);
+	else
+        center = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
+        radius = CSGFactory.parseOptionAs2DVector(options, "radius", {1, 1});
+    end
+    radius = radius.abs(); -- negative radii make no sense
+    local roundradius = CSGFactory.parseOptionAsFloat(options, "roundradius", 0.2);
+    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSG.defaultResolution2D);
+    local maxroundradius = math.min(radius.x, radius.y);
+    maxroundradius = maxroundradius - 0.1;
+    roundradius = math.min(roundradius, maxroundradius);
+    roundradius = math.max(0, roundradius);
+    radius = CSGVector2D:new():init(radius.x - roundradius, radius.y - roundradius);
+    local rect = CAGFactory.rectangle({
+        center = center,
+        radius = radius
+    });
+    if (roundradius > 0) then
+        rect = rect.expand(roundradius, resolution);
+    end
+    return rect;
+end

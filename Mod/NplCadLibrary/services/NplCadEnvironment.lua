@@ -588,3 +588,187 @@ function NplCadEnvironment:loadXml__(str)
 		parent:addChild(node);
 	end
 end
+
+--[[
+		circle
+--]]
+function NplCadEnvironment.circle(options,...)
+	local self = getfenv(2);
+	return self:circle__(options);
+end
+
+function NplCadEnvironment.read_circle(p,...)
+	local node = Node.create("");
+	local r = 1;
+	local fn = 32;
+	local a = {...};
+	local off = {0,0,0};
+
+	--x
+	if(not is_table(p)) then
+		r = p;
+	end
+	-- {d=x}
+	if(is_table(p) and p.d) then
+		r = p.d/2;
+	end
+	-- {r=x}
+	if(is_table(p) and p.r) then
+		r = p.r; 
+	end
+	--[r,fn]
+	if(is_array(a) and a[1] and is_array(a[1])) then
+		r = a[1]; 
+		if(#a == 2)then
+		fn = a[2];
+		end
+	end
+	-- {fn=x}
+	if(is_table(p) and p.fn) then
+		fn = p.fn;
+	end
+
+	local o;
+	o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,0.0001,0}, radiusStart = r, radiusEnd = r, resolution = fn}),"circle");
+
+	-- {center={}}
+	if(is_table(p) and p.center and is_table(p.center)) then         -- preparing individual x,y,z center
+		if(p.center[1])then
+			off[1] = 0;
+		else
+			off[1] = r;
+		end
+		if(p.center[2])then
+			off[2] = 0;
+		else
+			off[2] = r;
+		end
+	-- {center=true}
+	elseif(is_table(p) and p.center==true) then 
+		off = {0,0,0};
+	-- {center=false}
+	elseif(is_table(p) and p.center==false) then
+		off = {r,0,r};
+	end
+	
+	--if(off[0]||off[1]||off[2]) o = o.translate(off);
+	if(off[1] ~= 0 or off[2] ~= 0 or off[3] ~= 0)then
+		node:translate(off[1],off[2],off[3]);
+	end
+
+	node:setDrawable(o);
+	return node;
+end
+--[[
+	circle();                        -- openscad like
+	circle(1); 
+	circle({d: 2, fn:5});
+	circle({r: 2, fn:5});
+	circle({r: 3, center: true});    -- center: false (default)
+	circle({r: 3, center:  = {true, true}});    -- individual x,z center flags
+]]
+function NplCadEnvironment:circle__(options,...)
+	options = options or {};
+	local parent = self:getNode__();
+	local node = NplCadEnvironment.read_circle(options,...)
+	parent:addChild(node);
+	return node;
+end
+
+--[[
+		square
+--]]
+function NplCadEnvironment.square(options)
+	local self = getfenv(2);
+	return self:square__(options);
+end
+
+function NplCadEnvironment.read_square(p)
+	local node = Node.create("");
+	local s = 1;
+	local v = nil;
+	local off = {0,0,0};
+	local round = false;
+	local r = 0;
+	local fn = 8;
+
+	-- [w,h]
+	if(is_array(p))then
+		v = p;
+	end
+	--{ size: [w.h] }
+	if(is_table(p) and p.size and is_array(p.size))then 
+		v = p.size; 
+	end 
+	--{ size: 1 }
+	if(is_table(p) and p.size and not is_array(p.size))then 
+		s = p.size; 
+	end 
+	-- (2)
+	if(not is_table(p)) then 
+		s = p; 
+	end 
+	if(is_table(p) and p.round == true)then
+		round = true;
+		if(v)then
+			if(is_array(v))then
+				r = (v[1]+v[2])/30;
+			else 
+				r = s / 10;
+			end
+		end
+	end
+	if(is_table(p) and p.radius)then
+		round = true;
+		r = p.radius;
+	end
+	if(is_table(p) and p.fn)then
+		fn = p.fn; --applies in case of round: true
+	end
+
+	local x = s;
+	local z = s; 
+	if(v and is_array(v))then
+		x = v[1];
+		z = v[2]; 
+	end
+   
+	off = {x/2,0,z/2}; -- center: false default
+	local o;
+	if(round)then
+		--NOTE:Unimplemented
+		--o = CSGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedSquare");
+		o = CSGModel:new():init(CSGFactory.cube({radius = {x/2,0.0001,z/2}}),"square");
+	else
+		o = CSGModel:new():init(CSGFactory.cube({radius = {x/2,0.0001,z/2}}),"square");
+	end
+	if(is_table(p) and p.center and is_array(p.center))then
+		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
+		if(p.center[2])then off[2] = 0; else off[2] = z/2;end
+	elseif(is_table(p) and p.center == true)then
+		off = {0,0,0};
+	elseif(is_table(p) and p.center == false)then
+		off = {x/2,0,z/2};
+	end
+	node:setDrawable(o);
+	if(off[1] ~= 0 or off[2] ~= 0 or off[3] ~= 0)then
+		node:translate(off[1],off[2],off[3]);
+	end
+	return node;
+end
+--[[
+square(); // openscad like
+square(1);
+square({size = 1});
+square({size = {1,2}});
+square({size = 1, center = true}); // default center:false
+square({size = 1, center = {true,true}}); // individual axis center true or false
+--]]
+function NplCadEnvironment:square__(options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_square(options);
+	parent:addChild(node);
+	return node;
+end
