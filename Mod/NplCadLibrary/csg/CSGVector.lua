@@ -15,8 +15,11 @@ echo(v1:minus(v2));
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/STL.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
+
 local math_abs = math.abs;
 local CSGVector = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector"));
+local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 
 --------------------
 -- private vector pool
@@ -157,6 +160,9 @@ end
 function CSGVector:length()
 	return math.sqrt(self:dot(self));
 end
+function CSGVector:lengthSquared()
+	return self:dot(self);
+end
 function CSGVector:unit()
 	return self:dividedBy(self:length());
 end
@@ -187,4 +193,57 @@ function CSGVector:absInplace()
 	self[1], self[2], self[3] = math_abs(self[1]),math_abs(self[2]),math_abs(self[3]);
 	return self;
 end
+function CSGVector:getX() 
+    return self[1];
+end
+function CSGVector:getY() 
+    return self[2];
+end
+function CSGVector:getZ() 
+    return self[3];
+end
+-- extend to a 3D vector by adding a y coordinate:
+function CSGVector:toVector2D()
+    return CSGVector2D:new():init(self[1], self[3]);
+end
 
+function CSGVector:equals(a)
+	return (self[1] == a[1]) and (self[2] == a[2]) and (self[3] == a[3]);
+end
+
+function CSGVector:multiply4x4(matrix4x4)
+	return matrix4x4:leftMultiply1x3Vector(self);
+end
+
+function CSGVector:transform(matrix4x4)
+	return matrix4x4:leftMultiply1x3Vector(self);
+end
+
+-- find a vector that is somewhat perpendicular to this one
+function CSGVector:randomNonParallelVector()
+	local abs = self:abs();
+	if ((abs[1] <= abs[2]) and (abs[1] <= abs[3])) then
+		return CSGVector:new():init(1, 0, 0);
+	elseif ((abs[2] <= abs[1]) and (abs[2] <= abs[3])) then
+		return CSGVector:new():init(0, 1, 0);
+	else
+		return CSGVector:new():init(0, 0, 1);
+	end
+end
+
+function CSGVector:min(p)
+	return CSGVector:new():init(
+		math.min(self[1], p[1]), math.min(self[2], p[2]), math.min(self[3], p[3]));
+end
+
+function CSGVector:max(p)
+	return CSGVector:new():init(
+		math.max(self[1], p[1]), math.max(self[2], p[2]), math.max(self[3], p[3]));
+end
+
+function CSGVector:distanceTo(a)
+	return self:minus(a):length();
+end
+function CSGVector:distanceToSquared(a)
+	return self:minus(a):lengthSquared();
+end

@@ -37,16 +37,17 @@ function CSGOrthoNormalBasis:ctor()
 end
 
 function CSGOrthoNormalBasis:init(plane, rightvector)
-    if (arguments.length < 2) then
+    if (rightvector == nil) then
         -- choose an arbitrary right hand vector, making sure it is somewhat orthogonal to the plane normal:
-        rightvector = plane.normal.randomNonParallelVector();
+        rightvector = plane.normal:randomNonParallelVector();
     else
         rightvector = CSGVector:new():init(rightvector);
     end
-    self.v = plane.normal.cross(rightvector).unit();
-    self.u = self.v.cross(plane.normal);
+    self.v = plane.normal:cross(rightvector):unit();
+    self.u = self.v:cross(plane.normal);
     self.plane = plane;
-    self.planeorigin = plane.normal.times(plane.w);
+    self.planeorigin = plane.normal:times(plane.w);
+	return self;
 end
 
 -- Get an orthonormal basis for the standard XYZ planes.
@@ -152,8 +153,8 @@ CSGOrthoNormalBasis.GetCartesian_Test=function()
             local axis2name=axisnames[axis2+3*axis2inverted};
             local axis2vector=axisvectors[axis2+3*axis2inverted};
             local orthobasis=CSGOrthoNormalBasis.GetCartesian(axis1name, axis2name);
-            local test1=orthobasis.to3D(CSGVector2D:new():init([1,0]));
-            local test2=orthobasis.to3D(CSGVector2D:new():init([0,1]));
+            local test1=orthobasis:to3D(CSGVector2D:new():init([1,0]));
+            local test2=orthobasis:to3D(CSGVector2D:new():init([0,1]));
             local expected1=CSGVector:new():init(axis1vector);
             local expected2=CSGVector:new():init(axis2vector);
             local d1=test1.distanceTo(expected1);
@@ -182,7 +183,7 @@ function CSGOrthoNormalBasis:getProjectionMatrix()
 end
 
 function CSGOrthoNormalBasis:getInverseProjectionMatrix()
-    local p = self.plane.normal.times(self.plane.w);
+    local p = self.plane.normal:times(self.plane.w);
     return CSGMatrix4x4:new():init({
         self.u.x, self.u.y, self.u.z, 0,
         self.v.x, self.v.y, self.v.z, 0,
@@ -192,34 +193,34 @@ function CSGOrthoNormalBasis:getInverseProjectionMatrix()
 end
 
 function CSGOrthoNormalBasis:to2D(vec3)
-    return CSGVector2D:new():init(vec3.dot(self.u), vec3.dot(self.v));
+    return CSGVector2D:new():init(vec3:dot(self.u), vec3:dot(self.v));
 end
 
 function CSGOrthoNormalBasis:to3D(vec2)
-    return self.planeorigin.plus(self.u.times(vec2.x)).plus(self.v.times(vec2.y));
+    return self.planeorigin:plus(self.u:times(vec2.x)):plus(self.v:times(vec2.y));
 end
 
 function CSGOrthoNormalBasis:line3Dto2D(line3d)
     local a = line3d.point;
-    local b = line3d.direction.plus(a);
-    local a2d = self.to2D(a);
-    local b2d = self.to2D(b);
+    local b = line3d.direction:plus(a);
+    local a2d = self:to2D(a);
+    local b2d = self:to2D(b);
     return CSGLine2D.fromPoints(a2d, b2d);
 end
 
 function CSGOrthoNormalBasis:line2Dto3D(line2d)
-    local a = line2d.origin();
-    local b = line2d.direction().plus(a);
-    local a3d = self.to3D(a);
-    local b3d = self.to3D(b);
+    local a = line2d:origin();
+    local b = line2d:direction():plus(a);
+    local a3d = self:to3D(a);
+    local b3d = self:to3D(b);
     return CSGLine3D.fromPoints(a3d, b3d);
 end
 
 function CSGOrthoNormalBasis:transform(matrix4x4)
     -- todo: self may not work properly in case of mirroring
-    local newplane = self.plane.transform(matrix4x4);
-    local rightpoint_transformed = self.u.transform(matrix4x4);
-    local origin_transformed = CSGVector:new():init(0, 0, 0).transform(matrix4x4);
+    local newplane = self.plane:transform(matrix4x4);
+    local rightpoint_transformed = self.u:transform(matrix4x4);
+    local origin_transformed = CSGVector:new():init(0, 0, 0):transform(matrix4x4);
     local newrighthandvector = rightpoint_transformed.minus(origin_transformed);
     local newbasis = CSGOrthoNormalBasis:new():init(newplane, newrighthandvector);
     return newbasis;

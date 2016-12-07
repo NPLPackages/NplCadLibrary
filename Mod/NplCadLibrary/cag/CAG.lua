@@ -48,7 +48,7 @@ end
 -- Rotation direction of the points is not relevant. Points can be a convex or concave polygon.
 -- Polygon must not self intersect
 function CAG.fromPoints(points)
-    local numpoints = count(points);
+    local numpoints = #points;
     if numpoints < 3 then
 		LOG.std(nil, "error", "CAG:fromPoints", "CAG shape needs at least 3 points");
 		return nil;
@@ -219,7 +219,7 @@ function CAG:_toPlanePolygons(options)
 	end
     -- finally, position the plane per passed transformations
 	local i;
-	for i=1,count(polys),1 do
+	for i=1,#polys,1 do
 		polys[i] = polys[i].transform(m);
 	end
 	return polys;
@@ -250,7 +250,7 @@ function CAG:_toWallPolygons(options)
 		return nil;
     end
     if (options.cag) then
-        if (count(options.cag.sides) ~= count(self.sides)) then
+        if (#options.cag.sides ~= #self.sides) then
 			LOG.std(nil, "error", "CAG:_toWallPolygons", "target cag needs same sides count as start cag");
 			return nil;
         end
@@ -273,7 +273,7 @@ end
 
 function CAG:union(cag)
     local cags;
-    if (is_array(cag)) then
+    if (tableext.is_array(cag)) then
         cags = cag;
     else
         cags = {cag};
@@ -289,7 +289,7 @@ end
 
 function CAG:subtract(cag)
     local cags;
-    if (is_array(cag)) then
+    if (tableext.is_array(cag)) then
         cags = cag;
     else
         cags = {cag};
@@ -304,7 +304,7 @@ end
 
 function CAG:intersect(cag)
     local cags;
-    if (is_array(cag)) then
+    if (tableext.is_array(cag)) then
         cags = cag;
     else
         cags = {cag};
@@ -354,7 +354,7 @@ end
 
 function CAG:getBounds()
     local minpoint;
-    if (count(self.sides) == 0) then
+    if (#self.sides == 0) then
         minpoint = CSGVector2D:new():init(0, 0);
     else
         minpoint = self.sides[0].vertex0.pos;
@@ -370,7 +370,7 @@ function CAG:getBounds()
 end
 
 function CAG:isSelfIntersecting(debug)
-    local numsides = count(self.sides);
+    local numsides = #self.sides;
 	local i;
     for i = 0, numsides-1, 1 do
         local side0 = self.sides[i];
@@ -539,7 +539,7 @@ end
 -- twiststeps determines the resolution of the twist (should be >= 1)
 -- returns a CSG object
 function CAG:extrude(options)
-    if (count(self.sides) == 0) then
+    if (#self.sides == 0) then
         -- empty!
         return CSG:new();
     end
@@ -644,7 +644,7 @@ function CAG:check()
     if (area < EPS*EPS) then
         table.insert(errors,"Area is " .. area);
     end
-    if (count(errors) > 0) then
+    if (#errors > 0) then
         local ertxt = table.concat(errors,"\n");
         LOG.std(nil, "error", "CAG:check", ertxt);
 		return false;

@@ -7,7 +7,7 @@ Desc: This is a factory to create CAG object.
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
 local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 -------------------------------------------------------
-]]
+--]]
 
 
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");

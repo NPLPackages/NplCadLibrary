@@ -5,17 +5,21 @@ Date: 2016/11/26
 Desc: 
 	side is a line between 2 points (initialize with CAGVertex)
 -------------------------------------------------------
-NPL.load("(gl)Mod/NplCadLibrary/csg/CAGSide.lua");
+NPL.load("(gl)Mod/NplCadLibrary/cag/CAGSide.lua");
 local CAGSide = commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide");
 -------------------------------------------------------
-]]
+--]]
 
 -- include CAGVertex
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
-local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
-
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+
+local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
 local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
+local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
+local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 
 -- we inherit from nil
 local CAGSide = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide"));
@@ -49,14 +53,14 @@ function CAGSide._fromFakePolygon(polygon)
 	local pts2d = {}
 
 	for k,v in polygon.vertices do
-		if math.abs(v.pos.z - 0.0001) > tonumber("1e-5") then
+		if math.abs(v.pos[3] - 0.0001) > tonumber("1e-5") then
 			LOG.std(nil, "error", "CAGSide:_fromFakePolygon", "expects abs z values of 0.0001");
 			return nil;
 		end
-		-- filter out when v.pos.z <= 0
-		if v.pos.z > 0 then
+		-- filter out when v.pos[3] <= 0
+		if v.pos[3] > 0 then
 			table.insert(vert1Indices,k);
-			table.insert(pts2d,CSGVector2D:new():init(v.pos.x, v.pos.y));
+			table.insert(pts2d,CSGVector2D:new():init(v.pos[1], v.pos[2]));
         end
  	end
 		
@@ -67,7 +71,7 @@ function CAGSide._fromFakePolygon(polygon)
     local d = vert1Indices[1] - vert1Indices[0];
     if d == 1 or d == 3 then
         if d == 1 then
-            pts2d.reverse();
+            pts2d:reverse();
        end
     else
  		LOG.std(nil, "error", "CAGSide:_fromFakePolygon", "unknown index ordering");
@@ -79,10 +83,10 @@ end
 
 function CAGSide:toPolygon3D(y0, y1) 
     local vertices = {
-        CSGVertex:new():init(self.vertex0.pos.toVector3D(y0))	,
-		CSGVertex:new():init(self.vertex1.pos.toVector3D(y0))	,
-		CSGVertex:new():init(self.vertex1.pos.toVector3D(y1))	,
-		CSGVertex:new():init(self.vertex0.pos.toVector3D(y1))	
+        CSGVertex:new():init(self.vertex0.pos:toVector3D(y0))	,
+		CSGVertex:new():init(self.vertex1.pos:toVector3D(y0))	,
+		CSGVertex:new():init(self.vertex1.pos:toVector3D(y1))	,
+		CSGVertex:new():init(self.vertex0.pos:toVector3D(y1))	
     };
     return CSGPolygon:new():init(vertices);
 end
@@ -92,22 +96,22 @@ function CAGSide:flipped()
 end
 
 function CAGSide:direction()
-    return self.vertex1.pos.minus(self.vertex0.pos);
+    return self.vertex1.pos:minus(self.vertex0.pos);
 end
 
 function CAGSide:lengthSquared()
-	local x = self.vertex1.pos.x - self.vertex0.pos.x;
-	local y = self.vertex1.pos.y - self.vertex0.pos.y;
+	local x = self.vertex1.pos[1] - self.vertex0.pos[1];
+	local y = self.vertex1.pos[2] - self.vertex0.pos[2];
 	return x * x + y * y;
 end
 
 function CAGSide:length()
-	return math.sqrt(self.lengthSquared());
+	return math.sqrt(self:lengthSquared());
 end
 
 function CAGSide:transform(matrix4x4)
-    local newp1 = self.vertex0.pos.transform(matrix4x4);
-    local newp2 = self.vertex1.pos.transform(matrix4x4);
+    local newp1 = self.vertex0.pos:transform(matrix4x4);
+    local newp2 = self.vertex1.pos:transform(matrix4x4);
     return CAGSide:new():init(CAGVertex:new():init(newp1), CAGVertex:new():init(newp2));
 end
 

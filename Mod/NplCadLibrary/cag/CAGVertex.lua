@@ -9,7 +9,7 @@ for 2D space ,there isn't normal.
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
 local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
 -------------------------------------------------------
-]]
+--]]
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
 local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 
@@ -17,7 +17,7 @@ local CAGVertex = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.c
 
 
 function CAGVertex:ctor()
-
+	--self.pos;
 end
 
 function CAGVertex:init(pos)
@@ -50,4 +50,8 @@ function CAGVertex:interpolate(other, t)
 	return CAGVertex:new():init(
 		self.pos:lerp(other.pos,t)
 	);
+end
+
+function CAGVertex:getPosition()
+	return self.pos;
 end

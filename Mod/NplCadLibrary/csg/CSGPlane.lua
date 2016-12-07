@@ -12,8 +12,11 @@ local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
 ]]
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGLine3D.lua");
+
 local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
+local CSGLine3D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGLine3D");
 local CSGPlane = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane"));
 
 local bor = mathlib.bit.bor;
@@ -53,28 +56,28 @@ end
 -- like fromVector3Ds, but allow the vectors to be on one point or one line
 -- in such a case a random plane through the given points is constructed
 function CSGPlane.anyPlaneFromVector3Ds(a, b, c)
-    local v1 = b.minus(a);
-    local v2 = c.minus(a);
-    if (v1.length() < tonumber("1e-5")) then
-        v1 = v2.randomNonParallelVector();
+    local v1 = b:minus(a);
+    local v2 = c:minus(a);
+    if (v1:length() < tonumber("1e-5")) then
+        v1 = v2:randomNonParallelVector();
     end
-    if (v2.length() < tonumber("1e-5")) then
-        v2 = v1.randomNonParallelVector();
+    if (v2:length() < tonumber("1e-5")) then
+        v2 = v1:randomNonParallelVector();
     end
-    local normal = v1.cross(v2);
-    if (normal.length() < tonumber("1e-5")) then
+    local normal = v1:cross(v2);
+    if (normal:length() < tonumber("1e-5")) then
         -- self would mean that v1 == v2.negated()
-        v2 = v1.randomNonParallelVector();
-        normal = v1.cross(v2);
+        v2 = v1:randomNonParallelVector();
+        normal = v1:cross(v2);
     end
-    normal = normal.unit();
-    return CSGPlane:new():init(normal, normal.dot(a));
+    normal = normal:unit();
+    return CSGPlane:new():init(normal, normal:dot(a));
 end
 function CSGPlane.fromNormalAndPoint(normal, point)
     normal = CSGVector:new():init(normal);
     point = CSGVector:new():init(point);
-    normal = normal.unit();
-    local w = point.dot(normal);
+    normal = normal:unit();
+    local w = point:dot(normal);
     return CSGPlane:new():init(normal, w);
 end
 
@@ -183,34 +186,30 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 	return front, back, coplanarFront, coplanarBack;
 end
 
-function CSGPlane:flipped()
-    return CSGPlane:new():init(self.normal.negated(), -self.w);
-end
-
 function CSGPlane:equals(n)
-    return self.normal.equals(n.normal) and self.w == n.w;
+    return self.normal:equals(n.normal) and self.w == n.w;
 end
 
 function CSGPlane:transform(matrix4x4)
-    local ismirror = matrix4x4.isMirroring();
+    local ismirror = matrix4x4:isMirroring();
     -- get two vectors in the plane:
-    local r = self.normal.randomNonParallelVector();
-    local u = self.normal.cross(r);
-    local v = self.normal.cross(u);
+    local r = self.normal:randomNonParallelVector();
+    local u = self.normal:cross(r);
+    local v = self.normal:cross(u);
     -- get 3 points in the plane:
-    local point1 = self.normal.times(self.w);
-    local point2 = point1.plus(u);
-    local point3 = point1.plus(v);
+    local point1 = self.normal:times(self.w);
+    local point2 = point1:plus(u);
+    local point3 = point1:plus(v);
     -- transform the points:
-    point1 = point1.multiply4x4(matrix4x4);
-    point2 = point2.multiply4x4(matrix4x4);
-    point3 = point3.multiply4x4(matrix4x4);
+    point1 = point1:multiply4x4(matrix4x4);
+    point2 = point2:multiply4x4(matrix4x4);
+    point3 = point3:multiply4x4(matrix4x4);
     -- and create a new plane from the transformed points:
     local newplane = CSGPlane.fromVector3Ds(point1, point2, point3);
     if (ismirror) then
         -- the transform is mirroring
         -- We should mirror the plane:
-        newplane = newplane.flipped();
+        newplane = newplane:flip();
     end
     return newplane;
 end
@@ -218,8 +217,8 @@ end
 -- robust splitting of a line by a plane
 -- will work even if the line is parallel to the plane
 function CSGPlane:splitLineBetweenPoints(p1, p2)
-    local direction = p2.minus(p1);
-    local labda = (self.w - self.normal.dot(p1)) / self.normal.dot(direction);
+    local direction = p2:minus(p1);
+    local labda = (self.w - self.normal:dot(p1)) / self.normal:dot(direction);
     if (labda ~= labda) then	-- test for nan
 		labda = 0;
 	end
@@ -229,27 +228,27 @@ function CSGPlane:splitLineBetweenPoints(p1, p2)
     if (labda < 0) then
 		labda = 0;
 	end
-    local result = p1.plus(direction.times(labda));
+    local result = p1:plus(direction:times(labda));
     return result;
 end
 
 -- returns CSG.Vector3D
 function CSGPlane:intersectWithLine(line3d)
-    return line3d.intersectWithPlane(self);
+    return line3d:intersectWithPlane(self);
 end
 
 -- intersection of two planes
 function CSGPlane:intersectWithPlane(plane)
-    return CSG.Line3D.fromPlanes(self, plane);
+    return CSGLine3D.fromPlanes(self, plane);
 end
 
 function CSGPlane:signedDistanceToPoint(point)
-    local t = self.normal.dot(point) - self.w;
+    local t = self.normal:dot(point) - self.w;
     return t;
 end
 
 function CSGPlane:mirrorPoint(point3d)
-    local distance = self.signedDistanceToPoint(point3d);
-    local mirrored = point3d.minus(self.normal.times(distance * 2.0));
+    local distance = self:signedDistanceToPoint(point3d);
+    local mirrored = point3d:minus(self.normal:times(distance * 2.0));
     return mirrored;
 end

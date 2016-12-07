@@ -21,7 +21,7 @@ local CSGPolygon2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon2D");
 
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAG.lua");
 local CAG = commonlib.gettable("Mod.NplCadLibrary.cag.CAG");
-local CSGPath2D = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPath2D"));
+local CSGPolygon2D = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon2D"));
 
 
 function CSGPolygon2D:init(points) 

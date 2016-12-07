@@ -47,3 +47,8 @@ function tableext.reverse(tab)
   
     return tmp  
 end  
+function tableext.is_array(input)
+	if(input and type(input) == "table" and (#input) > 0)then
+		return true;
+	end
+end

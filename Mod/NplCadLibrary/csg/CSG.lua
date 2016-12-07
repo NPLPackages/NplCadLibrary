@@ -12,7 +12,7 @@ We use copy on write policy for all CSG stuffs, like vertext, polygon, plane, bs
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
 local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
 -------------------------------------------------------
-]]
+--]]
 NPL.load("(gl)script/ide/math/vector.lua");
 NPL.load("(gl)script/ide/math/bit.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");

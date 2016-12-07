@@ -11,11 +11,15 @@ local CSGMatrix4x4 = commonlib.gettable("Mod.NplCadLibrary.csg.CSGMatrix4x4");
 
 NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/mathext.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
 
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
 local mathext = commonlib.gettable("Mod.NplCadLibrary.utils.mathext");
 
 local CSGMatrix4x4 = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGMatrix4x4"));
+local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
+local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 
 ----------
 -- # class Matrix4x4:
@@ -25,12 +29,13 @@ end
 
 -- Represents a 4x4 matrix. Elements are specified in row order
 function CSGMatrix4x4:init(elements)
-    if (arguments.length >= 1) then
+    if (elements ~= nil) then
         self.elements = elements;
     else
         -- if no arguments passed: create unity matrix
         self.elements = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1};
     end
+	return self;
 end
 
 function CSGMatrix4x4:plus(m)
@@ -87,22 +92,22 @@ function CSGMatrix4x4:multiply(m)
     local m15 = m.elements[16];
 
     local result = {};
-    result[0] = this0 * m0 + this1 * m4 + this2 * m8 + this3 * m12;
-    result[1] = this0 * m1 + this1 * m5 + this2 * m9 + this3 * m13;
-    result[2] = this0 * m2 + this1 * m6 + this2 * m10 + this3 * m14;
-    result[3] = this0 * m3 + this1 * m7 + this2 * m11 + this3 * m15;
-    result[4] = this4 * m0 + this5 * m4 + this6 * m8 + this7 * m12;
-    result[5] = this4 * m1 + this5 * m5 + this6 * m9 + this7 * m13;
-    result[6] = this4 * m2 + this5 * m6 + this6 * m10 + this7 * m14;
-    result[7] = this4 * m3 + this5 * m7 + this6 * m11 + this7 * m15;
-    result[8] = this8 * m0 + this9 * m4 + this10 * m8 + this11 * m12;
-    result[9] = this8 * m1 + this9 * m5 + this10 * m9 + this11 * m13;
-    result[10] = this8 * m2 + this9 * m6 + this10 * m10 + this11 * m14;
-    result[11] = this8 * m3 + this9 * m7 + this10 * m11 + this11 * m15;
-    result[12] = this12 * m0 + this13 * m4 + this14 * m8 + this15 * m12;
-    result[13] = this12 * m1 + this13 * m5 + this14 * m9 + this15 * m13;
-    result[14] = this12 * m2 + this13 * m6 + this14 * m10 + this15 * m14;
-    result[15] = this12 * m3 + this13 * m7 + this14 * m11 + this15 * m15;
+    result[1] = this0 * m0 + this1 * m4 + this2 * m8 + this3 * m12;
+    result[2] = this0 * m1 + this1 * m5 + this2 * m9 + this3 * m13;
+    result[3] = this0 * m2 + this1 * m6 + this2 * m10 + this3 * m14;
+    result[4] = this0 * m3 + this1 * m7 + this2 * m11 + this3 * m15;
+    result[5] = this4 * m0 + this5 * m4 + this6 * m8 + this7 * m12;
+    result[6] = this4 * m1 + this5 * m5 + this6 * m9 + this7 * m13;
+    result[7] = this4 * m2 + this5 * m6 + this6 * m10 + this7 * m14;
+    result[8] = this4 * m3 + this5 * m7 + this6 * m11 + this7 * m15;
+    result[9] = this8 * m0 + this9 * m4 + this10 * m8 + this11 * m12;
+    result[10] = this8 * m1 + this9 * m5 + this10 * m9 + this11 * m13;
+    result[11] = this8 * m2 + this9 * m6 + this10 * m10 + this11 * m14;
+    result[12] = this8 * m3 + this9 * m7 + this10 * m11 + this11 * m15;
+    result[13] = this12 * m0 + this13 * m4 + this14 * m8 + this15 * m12;
+    result[14] = this12 * m1 + this13 * m5 + this14 * m9 + this15 * m13;
+    result[15] = this12 * m2 + this13 * m6 + this14 * m10 + this15 * m14;
+    result[16] = this12 * m3 + this13 * m7 + this14 * m11 + this15 * m15;
     return CSGMatrix4x4:new():init(result);
 end
 
@@ -115,9 +120,9 @@ end
 -- (result = M*v)
 -- Fourth element is taken as 1
 function CSGMatrix4x4:rightMultiply1x3Vector(v)
-    local v0 = v._x;
-    local v1 = v._y;
-    local v2 = v._z;
+    local v0 = v[1];
+    local v1 = v[2];
+    local v2 = v[3];
     local v3 = 1;
     local x = v0 * self.elements[1] + v1 * self.elements[2] + v2 * self.elements[3] + v3 * self.elements[4];
     local y = v0 * self.elements[5] + v1 * self.elements[6] + v2 * self.elements[7] + v3 * self.elements[8];
@@ -137,9 +142,9 @@ end
 -- (result = v*M)
 -- Fourth element is taken as 1
 function CSGMatrix4x4:leftMultiply1x3Vector(v)
-    local v0 = v._x;
-    local v1 = v._y;
-    local v2 = v._z;
+    local v0 = v[1];
+    local v1 = v[2];
+    local v2 = v[3];
     local v3 = 1;
     local x = v0 * self.elements[1] + v1 * self.elements[5] + v2 * self.elements[9] + v3 * self.elements[13];
     local y = v0 * self.elements[2] + v1 * self.elements[6] + v2 * self.elements[10] + v3 * self.elements[14];
@@ -181,8 +186,8 @@ end
 -- (result = v*M)
 -- Fourth element is taken as 1
 function CSGMatrix4x4:leftMultiply1x2Vector(v)
-    local v0 = v.x;
-    local v1 = v.y;
+    local v0 = v[1];
+    local v1 = v[2];
     local v2 = 0;
     local v3 = 1;
     local x = v0 * self.elements[1] + v1 * self.elements[5] + v2 * self.elements[9] + v3 * self.elements[13];
@@ -205,9 +210,9 @@ function CSGMatrix4x4:isMirroring()
     local v = CSGVector:new():init(self.elements[2], self.elements[6], self.elements[10]);
     local w = CSGVector:new():init(self.elements[3], self.elements[7], self.elements[11]);
 
-    -- for a true orthogonal, non-mirrored base, u.cross(v) == w
+    -- for a true orthogonal, non-mirrored base, u:cross(v) == w
     -- If they have an opposite direction then we are mirroring
-    local mirrorvalue = u.cross(v).dot(w);
+    local mirrorvalue = u:cross(v):dot(w);
     local ismirror = (mirrorvalue < 0);
     return ismirror;
 end

@@ -49,7 +49,7 @@ function CSGConnectorList._fromPath2DTangents(path2D, start, _end)
 	--[[
     -- path2D
     local axis;
-    local pathLen = count(path2D.points);
+    local pathLen = #path2D.points;
     local result = CSGConnectorList:new():init({CSGConnector:new():init(path2D.points[1],start, CSGConnectorList.defaultNormal)});
     
 	-- middle points
@@ -151,7 +151,7 @@ end
 function CSGConnectorList:verify()
     local connI, connI1, dPosToAxis, axisToNextAxis;
 	local i;
-    for i = 1, count(self.connectors_), 1 do
+    for i = 1, #self.connectors_, 1 do
         connI = self.connectors_[i];
 		connI1 = self.connectors_[i + 1];
         if (connI1.point.minus(connI.point).dot(connI.axisvector) <= 0) then
