@@ -183,9 +183,9 @@ function CSGFactory.sphere(options)
         local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution3D);
         local xvector, yvector, zvector;
         if (options["axes"])then
-            xvector = options.axes[0]:unit():timesInplace(radius);
-            yvector = options.axes[1]:unit():timesInplace(radius);
-            zvector = options.axes[2]:unit():timesInplace(radius);
+            xvector = options.axes[1]:unit():timesInplace(radius);
+            yvector = options.axes[2]:unit():timesInplace(radius);
+            zvector = options.axes[3]:unit():timesInplace(radius);
         else
             xvector = CSGVector:new():init(1, 0, 0):timesInplace(radius);
             yvector = CSGVector:new():init(0, 1, 0):timesInplace(radius);

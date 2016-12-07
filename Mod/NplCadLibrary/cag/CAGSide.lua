@@ -30,7 +30,7 @@ end
 
 function CAGSide:init(vertex0, vertex1)
 	self.vertex0 = vertex0 or self.vertex0;
-	self.vertex1 = vertex0 or self.vertex1;
+	self.vertex1 = vertex1 or self.vertex1;
 	return self;
 end
 
@@ -68,7 +68,7 @@ function CAGSide._fromFakePolygon(polygon)
 		LOG.std(nil, "error", "CAGSide:_fromFakePolygon", "not enough points found");
 		return nil;
     end
-    local d = vert1Indices[1] - vert1Indices[0];
+    local d = vert1Indices[2] - vert1Indices[1];
     if d == 1 or d == 3 then
         if d == 1 then
             pts2d:reverse();
@@ -77,7 +77,7 @@ function CAGSide._fromFakePolygon(polygon)
  		LOG.std(nil, "error", "CAGSide:_fromFakePolygon", "unknown index ordering");
 		return nil;
     end
-	local result = CAGSide:new():init( CAGVertex:new():init(pts2d[0]), CAGVertex:new():init(pts2d[1]));
+	local result = CAGSide:new():init( CAGVertex:new():init(pts2d[1]), CAGVertex:new():init(pts2d[2]));
     return result;
 end
 

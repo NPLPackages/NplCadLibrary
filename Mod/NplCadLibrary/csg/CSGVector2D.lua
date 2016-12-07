@@ -181,14 +181,7 @@ function CSGVector2D:unitInplace()
 end
 
 function CSGVector2D:cross(a)
-	return CSGVector2D:new():init( 
-		self[1] * a[2] - self[2] * a[1]);
-end
-
-function CSGVector2D:crossInplace(a)
-	self[1], self[2] = 
-			self[1] * a[2] - self[2] * a[1];
-	return self;
+	return self[1] * a[2] - self[2] * a[1];
 end
 -- returns the vector rotated by 90 degrees clockwise
 function CSGVector2D:normal()

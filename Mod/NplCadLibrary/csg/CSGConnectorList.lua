@@ -25,6 +25,7 @@ function CSGConnectorList:init(connectors)
 	else
 		self.connectors_ = {};
 	end
+	return self;
 end
     
 CSGConnectorList.defaultNormal = {0, 1, 0};

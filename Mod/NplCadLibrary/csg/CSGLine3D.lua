@@ -71,15 +71,15 @@ function CSGLine3D.fromPlanes(p1, p2)
         -- direction vector is mostly pointing towards x
         -- find a point p for which x is zero:
         local r = CSG.solve2Linear(p1.normal[2], p1.normal[3], p2.normal[2], p2.normal[3], p1.w, p2.w);
-        origin = CSGVector:new():init(0, r[0], r[1]);
+        origin = CSGVector:new():init(0, r[1], r[2]);
     elseif ((mabsy >= mabsx) and (mabsy >= mabsz)) then
         -- find a point p for which y is zero:
         local r = CSG.solve2Linear(p1.normal[1], p1.normal[3], p2.normal[1], p2.normal[3], p1.w, p2.w);
-        origin = CSGVector:new():init(r[0], 0, r[1]);
+        origin = CSGVector:new():init(r[1], 0, r[2]);
     else
         -- find a point p for which z is zero:
         local r = CSG.solve2Linear(p1.normal[1], p1.normal[2], p2.normal[1], p2.normal[2], p1.w, p2.w);
-        origin = CSGVector:new():init(r[0], r[1], 0);
+        origin = CSGVector:new():init(r[1], r[2], 0);
     end
     return CSGLine3D:new():init(origin, direction);
 end

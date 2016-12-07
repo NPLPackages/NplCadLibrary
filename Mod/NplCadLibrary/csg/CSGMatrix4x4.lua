@@ -13,6 +13,8 @@ NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/mathext.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPlane.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGOrthoNormalBasis.lua");
 
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
 local mathext = commonlib.gettable("Mod.NplCadLibrary.utils.mathext");
@@ -20,6 +22,8 @@ local mathext = commonlib.gettable("Mod.NplCadLibrary.utils.mathext");
 local CSGMatrix4x4 = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGMatrix4x4"));
 local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
+local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
+local CSGOrthoNormalBasis = commonlib.gettable("Mod.NplCadLibrary.csg.CSGOrthoNormalBasis");
 
 ----------
 -- # class Matrix4x4:
@@ -164,8 +168,8 @@ end
 -- (result = M*v)
 -- Fourth element is taken as 1
 function CSGMatrix4x4:rightMultiply1x2Vector(v)
-    local v0 = v.x;
-    local v1 = v.y;
+    local v0 = v[1];
+    local v1 = v[2];
     local v2 = 0;
     local v3 = 1;
     local x = v0 * self.elements[1] + v1 * self.elements[2] + v2 * self.elements[3] + v3 * self.elements[4];
@@ -259,13 +263,13 @@ end
 function CSGMatrix4x4.rotation(rotationCenter, rotationAxis, degrees)
     rotationCenter = CSGVector:new():init(rotationCenter);
     rotationAxis = CSGVector:new():init(rotationAxis);
-    local rotationPlane = CSG.Plane.fromNormalAndPoint(rotationAxis, rotationCenter);
-    local orthobasis = new CSG.OrthoNormalBasis(rotationPlane);
-    local transformation = CSGMatrix4x4.translation(rotationCenter.negated());
-    transformation = transformation.multiply(orthobasis.getProjectionMatrix());
-    transformation = transformation.multiply(CSGMatrix4x4.rotationZ(degrees));
-    transformation = transformation.multiply(orthobasis.getInverseProjectionMatrix());
-    transformation = transformation.multiply(CSGMatrix4x4.translation(rotationCenter));
+    local rotationPlane = CSGPlane.fromNormalAndPoint(rotationAxis, rotationCenter);
+    local orthobasis = CSGOrthoNormalBasis:new():init(rotationPlane);
+    local transformation = CSGMatrix4x4.translation(rotationCenter:negated());
+    transformation = transformation:multiply(orthobasis:getProjectionMatrix());
+    transformation = transformation:multiply(CSGMatrix4x4.rotationZ(degrees));
+    transformation = transformation:multiply(orthobasis:getInverseProjectionMatrix());
+    transformation = transformation:multiply(CSGMatrix4x4.translation(rotationCenter));
     return transformation;
 end
 
@@ -273,15 +277,15 @@ end
 function CSGMatrix4x4.translation(v)
     -- parse as CSG.Vector3D, so we can pass an array or a CSG.Vector3D
     local vec = CSGVector:new():init(v);
-    local els = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, vec.x, vec.y, vec.z, 1};
+    local els = {1, 0, 0, 0, 0, 1, 0, 0, 0, 0, 1, 0, vec[1], vec[2], vec[3], 1};
     return CSGMatrix4x4:new():init(els);
 end
 
 -- Create an affine matrix for mirroring into an arbitrary plane:
 function CSGMatrix4x4.mirroring(plane)
-    local nx = plane.normal.x;
-    local ny = plane.normal.y;
-    local nz = plane.normal.z;
+    local nx = plane.normal[1];
+    local ny = plane.normal[2];
+    local nz = plane.normal[3];
     local w = plane.w;
     local els = {
         (1.0 - 2.0 * nx * nx), (-2.0 * ny * nx), (-2.0 * nz * nx), 0,
@@ -297,7 +301,7 @@ function CSGMatrix4x4.scaling(v)
     -- parse as CSG.Vector3D, so we can pass an array or a CSG.Vector3D
     local vec = CSGVector:new():init(v);
     local els = {
-        vec.x, 0, 0, 0, 0, vec.y, 0, 0, 0, 0, vec.z, 0, 0, 0, 0, 1
+        vec[1], 0, 0, 0, 0, vec[2], 0, 0, 0, 0, vec[3], 0, 0, 0, 0, 1
     };
     return CSGMatrix4x4:new():init(els);
 end

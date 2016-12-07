@@ -58,7 +58,7 @@ end
 --   will return an orthonormal basis where the 2d X axis maps to the 3D inverted Y axis, and
 --   the 2d Y axis maps to the 3D Z axis.
 function CSGOrthoNormalBasis.GetCartesian(xaxisid, yaxisid)
-    local axisid = xaxisid + "/" + yaxisid;
+    local axisid = xaxisid .. "/" .. yaxisid;
     local planenormal, rightvector;
     if (axisid == "X/Y") then
         planenormal = {0, 0, 1};
@@ -138,33 +138,43 @@ function CSGOrthoNormalBasis.GetCartesian(xaxisid, yaxisid)
     return CSGOrthoNormalBasis:new():init(CSGPlane:new():init(CSGVector:new():init(planenormal), 0), CSGVector:new():init(rightvector));
 end
 
---[[
+
 -- test code for CSGOrthoNormalBasis.GetCartesian()
-CSGOrthoNormalBasis.GetCartesian_Test=function()
-    local axisnames=["X","Y","Z","-X","-Y","-Z"};
-    local axisvectors=[[1,0,0], [0,1,0], [0,0,1], [-1,0,0], [0,-1,0], [0,0,-1]};
-    for(local axis1=0; axis1 < 3; axis1++)
-    for(local axis1inverted=0; axis1inverted < 2; axis1inverted++)
-        local axis1name=axisnames[axis1+3*axis1inverted};
-        local axis1vector=axisvectors[axis1+3*axis1inverted};
-        for(local axis2=0; axis2 < 3; axis2++)
-        if(axis2 != axis1)
-            for(local axis2inverted=0; axis2inverted < 2; axis2inverted++)
-            local axis2name=axisnames[axis2+3*axis2inverted};
-            local axis2vector=axisvectors[axis2+3*axis2inverted};
-            local orthobasis=CSGOrthoNormalBasis.GetCartesian(axis1name, axis2name);
-            local test1=orthobasis:to3D(CSGVector2D:new():init([1,0]));
-            local test2=orthobasis:to3D(CSGVector2D:new():init([0,1]));
-            local expected1=CSGVector:new():init(axis1vector);
-            local expected2=CSGVector:new():init(axis2vector);
-            local d1=test1.distanceTo(expected1);
-            local d2=test2.distanceTo(expected2);
-            if( (d1 > 0.01) || (d2 > 0.01) )
-                throw new Error("Wrong!");
-    }}}}}}
-    throw new Error("OK");
+function CSGOrthoNormalBasis.GetCartesian_Test()
+    local axisnames={"X","Y","Z","-X","-Y","-Z"};
+    local axisvectors={{1,0,0}, {0,1,0}, {0,0,1}, {-1,0,0}, {0,-1,0}, {0,0,-1}};
+    local axis1;
+	for	axis1=1,3,1 do
+		local axis1inverted;
+		for axis1inverted=1, 2, 1 do
+			local axis1name=axisnames[axis1+3*(axis1inverted-1)];
+			local axis1vector=axisvectors[axis1+3*(axis1inverted-1)];
+			local axis2;
+			for axis2=1,3,1 do
+				if(axis2 ~= axis1) then
+					local axis2inverted;
+					for axis2inverted=1,2,1 do
+						local axis2name=axisnames[axis2+3*(axis1inverted-1)];
+						local axis2vector=axisvectors[axis2+3*(axis1inverted-1)];
+						local orthobasis=CSGOrthoNormalBasis.GetCartesian(axis1name, axis2name);
+						local test1=orthobasis:to3D(CSGVector2D:new():init({1,0}));
+						local test2=orthobasis:to3D(CSGVector2D:new():init({0,1}));
+						local expected1=CSGVector:new():init(axis1vector);
+						local expected2=CSGVector:new():init(axis2vector);
+						local d1=test1:distanceTo(expected1);
+						local d2=test2:distanceTo(expected2);
+						if( (d1 > 0.01) or (d2 > 0.01) ) then
+							LOG.std(nil, "error", "CSGOrthoNormalBasis.GetCartesian_Test", "Wrong!!");
+							return false;
+						end
+					end
+				end
+			end
+		end
+	end
+	LOG.std(nil, "error", "CSGOrthoNormalBasis.GetCartesian_Test", "OK!!");
+	return true;
 end
---]]
 
 -- The z=0 plane, with the 3D x and y vectors mapped to the 2D x and y vector
 function CSGOrthoNormalBasis.Z0Plane()
@@ -175,9 +185,9 @@ end
 
 function CSGOrthoNormalBasis:getProjectionMatrix()
     return CSGMatrix4x4:new():init({
-        self.u.x, self.v.x, self.plane.normal.x, 0,
-        self.u.y, self.v.y, self.plane.normal.y, 0,
-        self.u.z, self.v.z, self.plane.normal.z, 0,
+        self.u[1], self.v[1], self.plane.normal[1], 0,
+        self.u[2], self.v[2], self.plane.normal[2], 0,
+        self.u[3], self.v[3], self.plane.normal[3], 0,
         0, 0, -self.plane.w, 1
     });
 end
@@ -185,10 +195,10 @@ end
 function CSGOrthoNormalBasis:getInverseProjectionMatrix()
     local p = self.plane.normal:times(self.plane.w);
     return CSGMatrix4x4:new():init({
-        self.u.x, self.u.y, self.u.z, 0,
-        self.v.x, self.v.y, self.v.z, 0,
-        self.plane.normal.x, self.plane.normal.y, self.plane.normal.z, 0,
-        p.x, p.y, p.z, 1
+        self.u[1], self.u[2], self.u[3], 0,
+        self.v[1], self.v[2], self.v[3], 0,
+        self.plane.normal[1], self.plane.normal[2], self.plane.normal[3], 0,
+        p[1], p[2], p[3], 1
     });
 end
 
@@ -197,7 +207,7 @@ function CSGOrthoNormalBasis:to2D(vec3)
 end
 
 function CSGOrthoNormalBasis:to3D(vec2)
-    return self.planeorigin:plus(self.u:times(vec2.x)):plus(self.v:times(vec2.y));
+    return self.planeorigin:plus(self.u:times(vec2[1])):plus(self.v:times(vec2[2]));
 end
 
 function CSGOrthoNormalBasis:line3Dto2D(line3d)
@@ -221,7 +231,7 @@ function CSGOrthoNormalBasis:transform(matrix4x4)
     local newplane = self.plane:transform(matrix4x4);
     local rightpoint_transformed = self.u:transform(matrix4x4);
     local origin_transformed = CSGVector:new():init(0, 0, 0):transform(matrix4x4);
-    local newrighthandvector = rightpoint_transformed.minus(origin_transformed);
+    local newrighthandvector = rightpoint_transformed:minus(origin_transformed);
     local newbasis = CSGOrthoNormalBasis:new():init(newplane, newrighthandvector);
     return newbasis;
 end

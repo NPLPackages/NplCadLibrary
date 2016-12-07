@@ -1,5 +1,5 @@
 --[[
-Title: CSGFactory
+Title: CAGFactory
 Author(s): Skeleton
 Date: 2016/11/27
 Desc: This is a factory to create CAG object.
@@ -12,11 +12,18 @@ local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
+NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
+NPL.load("(gl)Mod/NplCadLibrary/cag/CAGSide.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPath2D.lua");
+NPL.load("(gl)Mod/NplCadLibrary/cag/CAG.lua");
 
-local math_pi = 3.1415926;
 local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
+local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
+local CAGSide = commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide");
+local CSGPath2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPath2D");
+local CAG = commonlib.gettable("Mod.NplCadLibrary.cag.CAG");
 
 --[[ 
 Construct a circle
@@ -30,18 +37,18 @@ function CAGFactory.circle(options)
     options = options or {};
     local center = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
     local radius = CSGFactory.parseOptionAsFloat(options, "radius", 1);
-    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSG.defaultResolution2D);
+    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution2D);
     local sides = {};
     local prevvertex;
 
 	local i;
 	for i=0,resolution do
         local radians = 2 * math.pi * i / resolution;
-		local point = CSGVector2D.fromAngleRadians(radians).times(radius).plus(center);
+		local point = CSGVector2D.fromAngleRadians(radians):times(radius):plus(center);
 		local vertex = CAGVertex:new():init(point);
         if (i > 0) then
 			local side = CAGSide:new():init(prevvertex, vertex);
-			table.insert(side);
+			table.insert(sides,side);
 		end
 		prevvertex = vertex;	
 	end
@@ -59,28 +66,28 @@ function CAGFactory.ellipse(options)
     options = options or {};
     local c = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
     local r = CSGFactory.parseOptionAs2DVector(options, "radius", {1, 1});
-    r = r.abs(); --  negative radii make no sense
-    local res = CSGFactory.parseOptionAsInt(options, "resolution", CSG.defaultResolution2D);
+    r = r:abs(); --  negative radii make no sense
+    local res = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution2D);
 
-    local e2 = CSGPath2D:new():init({{c.x,c.y + r.y}});
-    e2 = e2.appendArc({c.x,c.y - r.y}, {
-        xradius = r.x,
-        yradius =  r.y,
+    local e2 = CSGPath2D:new():init({{c[1],c[2] + r[2]}});
+    e2 = e2:appendArc({c[1],c[2] - r[2]}, {
+        xradius = r[1],
+        yradius =  r[2],
         xaxisrotation =  0,
         resolution =  res,
         clockwise =  true,
         large =  false,
     });
-    e2 = e2.appendArc({c.x,c.y + r.y}, {
-        xradius =  r.x,
-        yradius =  r.y,
+    e2 = e2:appendArc({c[1],c[2] + r[2]}, {
+        xradius =  r[1],
+        yradius =  r[2],
         xaxisrotation =  0,
         resolution =  res,
         clockwise =  true,
         large =  false,
     });
-    e2 = e2.close();
-    return e2.innerToCAG();
+    e2 = e2:close();
+    return e2:innerToCAG();
 end 
 --[[ Construct a rectangle
 options:
@@ -98,16 +105,16 @@ function CAGFactory.rectangle(options)
         end
         corner1 = CSGFactory.parseOptionAs2DVector(options, "corner1", {0, 0});
         corner2 = CSGFactory.parseOptionAs2DVector(options, "corner2", {1, 1});
-        c = corner1.plus(corner2).times(0.5);
-        r = corner2.minus(corner1).times(0.5);
+        c = corner1:plus(corner2):times(0.5);
+        r = corner2:minus(corner1):times(0.5);
 	else
         c = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
         r = CSGFactory.parseOptionAs2DVector(options, "radius", {1, 1});
     end
-    r = r.abs(); -- negative radii make no sense
-    local rswap = CSGVector2D:new():init(r.x, -r.y);
+    r = r:abs(); -- negative radii make no sense
+    local rswap = CSGVector2D:new():init(r[1], -r[2]);
     local points = {
-        c.plus(r), c.plus(rswap), c.minus(r), c.minus(rswap)
+        c:plus(r), c:plus(rswap), c:minus(r), c:minus(rswap)
     };
     return CAG.fromPoints(points);
 end
@@ -128,26 +135,26 @@ function CAGFactory.roundedRectangle(options)
         end
         corner1 = CSGFactory.parseOptionAs2DVector(options, "corner1", {0, 0});
         corner2 = CSGFactory.parseOptionAs2DVector(options, "corner2", {1, 1});
-        center = corner1.plus(corner2).times(0.5);
-        radius = corner2.minus(corner1).times(0.5);
+        center = corner1:plus(corner2):times(0.5);
+        radius = corner2:minus(corner1):times(0.5);
 	else
         center = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
         radius = CSGFactory.parseOptionAs2DVector(options, "radius", {1, 1});
     end
-    radius = radius.abs(); -- negative radii make no sense
+    radius = radius:abs(); -- negative radii make no sense
     local roundradius = CSGFactory.parseOptionAsFloat(options, "roundradius", 0.2);
     local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSG.defaultResolution2D);
-    local maxroundradius = math.min(radius.x, radius.y);
+    local maxroundradius = math.min(radius[1], radius[2]);
     maxroundradius = maxroundradius - 0.1;
     roundradius = math.min(roundradius, maxroundradius);
     roundradius = math.max(0, roundradius);
-    radius = CSGVector2D:new():init(radius.x - roundradius, radius.y - roundradius);
+    radius = CSGVector2D:new():init(radius[1] - roundradius, radius[2] - roundradius);
     local rect = CAGFactory.rectangle({
         center = center,
         radius = radius
     });
     if (roundradius > 0) then
-        rect = rect.expand(roundradius, resolution);
+        rect = rect:expand(roundradius, resolution);
     end
     return rect;
 end

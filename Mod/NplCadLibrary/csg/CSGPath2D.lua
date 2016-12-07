@@ -290,10 +290,8 @@ function CSGPath2D:appendBezier(controlpoints, options)
     while (subdivide_base < #newpoints) do
         local dir1 = newpoints[subdivide_base]:minus(newpoints[subdivide_base - 1]):unit();
         local dir2 = newpoints[subdivide_base + 1]:minus(newpoints[subdivide_base]):unit();
-        --local sinangle = dir1:cross(dir2); -- this is the sine of the angle
-		local angle = dir1:angleRadians()- dir2:angleRadians();
-        --if (math.abs(sinangle) > maxsinangle) then
-		if(math.abs(angle) > maxangle) then
+        local sinangle = dir1:cross(dir2); -- this is the sine of the angle
+        if (math.abs(sinangle) > maxsinangle) then
             -- angle is too big, we need to subdivide
             local t0 = newpoints_t[subdivide_base - 1];
             local t1 = newpoints_t[subdivide_base + 1];
@@ -370,7 +368,7 @@ function CSGPath2D:appendArc(endpoint, options)
     local xaxisrotation = CSGFactory.parseOptionAsFloat(options, "xaxisrotation", 0);
     local clockwise = CSGFactory.parseOptionAsBool(options, "clockwise", false);
     local largearc = CSGFactory.parseOptionAsBool(options, "large", false);
-    local startpoint = self.points[#self.points - 1];
+    local startpoint = self.points[#self.points];
     endpoint = CSGVector2D:new():init(endpoint);
     -- round to precision in order to have determinate calculations
     xradius = mathext.round(xradius*decimals)/decimals;
@@ -493,7 +491,7 @@ function CSGPath2D:rectangularExtrude(width, height, resolution)
     });
     return result;
 end
-
+--]]
 function CSGPath2D:innerToCAG() 
     if (not self.closed) then
 		LOG.std(nil, "error", "CSGPath2D:innerToCAG", "The path should be closed!");
@@ -501,7 +499,7 @@ function CSGPath2D:innerToCAG()
 	end
     return CAG.fromPoints(self.points);
 end
---]]
+
 function CSGPath2D:transform(matrix4x4)
     local newpoints = {};
 	for k,point in ipairs(self.points) do
