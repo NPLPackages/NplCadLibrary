@@ -229,7 +229,11 @@ end
 
 function CSGVector2D:angleRadians()
     -- y=sin, x=cos
-    return math.atan2(self[2], self[1]);
+    local r = math.atan2(self[2], self[1]);
+	if (r ~= r) then	-- test for nan
+		r = 0;
+	end
+	return r;
 end
 
 function CSGVector2D:min(p)

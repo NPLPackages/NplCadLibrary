@@ -45,7 +45,7 @@ function tableext.reverse(tab)
         tmp[i] = table.remove(tab)  
     end  
   
-    return tmp  
+    return tmp ;
 end  
 function tableext.is_array(input)
 	if(input and type(input) == "table" and (#input) > 0)then

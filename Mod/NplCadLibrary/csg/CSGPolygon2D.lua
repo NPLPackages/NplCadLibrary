@@ -14,7 +14,7 @@ Represents a polygon in 2D space.
     But we'll keep CSG.Polygon2D as a stub for backwards compatibility
 
 -------------------------------------------------------
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGLine2D.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon2D.lua");
 local CSGPolygon2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon2D");
 -------------------------------------------------------
 ]]  

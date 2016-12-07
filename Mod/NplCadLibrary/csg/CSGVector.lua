@@ -16,10 +16,12 @@ echo(v1:minus(v2));
 ]]
 NPL.load("(gl)script/ide/STL.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGMatrix4x4.lua");
 
 local math_abs = math.abs;
 local CSGVector = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector"));
 local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
+local CSGMatrix4x4 = commonlib.gettable("Mod.NplCadLibrary.csg.CSGMatrix4x4");
 
 --------------------
 -- private vector pool
@@ -246,4 +248,9 @@ function CSGVector:distanceTo(a)
 end
 function CSGVector:distanceToSquared(a)
 	return self:minus(a):lengthSquared();
+end
+
+
+function CSGVector:rotateZ(deg)
+	return self:transform(CSGMatrix4x4.rotationZ(deg));
 end

@@ -132,12 +132,12 @@ function CSGConnectorList:followWith(cagish)
         } else {
             -- it is the first, and shape not closed -> build start wall
             polygons.push.apply(polygons,
-                currCag._toPlanePolygons({toConnector: connector, flipped: true}));
+                currCag:_toPlanePolygons({toConnector: connector, flipped: true}));
         }
         if (notFirst == self.connectors_.length - 1 && !self.closed)
             -- build end wall
             polygons.push.apply(polygons,
-                currCag._toPlanePolygons({toConnector: connector}));
+                currCag:_toPlanePolygons({toConnector: connector}));
         }
         prevCag = currCag;
         prevConnector = connector;

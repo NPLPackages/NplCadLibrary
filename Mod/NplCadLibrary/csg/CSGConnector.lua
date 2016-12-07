@@ -83,12 +83,10 @@ end
 --   normalrotation: degrees of rotation between the 'normal' vectors of the two
 --                   connectors
 function CSGConnector:getTransformationTo(other, mirror, normalrotation)
-	echo(other);
 	mirror = mirror or false;
     normalrotation = normalrotation or 0.0;
     local us = self:normalized();
     other = other:normalized();
-	echo(other);
     -- shift to the origin:
     local transformation = CSGMatrix4x4.translation(self.point:negated());
     -- construct the plane crossing through the origin and the two axes:
@@ -106,18 +104,13 @@ function CSGConnector:getTransformationTo(other, mirror, normalrotation)
     transformation = transformation:multiply(axesbasis:getInverseProjectionMatrix());
 
     local usAxesAligned = us:transform(transformation);
-			echo("CSGConnector:getTransformationTo-X1");
 
     -- Now we have done the transformation for aligning the axes.
     -- We still need to align the normals:
-	echo(other);
     local normalsplane = CSGPlane.fromNormalAndPoint(other.axisvector, CSGVector:new():init(0, 0, 0));
-			echo("CSGConnector:getTransformationTo-X2");
-
     local normalsbasis = CSGOrthoNormalBasis:new():init(normalsplane);
 
     angle1 = normalsbasis:to2D(usAxesAligned.normalvector):angle();
- 	echo(other);
 	angle2 = normalsbasis:to2D(other.normalvector):angle();
     rotation = 180.0 * (angle2 - angle1) / mathext.pi;
     rotation = rotation + normalrotation;
@@ -125,7 +118,6 @@ function CSGConnector:getTransformationTo(other, mirror, normalrotation)
     transformation = transformation:multiply(CSGMatrix4x4.rotationZ(rotation));
     transformation = transformation:multiply(normalsbasis:getInverseProjectionMatrix());
     -- and translate to the destination point:
-	echo(other);
     transformation = transformation:multiply(CSGMatrix4x4.translation(other.point));
     -- local usAligned = us:transform(transformation);
     return transformation;
