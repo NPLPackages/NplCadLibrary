@@ -32,6 +32,7 @@ end
 function CSGPolygon:init(vertices, shared)
 	self.vertices = vertices or {};
 	self.shared = shared;
+	self.plane = CSGPlane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos);	
 	return self;
 end
 
@@ -92,7 +93,7 @@ function CSGPolygon:transform(matrix4x4)
 	for k,v in ipairs(self.vertices) do 
         table.insert(newvertices, CSGVertex:new():init(v.pos:transform(matrix4x4)));
     end
-
+	local newplane = self:GetPlane():transform(matrix4x4);
     if (matrix4x4:isMirroring()) then
         -- need to reverse the vertex order
         -- in order to preserve the inside/outside orientation:

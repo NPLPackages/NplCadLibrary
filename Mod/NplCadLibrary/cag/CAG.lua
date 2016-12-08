@@ -191,8 +191,8 @@ function CAG:_toPlanePolygons(options)
     local flipped = options.flipped or false;
 	-- reference connector for transformation
     local origin = {0, 0, 0}; 
-	local defaultAxis = {0, 0, 1};
-	local defaultNormal = {0, 1, 0};
+	local defaultAxis = {0, 1, 0};
+	local defaultNormal = {0, 0, -1};
     local thisConnector = CSGConnector:new():init(origin, defaultAxis, defaultNormal);
 
     -- translated connector per options
@@ -204,6 +204,8 @@ function CAG:_toPlanePolygons(options)
         CSGConnector:new():init(translation, axisVector, normalVector);
     -- resulting transform
     local m = thisConnector:getTransformationTo(toConnector, false, 0);
+
+	--[[
     -- create plane as a (partial non-closed) CSG in XY plane
     local bounds = self:getBounds();
     bounds[1] = bounds[1]:minus(CSGVector2D:new():init(1, 1));
@@ -234,7 +236,21 @@ function CAG:_toPlanePolygons(options)
 	for i=1,#polys,1 do
 		polys[i] = polys[i]:transform(m);
 	end
-	return polys;
+	--]]
+
+	-- take every vertex from side,add to Polygon3D
+	local vertices = {};
+	for k,side in ipairs(self.sides) do
+		local vertex = CSGVertex:new():init(CSGVector:new():init(side.vertex0.pos[1],0,side.vertex0.pos[2]));
+		table.insert(vertices,vertex);
+	end
+	local poly = CSGPolygon:new():init(tableext.reverse(vertices));
+	poly = poly:transform(m);
+    if (flipped) then
+        poly = poly:flip();
+    end
+	poly:GetPlane();
+	return {poly};
 end
 --[[
     * given 2 connectors, self returns all polygons of a "wall" between 2
@@ -248,8 +264,8 @@ function CAG:_toWallPolygons(options)
     --     walls go from toConnector1 to toConnector2
     --     optionally, target cag to point to - cag needs to have same number of sides as self!
     local origin = {0, 0, 0}; 
-	local defaultAxis = {0, 0, 1};
-	local defaultNormal = {0, 1, 0};
+	local defaultAxis = {0, 1, 0};
+	local defaultNormal = {0, 0, -1};
     local thisConnector = CSGConnector:new():init(origin, defaultAxis, defaultNormal);
     -- arguments:
     local toConnector1 = options.toConnector1;
@@ -275,8 +291,8 @@ function CAG:_toWallPolygons(options)
 
     local polygons = {};
 	for k,v in ipairs(vps1) do
-		table.insert(polygons,CSGPolygon:new():init({CSGVertex:new():init(vps2[k][2]), CSGVertex:new():init(vps2[k][1]), CSGVertex:new():init(v[1])}));
-        table.insert(polygons,CSGPolygon:new():init({CSGVertex:new():init(vps2[k][2]), CSGVertex:new():init(v[1]), CSGVertex:new():init(v[2])}));
+		table.insert(polygons,CSGPolygon:new():init({CSGVertex:new():init(vps2[k][1]:clone()), CSGVertex:new():init(vps2[k][2]:clone()), CSGVertex:new():init(v[1]:clone())}));
+        table.insert(polygons,CSGPolygon:new():init({CSGVertex:new():init(v[1]:clone()), CSGVertex:new():init(vps2[k][2]:clone()), CSGVertex:new():init(v[2]:clone())}));
 	end
     return polygons;
 end
@@ -543,6 +559,20 @@ function CAG:extrudeInPlane(axis1, axis2, depth)
     return self.extrudeInOrthonormalBasis(CSG.OrthoNormalBasis.GetCartesian(axis1, axis2), depth);
 end
 
+function CAG:toCSG()
+    if (#self.sides == 0) then
+        -- empty!
+        return CSG:new();
+    end
+    local normalVector = CSGVector:new():init(0, 0, -1);
+    local polygons = {};
+    -- bottom and top
+	polygons = tableext.concat(polygons,self:_toPlanePolygons({translation= {0, 0, 0},normalVector= normalVector, flipped = false}));
+    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = {0, 0, 0},normalVector = normalVector, flipped = true}));
+
+	return CSG.fromPolygons(polygons);	
+end
+
 -- extruded=cag.extrude({offset: [0,0,10], twistangle: 360, twiststeps: 100});
 -- linear extrusion of 2D shape, with optional twist
 -- The 2d shape is placed in in y=0 plane and extruded into direction <offset> (a CSG.Vector3D)
@@ -568,14 +598,14 @@ function CAG:extrude(options)
 
     local polygons = {};
     -- bottom and top
-	polygons = tableext.concat(polygons,self:_toPlanePolygons({translation= {0, 0, 0},normalVector= normalVector, flipped = not (offsetVector[3] < 0)}));
-    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = offsetVector,normalVector = normalVector:rotateZ(twistangle + 180), flipped = offsetVector[2] < 0}));
+	polygons = tableext.concat(polygons,self:_toPlanePolygons({translation= {0, 0, 0},normalVector= normalVector, flipped = not (offsetVector[2] < 0)}));
+    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = offsetVector,normalVector = normalVector:rotateZ(twistangle + 180), flipped = (offsetVector[2] < 0)}));
     -- walls
 	local i;
     for i = 0, twiststeps-1 ,1 do
         local c1 = CSGConnector:new():init(offsetVector:times(i / twiststeps), {0, offsetVector[2], 0},
             normalVector:rotateZ(i * twistangle/twiststeps + 180));
-        local c2 = CSGConnector:new():init(offsetVector:times((i + 1) / twiststeps), {0, 0, offsetVector[3]},
+        local c2 = CSGConnector:new():init(offsetVector:times((i + 1) / twiststeps), {0, offsetVector[2], 0},
             normalVector:rotateZ((i + 1) * twistangle/twiststeps + 180));
 		polygons = tableext.concat(polygons,self:_toWallPolygons({toConnector1 = c1, toConnector2 = c2}));
     end

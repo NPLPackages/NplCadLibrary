@@ -25,15 +25,23 @@ local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 local CSGModel = commonlib.inherit(commonlib.gettable("Mod.NplCadLibrary.core.Drawable"), commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel"));
 CSGModel.csg_node = nil;
+CSGModel.cag_node = nil;
 CSGModel.model_type = nil;
 CSGModel.options = nil;
-function CSGModel:init(csg_node,model_type)
-	self.csg_node = csg_node;
+function CSGModel:init(node,model_type,is2D)
+	is2D = is2D or false;
+	if not is2D then
+		self.csg_node = node;
+	else
+		self.cag_node = node;
+		self.csg_node= self.cag_node:extrude({offset={0,0.01,0}});
+	end
 	self.model_type = model_type;
 	return self;
 end
 function CSGModel:ctor()
 	self.csg_node = nil;
+	self.cag_node = nil;
 end
 function CSGModel:getTypeName()
 	return "Model";
@@ -46,4 +54,9 @@ function CSGModel:toMesh()
 end
 function CSGModel:applyMatrix(matrix)
 	CSGService.applyMatrix(self.csg_node,matrix);
+	--[[
+	if(self.cag_node ~= nil) then
+		self.cag_node = CSGService.applyMatrixCAG(self.cag_node,matrix);
+	end
+	--]]
 end

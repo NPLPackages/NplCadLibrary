@@ -18,6 +18,7 @@ NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/doms/DomParser.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
+NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/Color.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
@@ -27,6 +28,7 @@ local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 local DomParser = commonlib.gettable("Mod.NplCadLibrary.doms.DomParser");
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
+local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 local Color = commonlib.gettable("Mod.NplCadLibrary.utils.Color");
 local math_pi = 3.1415926;
@@ -629,7 +631,7 @@ function NplCadEnvironment.read_circle(p,...)
 	end
 
 	local o;
-	o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,0.0001,0}, radiusStart = r, radiusEnd = r, resolution = fn}),"circle");
+	o = CSGModel:new():init(CAGFactory.circle({radius = r, resolution = fn}),"circle",true);
 
 	-- {center={}}
 	if(is_table(p) and p.center and is_table(p.center)) then         -- preparing individual x,y,z center
@@ -664,8 +666,8 @@ end
 	circle(1); 
 	circle({d: 2, fn:5});
 	circle({r: 2, fn:5});
-	circle({r: 3, center: true});    -- center: false (default)
-	circle({r: 3, center:  = {true, true}});    -- individual x,z center flags
+	circle({r: 3, center = true});    -- center: false (default)
+	circle({r: 3, center = {true, true}});    -- individual x,z center flags
 ]]
 function NplCadEnvironment:circle__(options,...)
 	options = options or {};
@@ -687,7 +689,7 @@ function NplCadEnvironment.read_square(p)
 	local node = Node.create("");
 	local s = 1;
 	local v = nil;
-	local off = {0,0,0};
+	local off = {0,0};
 	local round = false;
 	local r = 0;
 	local fn = 8;
@@ -733,26 +735,26 @@ function NplCadEnvironment.read_square(p)
 		z = v[2]; 
 	end
    
-	off = {x/2,0,z/2}; -- center: false default
+	off = {x/2,z/2}; -- center: false default
 	local o;
 	if(round)then
 		--NOTE:Unimplemented
 		--o = CSGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedSquare");
-		o = CSGModel:new():init(CSGFactory.cube({radius = {x/2,0.0001,z/2}}),"square");
+		o = CSGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square",true);
 	else
-		o = CSGModel:new():init(CSGFactory.cube({radius = {x/2,0.0001,z/2}}),"square");
+		o = CSGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square",true);
 	end
 	if(is_table(p) and p.center and is_array(p.center))then
 		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
 		if(p.center[2])then off[2] = 0; else off[2] = z/2;end
 	elseif(is_table(p) and p.center == true)then
-		off = {0,0,0};
+		off = {0,0};
 	elseif(is_table(p) and p.center == false)then
-		off = {x/2,0,z/2};
+		off = {x/2,z/2};
 	end
 	node:setDrawable(o);
-	if(off[1] ~= 0 or off[2] ~= 0 or off[3] ~= 0)then
-		node:translate(off[1],off[2],off[3]);
+	if(off[1] ~= 0 or off[2] ~= 0)then
+		node:translate(off[1],0,off[2]);
 	end
 	return node;
 end
@@ -771,4 +773,121 @@ function NplCadEnvironment:square__(options)
 	local node = NplCadEnvironment.read_square(options);
 	parent:addChild(node);
 	return node;
+end
+
+
+--[[
+		polygon
+--]]
+function NplCadEnvironment.polygon(options)
+	local self = getfenv(2);
+	return self:polygon__(options);
+end
+--[[
+polygon({ {0,0},{3,0},{3,3} });                // openscad like
+polygon({ points = { {0,0},{3,0},{3,3},{0,6} });                    
+--]]
+function NplCadEnvironment:polygon__(options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_polygon(options);
+	parent:addChild(node);
+	return node;
+end
+
+function NplCadEnvironment.read_polygon(p)
+	local node = Node.create("");
+	local points = {};
+	local off = {0,0};
+
+	-- { {0,0},{3,0},{3,3} }
+	if(is_array(p))then
+		points = p;
+	end
+	--{ points = { {0,0},{3,0},{3,3},{0,6} }
+	if(is_table(p) and p.points)then 
+		points = p.points; 
+	end 
+
+	o = CSGModel:new():init(CAGFactory.polygon(points),"polygon",true);
+
+	if(is_table(p) and p.center and is_array(p.center))then
+		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
+		if(p.center[2])then off[2] = 0; else off[2] = z/2;end
+	elseif(is_table(p) and p.center == true)then
+		off = {0,0};
+	elseif(is_table(p) and p.center == false)then
+		off = {x/2,z/2};
+	end
+	node:setDrawable(o);
+	if(off[1] ~= 0 or off[2] ~= 0)then
+		node:translate(off[1],0,off[2]);
+	end
+	return node;
+end
+
+--[[
+		path2area
+--]]
+function NplCadEnvironment.path2area(options)
+	local self = getfenv(2);
+	return self:path2area__(options);
+end
+--[[
+path2area({ path = obj });                // openscad like
+--]]
+function NplCadEnvironment:path2area__(options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_path2area(options);
+	parent:addChild(node);
+	return node;
+end
+
+function NplCadEnvironment.read_path2area(p)
+	local node = Node.create("");
+	local path = nil;
+	local off = {0,0};
+
+	--{ path = obj }
+	if(is_table(p) and p.path)then 
+		path = p.path; 
+	end 
+
+	o = CSGModel:new():init(CAGFactory.path2area(path),"path2area",true);
+
+	if(is_table(p) and p.center and is_array(p.center))then
+		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
+		if(p.center[2])then off[2] = 0; else off[2] = z/2;end
+	elseif(is_table(p) and p.center == true)then
+		off = {0,0};
+	elseif(is_table(p) and p.center == false)then
+		off = {x/2,z/2};
+	end
+	node:setDrawable(o);
+	if(off[1] ~= 0 or off[2] ~= 0)then
+		node:translate(off[1],0,off[2]);
+	end
+	return node;
+end
+
+
+--[[
+		path2d
+--]]
+function NplCadEnvironment.path2d(p)
+	local points = {};
+	local off = {0,0};
+
+	-- { {0,0},{3,0},{3,3} }
+	if(is_array(p))then
+		points = p;
+	end
+	--{ points = { {0,0},{3,0},{3,3},{0,6} }
+	if(is_table(p) and p.points)then 
+		points = p.points; 
+	end 
+	return CAGFactory.path2d(points);
 end

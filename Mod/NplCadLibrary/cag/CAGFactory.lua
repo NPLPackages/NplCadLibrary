@@ -158,3 +158,15 @@ function CAGFactory.roundedRectangle(options)
     end
     return rect;
 end
+
+function CAGFactory.polygon(points)
+	return CAG.fromPoints(points);
+end
+
+function CAGFactory.path2area(path)
+	return path:innerToCAG();
+end
+
+function CAGFactory.path2d(points)
+	return CSGPath2D:new():init(points,false);
+end

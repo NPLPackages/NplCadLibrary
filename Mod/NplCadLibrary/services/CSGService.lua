@@ -12,11 +12,13 @@ commonlib.echo(output);
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGMatrix4x4.lua");
 NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/NplCadEnvironment.lua");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
-local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
+local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGMatrix4x4");
+local CSGMatrix4x4 = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local math3d = commonlib.gettable("mathlib.math3d");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
@@ -70,6 +72,13 @@ function CSGService.applyMatrix(csg_node,matrix)
 		end
 		polygon.plane = nil;
 	end
+end
+function CSGService.applyMatrixCAG(cag_node,matrix)
+	if(not matrix or not cag_node)then 
+		return 
+	end
+	local mat44 = CSGMatrix4x4:new():init(matrix);
+	return cag_node:transform(mat44);
 end
 function CSGService.operateTwoNodes(pre_csg_node,cur_csg_node,csg_action)
 	local bResult = false;
