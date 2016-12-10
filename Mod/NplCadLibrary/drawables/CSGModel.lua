@@ -34,7 +34,7 @@ function CSGModel:init(node,model_type,is2D)
 		self.csg_node = node;
 	else
 		self.cag_node = node;
-		self.csg_node= self.cag_node:extrude({offset={0,0.01,0}});
+		self.csg_node= self.cag_node:toCSG(0.01);
 	end
 	self.model_type = model_type;
 	return self;

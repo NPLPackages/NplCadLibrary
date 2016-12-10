@@ -74,7 +74,10 @@ end
 local default_pool = VectorPool:new();
 
 ------------------------------------------
--- CSG Vector
+-- CSG Vector initializer
+	-- {x,y,z}
+	-- {x}
+	-- {{x,y,z}} other CSGVector
 ------------------------------------------
 function CSGVector:ctor()
 	self[1] = 0;
@@ -251,6 +254,6 @@ function CSGVector:distanceToSquared(a)
 end
 
 
-function CSGVector:rotateZ(deg)
-	return self:transform(CSGMatrix4x4.rotationZ(deg));
+function CSGVector:rotateY(deg)
+	return self:transform(CSGMatrix4x4.rotationY(deg));
 end

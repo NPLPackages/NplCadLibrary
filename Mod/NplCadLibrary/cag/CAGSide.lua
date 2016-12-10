@@ -15,11 +15,13 @@ NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
 
 local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
 local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
+local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
 
 -- we inherit from nil
 local CAGSide = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide"));
@@ -52,15 +54,15 @@ function CAGSide._fromFakePolygon(polygon)
     local vert1Indices = {};
 	local pts2d = {}
 
-	for k,v in polygon.vertices do
-		if math.abs(v.pos[3] - 0.0001) > tonumber("1e-5") then
-			LOG.std(nil, "error", "CAGSide:_fromFakePolygon", "expects abs z values of 0.0001");
+	for k,v in ipairs(polygon.vertices) do
+		if (math.abs(v.pos[2]) - 1.0) > 0.001 then
+			LOG.std(nil, "error", "CAGSide:_fromFakePolygon", "expects abs y values of 0.0001");
 			return nil;
 		end
 		-- filter out when v.pos[3] <= 0
-		if v.pos[3] > 0 then
+		if v.pos[2] > 0 then
 			table.insert(vert1Indices,k);
-			table.insert(pts2d,CSGVector2D:new():init(v.pos[1], v.pos[2]));
+			table.insert(pts2d,CSGVector2D:new():init(v.pos[1], v.pos[3]));
         end
  	end
 		
@@ -71,22 +73,21 @@ function CAGSide._fromFakePolygon(polygon)
     local d = vert1Indices[2] - vert1Indices[1];
     if d == 1 or d == 3 then
         if d == 1 then
-            pts2d:reverse();
+            pts2d = tableext.reverse(pts2d);
        end
     else
  		LOG.std(nil, "error", "CAGSide:_fromFakePolygon", "unknown index ordering");
 		return nil;
     end
-	local result = CAGSide:new():init( CAGVertex:new():init(pts2d[1]), CAGVertex:new():init(pts2d[2]));
-    return result;
+	return CAGSide:new():init( CAGVertex:new():init(pts2d[2]), CAGVertex:new():init(pts2d[1]));
 end
 
 function CAGSide:toPolygon3D(y0, y1) 
     local vertices = {
         CSGVertex:new():init(self.vertex0.pos:toVector3D(y0))	,
-		CSGVertex:new():init(self.vertex1.pos:toVector3D(y0))	,
+		CSGVertex:new():init(self.vertex0.pos:toVector3D(y1))	,
 		CSGVertex:new():init(self.vertex1.pos:toVector3D(y1))	,
-		CSGVertex:new():init(self.vertex0.pos:toVector3D(y1))	
+		CSGVertex:new():init(self.vertex1.pos:toVector3D(y0))
     };
     return CSGPolygon:new():init(vertices);
 end

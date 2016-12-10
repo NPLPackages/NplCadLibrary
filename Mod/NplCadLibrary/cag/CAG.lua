@@ -102,7 +102,8 @@ end
 -- Points should rotate counter clockwise
 function CAG.fromPointsNoCheck(points)
 	local sides = {};
-    local prevpoint = CSGVector2D:new():init(points[numpoints - 1]);
+	local numpoints = #points;
+    local prevpoint = CSGVector2D:new():init(points[numpoints]);
     local prevvertex = CAGVertex:new():init(prevpoint);
 	
 	-- build side from points array
@@ -117,17 +118,17 @@ function CAG.fromPointsNoCheck(points)
 end
 
 
--- Converts a CSG to a CAG. The CSG must consist of polygons with only z coordinates +0.0001 and -0.0001
+-- Converts a CSG to a CAG. The CSG must consist of polygons with only z coordinates +1 and -1
 -- as constructed by CAG:_toCSGWall(-1, 1). This is so we can use the 3D union(), intersect() etc
 function CAG.fromFakeCSG(csg) 
 	local sides = {};
 	-- can we sure csg.polygons is an array?
-    local polygon = csg:GetPolygons();
-	for k,v in ipairs(sides) do
-		local side = CAGSide:_fromFakePolygon(v);
+    local polygons = csg:GetPolygons();
+	for k,poly in ipairs(polygons) do
+		local side = CAGSide._fromFakePolygon(poly);
 		table.insert(sides,side);
 	end
-    return CAG.fromSides(sides);
+	return CAG.fromSides(sides);
 end
 
 -- see if the line between p0start and p0end intersects with the line between p1start and p1end
@@ -158,8 +159,8 @@ end
 
 function CAG:_toCSGWall(y0, y1) 
 	local polygons = {};
-	for k,v in ipairs(self.sides) do
-		table.insert(polygons,v:toPolygon3D(y0,y1));
+	for k,side in ipairs(self.sides) do
+		table.insert(polygons,side:toPolygon3D(y0,y1));
 	end
     return CSG.fromPolygons(polygons);
 end
@@ -205,7 +206,6 @@ function CAG:_toPlanePolygons(options)
     -- resulting transform
     local m = thisConnector:getTransformationTo(toConnector, false, 0);
 
-	--[[
     -- create plane as a (partial non-closed) CSG in XY plane
     local bounds = self:getBounds();
     bounds[1] = bounds[1]:minus(CSGVector2D:new():init(1, 1));
@@ -213,13 +213,10 @@ function CAG:_toPlanePolygons(options)
     local csgshell = self:_toCSGWall(-1, 1);
     local csgplane = CSG.fromPolygons({CSGPolygon:new():init({
         CSGVertex:new():init(CSGVector:new():init(bounds[1][1], 0, bounds[1][2])),
-        CSGVertex:new():init(CSGVector:new():init(bounds[2][1], 0, bounds[1][2])),
+        CSGVertex:new():init(CSGVector:new():init(bounds[1][1], 0, bounds[2][2])),
         CSGVertex:new():init(CSGVector:new():init(bounds[2][1], 0, bounds[2][2])),
-        CSGVertex:new():init(CSGVector:new():init(bounds[1][1], 0, bounds[2][2]))
+		CSGVertex:new():init(CSGVector:new():init(bounds[2][1], 0, bounds[1][2]))
     })});
-    if (flipped) then
-        csgplane = csgplane:inverse();
-    end
 
     -- intersectSub -> prevent premature retesselate/canonicalize
     csgplane = csgplane:intersect(csgshell);
@@ -228,6 +225,9 @@ function CAG:_toPlanePolygons(options)
     local polys = {};
 	for k,polygon in ipairs(csgplane.polygons) do
 		if(math.abs(polygon:GetPlane().normal[2]) > 0.99) then
+		    if (flipped) then
+				polygon = polygon:flip();
+			end
 			table.insert(polys,polygon);
 		end
 	end
@@ -236,21 +236,7 @@ function CAG:_toPlanePolygons(options)
 	for i=1,#polys,1 do
 		polys[i] = polys[i]:transform(m);
 	end
-	--]]
-
-	-- take every vertex from side,add to Polygon3D
-	local vertices = {};
-	for k,side in ipairs(self.sides) do
-		local vertex = CSGVertex:new():init(CSGVector:new():init(side.vertex0.pos[1],0,side.vertex0.pos[2]));
-		table.insert(vertices,vertex);
-	end
-	local poly = CSGPolygon:new():init(tableext.reverse(vertices));
-	poly = poly:transform(m);
-    if (flipped) then
-        poly = poly:flip();
-    end
-	poly:GetPlane();
-	return {poly};
+	return polys;
 end
 --[[
     * given 2 connectors, self returns all polygons of a "wall" between 2
@@ -306,11 +292,9 @@ function CAG:union(cag)
         cags = {cag};
     end
     local r = self:_toCSGWall(-1, 1);
-	local others = {};
-	for k,v in ipairs(cags) do
-		table.insert(others,v:_toCSGWall(-1, 1));
+	for k,cag in ipairs(cags) do
+		r = r:union(cag:_toCSGWall(-1, 1));
 	end
-    local r = r.union(others, false, false);
     return CAG.fromFakeCSG(r);
 end
 
@@ -323,7 +307,7 @@ function CAG:subtract(cag)
     end
     local r = self:_toCSGWall(-1, 1);
 	for k,v in ipairs(cags) do
-		r = r.subtractSub(v:_toCSGWall(-1, 1));
+		r = r:subtractSub(v:_toCSGWall(-1, 1));
 	end
     r = CAG.fromFakeCSG(r);
     return r;
@@ -427,10 +411,10 @@ function CAG:expandedShell(radius, resolution)
 
 	for k,side in ipairs(self.sides) do
         local d = side.vertex1.pos:minus(side.vertex0.pos);
-        local dl = d.length();
+        local dl = d:length();
         if (dl > tonumber("1e-5")) then
             d = d:times(1.0 / dl);
-            local normal = d.normal():times(radius);
+            local normal = d:normal():times(radius);
             local shellpoints = {
                 side.vertex1.pos:plus(normal),
                 side.vertex1.pos:minus(normal),
@@ -469,8 +453,8 @@ function CAG:expandedShell(radius, resolution)
         if (m.length == 2) then
             local end1 = m[1].p2;
             local end2 = m[2].p2;
-            angle1 = end1:minus(pcenter).angleDegrees();
-            angle2 = end2:minus(pcenter).angleDegrees();
+            angle1 = end1:minus(pcenter):angleDegrees();
+            angle2 = end2:minus(pcenter):angleDegrees();
             if (angle2 < angle1) then
 				angle2 = angle2 + 360;
 			end
@@ -508,9 +492,9 @@ function CAG:expandedShell(radius, resolution)
                 if (step == numsteps) then
 					angle = angle2; -- prevent rounding errors
 				end
-                local point = pcenter:plus(CSG.Vector2D.fromAngleDegrees(angle):times(radius));
+                local point = pcenter:plus(CSGVector2D.fromAngleDegrees(angle):times(radius));
                 if ((not fullcircle) or (step > 0)) then
-                    points.push(point);
+					table.insert(points,point);
                 end
             end
             local newcag = CAG.fromPointsNoCheck(points);
@@ -518,7 +502,7 @@ function CAG:expandedShell(radius, resolution)
         end
     end
     local result = CAG:new();
-    result = result.union(cags);
+    result = result:union(cags);
     return result;
 end
 
@@ -559,7 +543,7 @@ function CAG:extrudeInPlane(axis1, axis2, depth)
     return self.extrudeInOrthonormalBasis(CSG.OrthoNormalBasis.GetCartesian(axis1, axis2), depth);
 end
 
-function CAG:toCSG()
+function CAG:toCSG(height)
     if (#self.sides == 0) then
         -- empty!
         return CSG:new();
@@ -567,9 +551,11 @@ function CAG:toCSG()
     local normalVector = CSGVector:new():init(0, 0, -1);
     local polygons = {};
     -- bottom and top
-	polygons = tableext.concat(polygons,self:_toPlanePolygons({translation= {0, 0, 0},normalVector= normalVector, flipped = false}));
-    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = {0, 0, 0},normalVector = normalVector, flipped = true}));
-
+	polygons = tableext.concat(polygons,self:_toPlanePolygons({translation= {0, 0, 0},normalVector= normalVector, flipped = true}));
+    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = {0, height, 0},normalVector = normalVector, flipped = false}));
+	for k,side in ipairs(self.sides) do
+		table.insert(polygons,side:toPolygon3D(0,height));
+	end
 	return CSG.fromPolygons(polygons);	
 end
 
@@ -599,14 +585,14 @@ function CAG:extrude(options)
     local polygons = {};
     -- bottom and top
 	polygons = tableext.concat(polygons,self:_toPlanePolygons({translation= {0, 0, 0},normalVector= normalVector, flipped = not (offsetVector[2] < 0)}));
-    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = offsetVector,normalVector = normalVector:rotateZ(twistangle + 180), flipped = (offsetVector[2] < 0)}));
+    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = offsetVector,normalVector = normalVector:rotateY(twistangle + 180), flipped = (offsetVector[2] < 0)}));
     -- walls
 	local i;
     for i = 0, twiststeps-1 ,1 do
         local c1 = CSGConnector:new():init(offsetVector:times(i / twiststeps), {0, offsetVector[2], 0},
-            normalVector:rotateZ(i * twistangle/twiststeps + 180));
+            normalVector:rotateY(i * twistangle/twiststeps + 180));
         local c2 = CSGConnector:new():init(offsetVector:times((i + 1) / twiststeps), {0, offsetVector[2], 0},
-            normalVector:rotateZ((i + 1) * twistangle/twiststeps + 180));
+            normalVector:rotateY((i + 1) * twistangle/twiststeps + 180));
 		polygons = tableext.concat(polygons,self:_toWallPolygons({toConnector1 = c1, toConnector2 = c2}));
     end
     return CSG.fromPolygons(polygons);
@@ -618,14 +604,14 @@ end
     * --]]
 function CAG:rotateExtrude(options)
     local alpha = CSGFactory.parseOptionAsFloat(options, "angle", 360);
-    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSG.defaultResolution3D);
+    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution3D);
 
     local EPS = tonumber("1e-5");
 	if(alpha > 360) then
 		alpha = alpha % 360;
 	end
     local origin = {0, 0, 0};
-    local axisV = CSGVector:new():init(0, 0, 1);
+    local axisV = CSGVector:new():init(0, 0, -1);
     local normalV = {0, 1, 0};
     local polygons = {};
     -- planes only needed if alpha > 0
@@ -633,22 +619,23 @@ function CAG:rotateExtrude(options)
     if (alpha > 0 and alpha < 360) then
         -- we need to rotate negative to satisfy wall function condition of
         -- building in the direction of axis vector
-        local connE = CSGConnector:new():init(origin, axisV.rotateZ(-alpha), normalV);
-        polygons = polygons.concat(
+        local connE = CSGConnector:new():init(origin, axisV:rotateY(-alpha), normalV);
+        polygons = tableext.concat(polygons,
             self:_toPlanePolygons({toConnector = connS, flipped = true}));
-        polygons = polygons.concat(
+        polygons = tableext.concat(polygons,
             self:_toPlanePolygons({toConnector = connE}));
     end
-    local connT1 = connS, connT2;
+    local connT1 = connS;
+	local connT2;
     local step = alpha/resolution;
 	local a;
     for a = step, alpha + EPS ,step do
-        connT2 = CSGConnector:new():init(origin, axisV.rotateZ(-a), normalV);
-        polygons = polygons.concat(self:_toWallPolygons(
+        connT2 = CSGConnector:new():init(origin, axisV:rotateY(-a), normalV);
+        polygons = tableext.concat(polygons,self:_toWallPolygons(
             {toConnector1 = connT1, toConnector2 = connT2}));
         connT1 = connT2;
     end
-    return CSG.fromPolygons(polygons).reTesselated();
+    return CSG.fromPolygons(polygons);
 end
 
 -- check if we are a valid CAG (for debugging)
@@ -873,7 +860,7 @@ overCutInsideCorners(cutterradius)
                 local points = [circlecenter];
                 for (local i = 0; i <= numsteps; i++)
                     local angle = startangle + i / numsteps * deltaangle;
-                    local p = CSG.Vector2D.fromAngleRadians(angle):times(radiuscorrected):plus(circlecenter);
+                    local p = CSGVector2D.fromAngleRadians(angle):times(radiuscorrected):plus(circlecenter);
                     points.push(p);
                 }
                 cutouts.push(CAG.fromPoints(points));

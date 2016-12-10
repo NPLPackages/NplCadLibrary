@@ -207,7 +207,7 @@ function CSGVector2D:toVector3D(y)
 end
 
 function CSGVector2D:equals(a)
-	return (self[1] == a[1]) and (self[2] == a[2]);
+	return ((math.abs(self[1]-a[1])<tonumber("1e-5")) and (math.abs(self[2] - a[2])<tonumber("1e-5")));
 end
 
 function CSGVector2D:multiply4x4(matrix4x4)

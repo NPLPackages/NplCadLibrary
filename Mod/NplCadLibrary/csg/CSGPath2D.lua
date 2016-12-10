@@ -448,23 +448,22 @@ function CSGPath2D:appendArc(endpoint, options)
     local result = CSGPath2D:new():init(newpoints);
     return result;
 end
-	--[[
 
 -- Expand the path to a CAG
 -- This traces the path with a circle with radius pathradius
 function CSGPath2D:expandToCAG(pathradius, resolution) 
     local sides = {};
     local numpoints = #self.points;
-    local startindex = 0;
+    local startindex = 1;
     if (self.closed and (numpoints > 2)) then
-		startindex = -1;
+		startindex = 0;
 	end
     local prevvertex;
 	local i;
-    for i = startindex, numpoints-1,1 do
+    for i = startindex, numpoints,1 do
         local pointindex = i;
-        if (pointindex < 0) then
-			pointindex = numpoints - 1;
+        if (pointindex < 1) then
+			pointindex = numpoints;
 		end
         local point = self.points[pointindex];
         local vertex = CAGVertex:new():init(point);
@@ -475,7 +474,7 @@ function CSGPath2D:expandToCAG(pathradius, resolution)
         prevvertex = vertex;
     end
     local shellcag = CAG.fromSides(sides);
-    local expanded = shellcag.expandedShell(pathradius, resolution);
+    local expanded = shellcag:expandedShell(pathradius, resolution);
     return expanded;
 end
 
@@ -485,13 +484,11 @@ end
 --   height: height of the extrusion in the z direction
 --   resolution: number of segments per 360 degrees for the curve in a corner
 function CSGPath2D:rectangularExtrude(width, height, resolution) 
-    local cag = self.expandToCAG(width / 2, resolution);
-    local result = cag.extrude({
-        offset = {0, 0, height}
-    });
+    local cag = self:expandToCAG(width / 2, resolution);
+    local result = cag:toCSG(height);
     return result;
 end
---]]
+
 function CSGPath2D:innerToCAG() 
     if (not self.closed) then
 		LOG.std(nil, "error", "CSGPath2D:innerToCAG", "The path should be closed!");
