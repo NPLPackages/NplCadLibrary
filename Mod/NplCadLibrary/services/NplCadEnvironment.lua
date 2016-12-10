@@ -850,20 +850,33 @@ end
 
 --[[
 		path2d
+		-- { {0,0},{3,0},{3,3} }
+		--{ points = { {0,0},{3,0},{3,3},{0,6} }
+		-- { arc = {center={0,0,0},radius=1,startangle=0,endangle= 360,resolution=32,maketangent=false}}
+	
 --]]
 function NplCadEnvironment.path2d(p)
-	local points = {};
-	local off = {0,0};
-
 	-- { {0,0},{3,0},{3,3} }
-	if(is_array(p))then
-		points = p;
-	end
+	if(is_array(p)) then
+		return CAGFactory.path2dFromPoints(p);
+
 	--{ points = { {0,0},{3,0},{3,3},{0,6} }
-	if(is_table(p) and p.points)then 
-		points = p.points; 
+	elseif(is_table(p)) then 
+		local closed = false;
+		local path = nil;
+		if(p.closed) then
+			closed = p.closed;
+		end
+		if(p.points) then
+			path = CAGFactory.path2dFromPoints(p.points);
+		elseif(p.arc) then
+			path = CAGFactory.path2dFromArc(p.arc);
+		end
+		path.closed = closed;
+		return path;
+	else
+		return CAGFactory.path2dFromPoints({});
 	end 
-	return CAGFactory.path2d(points);
 end
 
 

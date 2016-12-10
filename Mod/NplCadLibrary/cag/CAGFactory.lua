@@ -163,10 +163,9 @@ function CAGFactory.polygon(points)
 	return CAG.fromPoints(points);
 end
 
-function CAGFactory.path2area(path)
-	return path:innerToCAG();
-end
-
-function CAGFactory.path2d(points)
+function CAGFactory.path2dFromPoints(points)
 	return CSGPath2D:new():init(points,false);
+end
+function CAGFactory.path2dFromArc(arc)
+	return CSGPath2D.arc(arc);
 end

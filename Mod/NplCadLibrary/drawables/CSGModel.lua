@@ -49,14 +49,15 @@ end
 function CSGModel:getCSGNode()
 	return self.csg_node;
 end
+
+--[[
 function CSGModel:toMesh()
 	return CSGService.toMesh(self.csg_node);
 end
 function CSGModel:applyMatrix(matrix)
 	CSGService.applyMatrix(self.csg_node,matrix);
-	--[[
 	if(self.cag_node ~= nil) then
 		self.cag_node = CSGService.applyMatrixCAG(self.cag_node,matrix);
 	end
-	--]]
 end
+--]]
