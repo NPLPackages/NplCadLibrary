@@ -12,7 +12,7 @@ We use copy on write policy for all CSG stuffs, like vertext, polygon, plane, bs
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
 local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
 -------------------------------------------------------
-]]
+--]]
 NPL.load("(gl)script/ide/math/vector.lua");
 NPL.load("(gl)script/ide/math/bit.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
@@ -256,3 +256,74 @@ function CSG.saveAsSTL(csg,output_file_name)
 		return true;
 	end
 end
+
+-- solve 2x2 linear equation:
+-- [ab][x] = [u]
+-- [cd][y]   [v]
+function CSG.solve2Linear(a, b, c, d, u, v)
+    local det = a * d - b * c;
+    local invdet = 1.0 / det;
+    local x = u * d - b * v;
+    local y = -u * c + a * v;
+    x = x*invdet;
+    y = y*invdet;
+    return {x, y};
+end
+
+--[[
+function CSG.addTransformationMethodsToPrototype(prot) 
+    prot.mirrored = function(plane) 
+        return this.transform(CSG.Matrix4x4.mirroring(plane));
+    end
+
+    prot.mirroredX = function() {
+        var plane = new CSG.Plane(CSG.Vector3D.Create(1, 0, 0), 0);
+        return this.mirrored(plane);
+    };
+
+    prot.mirroredY = function() {
+        var plane = new CSG.Plane(CSG.Vector3D.Create(0, 1, 0), 0);
+        return this.mirrored(plane);
+    };
+
+    prot.mirroredZ = function() {
+        var plane = new CSG.Plane(CSG.Vector3D.Create(0, 0, 1), 0);
+        return this.mirrored(plane);
+    };
+
+    prot.translate = function(v) {
+        return this.transform(CSG.Matrix4x4.translation(v));
+    };
+
+    prot.scale = function(f) {
+        return this.transform(CSG.Matrix4x4.scaling(f));
+    };
+
+    prot.rotateX = function(deg) {
+        return this.transform(CSG.Matrix4x4.rotationX(deg));
+    };
+
+    prot.rotateY = function(deg) {
+        return this.transform(CSG.Matrix4x4.rotationY(deg));
+    };
+
+    prot.rotateZ = function(deg) {
+        return this.transform(CSG.Matrix4x4.rotationZ(deg));
+    };
+
+    prot.rotate = function(rotationCenter, rotationAxis, degrees) {
+        return this.transform(CSG.Matrix4x4.rotation(rotationCenter, rotationAxis, degrees));
+    };
+
+    prot.rotateEulerAngles = function(alpha, beta, gamma, position) {
+        position = position || [0,0,0];
+
+        var Rz1 = CSG.Matrix4x4.rotationZ(alpha);
+        var Rx  = CSG.Matrix4x4.rotationX(beta);
+        var Rz2 = CSG.Matrix4x4.rotationZ(gamma);
+        var T   = CSG.Matrix4x4.translation(new CSG.Vector3D(position));
+
+        return this.transform(Rz2.multiply(Rx).multiply(Rz1).multiply(T));
+    };
+end
+--]]

@@ -18,6 +18,7 @@ NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/doms/DomParser.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
+NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/Color.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
@@ -27,6 +28,7 @@ local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 local DomParser = commonlib.gettable("Mod.NplCadLibrary.doms.DomParser");
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
+local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 local Color = commonlib.gettable("Mod.NplCadLibrary.utils.Color");
 local math_pi = 3.1415926;
@@ -47,6 +49,22 @@ local function is_number(input)
 end
 local function is_array(input)
 	if(input and type(input) == "table" and (#input) > 0)then
+		return true;
+	end
+end
+
+local function is_node(input)
+	if(input and type(input) == "table" and (input.getTypeName) and input.getTypeName()=="Node")then
+		return true;
+	end
+end
+local function is_sharp(input)
+	if(is_node(input) and input.hasTag and input:hasTag("shape")) then
+		return true;
+	end
+end
+local function is_path(input)
+	if(input and type(input) == "table" and input.expandToCAG and input.innerToCAG and input.rectangularExtrude) then
 		return true;
 	end
 end
@@ -587,4 +605,535 @@ function NplCadEnvironment:loadXml__(str)
 	if(node)then
 		parent:addChild(node);
 	end
+end
+
+--[[
+		circle
+--]]
+function NplCadEnvironment.circle(options,...)
+	local self = getfenv(2);
+	return self:circle__(options);
+end
+
+function NplCadEnvironment.read_circle(p,...)
+	local node = Node.create("");
+	local r = 1;
+	local fn = CSGFactory.defaultResolution2D;
+	local a = {...};
+	local off = {0,0,0};
+
+	--x
+	if(not is_table(p)) then
+		r = p;
+	end
+	-- {d=x}
+	if(is_table(p) and p.d) then
+		r = p.d/2;
+	end
+	-- {r=x}
+	if(is_table(p) and p.r) then
+		r = p.r; 
+	end
+	--[r,fn]
+	if(is_array(a) and a[1] and is_array(a[1])) then
+		r = a[1]; 
+		if(#a == 2)then
+		fn = a[2];
+		end
+	end
+	-- {fn=x}
+	if(is_table(p) and p.fn) then
+		fn = p.fn;
+	end
+
+	local o;
+	o = CSGModel:new():init(CAGFactory.circle({radius = r, resolution = fn}),"circle",true);
+
+	-- {center={}}
+	if(is_table(p) and p.center and is_table(p.center)) then         -- preparing individual x,y,z center
+		if(p.center[1])then
+			off[1] = 0;
+		else
+			off[1] = r;
+		end
+		if(p.center[2])then
+			off[2] = 0;
+		else
+			off[2] = r;
+		end
+	-- {center=true}
+	elseif(is_table(p) and p.center==true) then 
+		off = {0,0,0};
+	-- {center=false}
+	elseif(is_table(p) and p.center==false) then
+		off = {r,0,r};
+	end
+	
+	--if(off[0]||off[1]||off[2]) o = o.translate(off);
+	if(off[1] ~= 0 or off[2] ~= 0 or off[3] ~= 0)then
+		node:translate(off[1],off[2],off[3]);
+	end
+
+	node:setDrawable(o);
+	node:setTag("shape","circle");
+	return node;
+end
+--[[
+	circle();                        -- openscad like
+	circle(1); 
+	circle({d: 2, fn:5});
+	circle({r: 2, fn:5});
+	circle({r: 3, center = true});    -- center: false (default)
+	circle({r: 3, center = {true, true}});    -- individual x,z center flags
+]]
+function NplCadEnvironment:circle__(options,...)
+	options = options or {};
+	local parent = self:getNode__();
+	local node = NplCadEnvironment.read_circle(options,...)
+	parent:addChild(node);
+	return node;
+end
+
+--[[
+		square
+--]]
+function NplCadEnvironment.square(options)
+	local self = getfenv(2);
+	return self:square__(options);
+end
+
+function NplCadEnvironment.read_square(p)
+	local node = Node.create("");
+	local s = 1;
+	local v = nil;
+	local off = {0,0};
+	local round = false;
+	local r = 0;
+	local fn = 8;
+
+	-- [w,h]
+	if(is_array(p))then
+		v = p;
+	end
+	--{ size: [w.h] }
+	if(is_table(p) and p.size and is_array(p.size))then 
+		v = p.size; 
+	end 
+	--{ size: 1 }
+	if(is_table(p) and p.size and not is_array(p.size))then 
+		s = p.size; 
+	end 
+	-- (2)
+	if(not is_table(p)) then 
+		s = p; 
+	end 
+	if(is_table(p) and p.round == true)then
+		round = true;
+		if(v)then
+			if(is_array(v))then
+				r = (v[1]+v[2])/30;
+			else 
+				r = s / 10;
+			end
+		end
+	end
+	if(is_table(p) and p.radius)then
+		round = true;
+		r = p.radius;
+	end
+	if(is_table(p) and p.fn)then
+		fn = p.fn; --applies in case of round: true
+	end
+
+	local x = s;
+	local z = s; 
+	if(v and is_array(v))then
+		x = v[1];
+		z = v[2]; 
+	end
+   
+	off = {x/2,z/2}; -- center: false default
+	local o;
+	if(round)then
+		--NOTE:Unimplemented
+		--o = CSGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedSquare");
+		o = CSGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square",true);
+	else
+		o = CSGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square",true);
+	end
+	if(is_table(p) and p.center and is_array(p.center))then
+		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
+		if(p.center[2])then off[2] = 0; else off[2] = z/2;end
+	elseif(is_table(p) and p.center == true)then
+		off = {0,0};
+	elseif(is_table(p) and p.center == false)then
+		off = {x/2,z/2};
+	end
+	node:setDrawable(o);
+	node:setTag("shape","square");
+
+	if(off[1] ~= 0 or off[2] ~= 0)then
+		node:translate(off[1],0,off[2]);
+	end
+	return node;
+end
+--[[
+square(); // openscad like
+square(1);
+square({size = 1});
+square({size = {1,2}});
+square({size = 1, center = true}); // default center:false
+square({size = 1, center = {true,true}}); // individual axis center true or false
+--]]
+function NplCadEnvironment:square__(options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_square(options);
+	parent:addChild(node);
+	return node;
+end
+
+
+--[[
+		polygon
+--]]
+function NplCadEnvironment.polygon(options)
+	local self = getfenv(2);
+	return self:polygon__(options);
+end
+--[[
+polygon({ {0,0},{3,0},{3,3} });                // openscad like
+polygon({ points = { {0,0},{3,0},{3,3},{0,6} });                    
+--]]
+function NplCadEnvironment:polygon__(options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_polygon(options);
+	parent:addChild(node);
+	return node;
+end
+
+function NplCadEnvironment.read_polygon(p)
+	local node = Node.create("");
+	local points = {};
+	local off = {0,0};
+
+	-- { {0,0},{3,0},{3,3} }
+	if(is_array(p))then
+		points = p;
+	end
+	--{ points = { {0,0},{3,0},{3,3},{0,6} }
+	if(is_table(p) and p.points)then 
+		points = p.points; 
+	end 
+
+	o = CSGModel:new():init(CAGFactory.polygon(points),"polygon",true);
+
+	if(is_table(p) and p.center and is_array(p.center))then
+		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
+		if(p.center[2])then off[2] = 0; else off[2] = z/2;end
+	elseif(is_table(p) and p.center == true)then
+		off = {0,0};
+	elseif(is_table(p) and p.center == false)then
+		off = {x/2,z/2};
+	end
+	node:setDrawable(o);
+	node:setTag("shape","polygon");
+
+	if(off[1] ~= 0 or off[2] ~= 0)then
+		node:translate(off[1],0,off[2]);
+	end
+	return node;
+end
+
+--[[
+		path2d
+		-- { {0,0},{3,0},{3,3} }
+		--{ points = { {0,0},{3,0},{3,3},{0,6} }
+		-- { arc = {center={0,0,0},radius=1,startangle=0,endangle= 360,resolution=32,maketangent=false}}
+	
+--]]
+function NplCadEnvironment.path2d(p)
+	-- { {0,0},{3,0},{3,3} }
+	if(is_array(p)) then
+		return CAGFactory.path2dFromPoints(p);
+
+	--{ points = { {0,0},{3,0},{3,3},{0,6} }
+	elseif(is_table(p)) then 
+		local closed = false;
+		local path = nil;
+		if(p.closed) then
+			closed = p.closed;
+		end
+		if(p.points) then
+			path = CAGFactory.path2dFromPoints(p.points);
+		elseif(p.arc) then
+			path = CAGFactory.path2dFromArc(p.arc);
+		end
+		path.closed = closed;
+		return path;
+	else
+		return CAGFactory.path2dFromPoints({});
+	end 
+end
+
+
+--[[
+innerToCAG( path);
+--]]
+function NplCadEnvironment.innerToCAG(path)
+	local self = getfenv(2);
+	return self:innerToCAG__(path);
+end
+function NplCadEnvironment:innerToCAG__(path)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_innerToCAG(path);
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_innerToCAG(path)
+	local node = Node.create("");
+	local obj = nil;
+	local o;
+	if(is_path(path)) then
+		obj = path;
+		if(obj.closed == true) then
+			o = CSGModel:new():init(obj:innerToCAG(),"innerToCAG",true);
+			node:setDrawable(o);
+			node:setTag("shape","innerToCAG");
+		else
+			log("the path which innerToCAG should be CLOSED.");
+		end
+	else
+		log("obj isn't a path,cannot be innerToCAG.");
+	end
+	return node;
+end
+
+--[[
+expandToCAG(path,0.1);
+expandToCAG(path,{pathradius = 0.1, fn = 8});
+-- pathradius default is 0.1
+-- fn default is 32
+--]]
+function NplCadEnvironment.expandToCAG(path,options)
+	local self = getfenv(2);
+	return self:expandToCAG__(path,options);
+end
+function NplCadEnvironment:expandToCAG__(path,options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_expandToCAG(path,options);
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_expandToCAG(path,options)
+	local node = Node.create("");
+	local obj = nil;
+	local o;
+	local pathradius = 0.1;
+	local fn = 32;
+	if(is_path(path)) then
+		obj = path;
+		if (is_number(options)) then 
+			pathradius = options;
+		elseif (is_table(options)) then
+			if(is_number(options.pathradius)) then
+				pathradius = options.pathradius;
+			end
+			if(is_number(options.fn)) then
+				fn = options.fn;
+			end
+		end
+
+		o = CSGModel:new():init(obj:expandToCAG(pathradius,fn),"expandToCAG",true);
+		node:setDrawable(o);
+		node:setTag("shape","expandToCAG");
+	else
+		log("obj isn't a path,cannot be expandToCAG.");
+	end
+	return node;
+end
+
+--[[
+rectangular_extrude(path)
+rectangular_extrude(path,0.1)
+rectangular_extrude(path,{width = 0.1, height = 0.2, fn = 8})
+-- width default is 0.1
+-- height default is 0.1
+-- fn default is 32
+--]]
+
+function NplCadEnvironment.rectangularExtrude(path,options)
+	local self = getfenv(2);
+	return self:rectangularExtrude__(path,options);
+end
+function NplCadEnvironment:rectangularExtrude__(path,options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_rectangularExtrude(path,options);
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_rectangularExtrude(path,options)
+	local node = Node.create("");
+	local obj = nil;
+	local o;
+	local width = 0.1;
+	local height = 0.1
+	local fn = 32;
+	if(is_path(path)) then
+		obj = path;
+
+		if (is_number(options)) then 
+			pathradius = options;
+		elseif (is_table(options)) then
+			if(is_number(options.width)) then
+				width = options.width;
+			end
+			if(is_number(options.height)) then
+				height = options.height;
+			else
+				height = width;
+			end
+			if(is_number(options.fn)) then
+				fn = options.fn;
+			end
+		end
+
+		o = CSGModel:new():init(obj:rectangularExtrude(width,height,fn),"rectangular_extrude");
+		node:setDrawable(o);
+		node:setTag("shape","rectangular_extrude");
+	else
+		log("obj isn't a path,cannot be rectangular_extrude.");
+	end
+	return node;
+end
+
+--[[
+extrude(shape)
+extrude(shape,{0,10,0})
+extrude(shape,{offset = {0,10,0}, twistangle = 360, twiststeps = 100})
+-- offset default is {0,0,1}
+-- twistangle default is 0
+-- twiststeps default is 32
+--]]
+
+function NplCadEnvironment.linearExtrude(shape,options)
+	local self = getfenv(2);
+	return self:linearExtrude__(shape,options);
+end
+function NplCadEnvironment:linearExtrude__(shape,options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_linearExtrude(shape,options);
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_linearExtrude(shape,options)
+	local node = nil;
+	local obj = nil;
+	local o;
+	local twistangle = 0;
+	local twiststeps = 32
+	local x,y,z = 0,1,0;
+	if(is_sharp(shape)) then
+		node = shape;
+		obj = node:getDrawable().cag_node;
+		if(obj.extrude) then
+			if (is_array(options)) then 
+				if(is_number(options[1])) then
+					x = options[1];
+				end
+				if(is_number(options[2])) then
+					y = options[2];
+				end
+				if(is_number(options[3])) then
+					z = options[3];
+				end
+			elseif (is_table(options)) then
+				if(is_table(options.offset)) then
+					if(is_number(options.offset[1])) then
+						x = options.offset[1];
+					end
+					if(is_number(options.offset[2])) then
+						y = options.offset[2];
+					end
+					if(is_number(options.offset[3])) then
+						z = options.offset[3];
+					end
+				end
+				if(is_number(options.twistangle)) then
+					twistangle = options.twistangle;
+				end
+				if(is_number(options.twiststeps)) then
+					twiststeps = options.twiststeps;
+				end
+			end
+			o = CSGModel:new():init(obj:extrude({offset = {x,y,z},twistangle = twistangle,twiststeps = twiststeps}),"extrude");
+			node:setDrawable(o);
+			node:setTag("extrude","linearExtrude");
+		else
+			log("obj isn't a shape,cannot be linearExtrude.");
+		end
+	end
+	return node;
+end
+
+--[[
+rotateExtrude
+arguments: options dict with angle and resolution, both optional
+rotateExtrude(shape,angle)
+rotateExtrude(shape,{angle = a, fn = 8})
+-- angle default is 360
+-- fn default is 32
+--]]
+
+function NplCadEnvironment.rotateExtrude(shape,options)
+	local self = getfenv(2);
+	return self:rotateExtrude__(shape,options);
+end
+function NplCadEnvironment:rotateExtrude__(shape,options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_rotateExtrude(shape,options);
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_rotateExtrude(shape,options)
+	local node = nil;
+	local obj = nil;
+	local o;
+	local angle = 360;
+	local fn = CSGFactory.defaultResolution2D;
+	if(is_sharp(shape)) then
+		node = shape;
+		obj = node:getDrawable().cag_node;
+		if(obj.rotateExtrude) then
+			if (is_number(options)) then 
+				angle = options;
+			elseif (is_table(options)) then
+				if(is_number(options.angle)) then
+					angle = options.angle;
+				end
+				if(is_number(options.fn)) then
+					fn = options.fn;
+				end
+			end
+			o = CSGModel:new():init(obj:rotateExtrude({angle = angle,resolution = fn}),"rotateExtrude");
+			node:setDrawable(o);	-- cag should be destroy by this.
+			node:setTag("extrude","rotateExtrude");
+		else
+			log("obj isn't a shape,cannot be rotateExtrude.");
+		end
+	end
+	return node;
 end

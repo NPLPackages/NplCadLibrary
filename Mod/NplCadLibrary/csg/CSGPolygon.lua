@@ -19,7 +19,10 @@ local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 -------------------------------------------------------
 ]]
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPlane.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
+
 local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
+local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 local CSGPolygon = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon"));
 
 -- {vertices, shared, plane(optional)}
@@ -29,6 +32,7 @@ end
 function CSGPolygon:init(vertices, shared)
 	self.vertices = vertices or {};
 	self.shared = shared;
+	self.plane = CSGPlane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos);	
 	return self;
 end
 
@@ -81,4 +85,19 @@ function CSGPolygon:getVertexCnt()
 		return #self.vertices;
 	end
 	return 0;
+end
+
+-- Affine transformation of polygon. Returns a new CSG.Polygon
+function CSGPolygon:transform(matrix4x4) 
+    local newvertices = {};
+	for k,v in ipairs(self.vertices) do 
+        table.insert(newvertices, CSGVertex:new():init(v.pos:transform(matrix4x4)));
+    end
+	local newplane = self:GetPlane():transform(matrix4x4);
+    if (matrix4x4:isMirroring()) then
+        -- need to reverse the vertex order
+        -- in order to preserve the inside/outside orientation:
+        newvertices = tableext.reverse(newvertices);
+    end
+    return CSGPolygon:new():init(newvertices, self.shared);
 end

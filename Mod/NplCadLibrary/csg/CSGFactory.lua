@@ -15,6 +15,8 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPlane.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGBSPNode.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
+
 
 local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
@@ -22,6 +24,7 @@ local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSGBSPNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode");
 local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
+local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 
 local math_floor = math.floor;
 local math_mod = math.mod;
@@ -180,9 +183,9 @@ function CSGFactory.sphere(options)
         local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution3D);
         local xvector, yvector, zvector;
         if (options["axes"])then
-            xvector = options.axes[0]:unit():timesInplace(radius);
-            yvector = options.axes[1]:unit():timesInplace(radius);
-            zvector = options.axes[2]:unit():timesInplace(radius);
+            xvector = options.axes[1]:unit():timesInplace(radius);
+            yvector = options.axes[2]:unit():timesInplace(radius);
+            zvector = options.axes[3]:unit():timesInplace(radius);
         else
             xvector = CSGVector:new():init(1, 0, 0):timesInplace(radius);
             yvector = CSGVector:new():init(0, 1, 0):timesInplace(radius);
@@ -457,4 +460,11 @@ function CSGFactory.reverseTable(list)
 		len = len - 1
 	end
 	return result;
+end
+
+
+function CSGFactory.parseOptionAs2DVector(options, optionname, defaultvalue)
+	local result = CSGFactory.parseOption(options, optionname, defaultvalue);
+    result = CSGVector2D:new():init(result);
+    return result;
 end
