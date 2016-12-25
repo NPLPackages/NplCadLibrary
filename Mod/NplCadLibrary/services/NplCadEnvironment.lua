@@ -81,7 +81,9 @@ function NplCadEnvironment:new()
 		specified_indexs = {},
 	};
 	setmetatable(o, self);
-	self.__index = self
+	self.__index = self;
+	-- we need scene for log writing.
+	NplCadEnvironment.scene= o.scene;
 	return o;
 end
 
@@ -140,13 +142,9 @@ function NplCadEnvironment.current()
 	return node;
 end
 
+-- 'scene' new belong to NplCadEnvironment.
 function NplCadEnvironment.log(...)
-	local self = getfenv(2);
-	self:log__(...);
-end
-
-function NplCadEnvironment:log__(...)
-	self.scene:log(...);
+	NplCadEnvironment.scene:log(...);
 end
 
 function NplCadEnvironment.union()
@@ -969,19 +967,19 @@ rectangular_extrude(path,{width = 0.1, height = 0.2, fn = 8})
 -- fn default is 32
 --]]
 
-function NplCadEnvironment.rectangularExtrude(path,options)
+function NplCadEnvironment.rectangular_extrude(path,options)
 	local self = getfenv(2);
-	return self:rectangularExtrude__(path,options);
+	return self:rectangular_extrude__(path,options);
 end
-function NplCadEnvironment:rectangularExtrude__(path,options)
+function NplCadEnvironment:rectangular_extrude__(path,options)
 	options = options or {};
 	local parent = self:getNode__();
 
-	local node = NplCadEnvironment.read_rectangularExtrude(path,options);
+	local node = NplCadEnvironment.read_rectangular_extrude(path,options);
 	parent:addChild(node);
 	return node;
 end
-function NplCadEnvironment.read_rectangularExtrude(path,options)
+function NplCadEnvironment.read_rectangular_extrude(path,options)
 	local node = Node.create("");
 	local obj = nil;
 	local o;
@@ -1025,19 +1023,19 @@ extrude(shape,{offset = {0,10,0}, twistangle = 360, twiststeps = 100})
 -- twiststeps default is 32
 --]]
 
-function NplCadEnvironment.linearExtrude(shape,options)
+function NplCadEnvironment.linear_extrude(shape,options)
 	local self = getfenv(2);
-	return self:linearExtrude__(shape,options);
+	return self:linear_extrude__(shape,options);
 end
-function NplCadEnvironment:linearExtrude__(shape,options)
+function NplCadEnvironment:linear_extrude__(shape,options)
 	options = options or {};
 	local parent = self:getNode__();
 
-	local node = NplCadEnvironment.read_linearExtrude(shape,options);
+	local node = NplCadEnvironment.read_linear_extrude(shape,options);
 	parent:addChild(node);
 	return node;
 end
-function NplCadEnvironment.read_linearExtrude(shape,options)
+function NplCadEnvironment.read_linear_extrude(shape,options)
 	local node = nil;
 	local obj = nil;
 	local o;
@@ -1079,36 +1077,36 @@ function NplCadEnvironment.read_linearExtrude(shape,options)
 			end
 			o = CSGModel:new():init(obj:extrude({offset = {x,y,z},twistangle = twistangle,twiststeps = twiststeps}),"extrude");
 			node:setDrawable(o);
-			node:setTag("extrude","linearExtrude");
+			node:setTag("extrude","linear_extrude");
 		else
-			log("obj isn't a shape,cannot be linearExtrude.");
+			log("obj isn't a shape,cannot be linear_extrude.");
 		end
 	end
 	return node;
 end
 
 --[[
-rotateExtrude
+rotate_extrude
 arguments: options dict with angle and resolution, both optional
-rotateExtrude(shape,angle)
-rotateExtrude(shape,{angle = a, fn = 8})
+rotate_extrude(shape,angle)
+rotate_extrude(shape,{angle = a, fn = 8})
 -- angle default is 360
 -- fn default is 32
 --]]
 
-function NplCadEnvironment.rotateExtrude(shape,options)
+function NplCadEnvironment.rotate_extrude(shape,options)
 	local self = getfenv(2);
-	return self:rotateExtrude__(shape,options);
+	return self:rotate_extrude__(shape,options);
 end
-function NplCadEnvironment:rotateExtrude__(shape,options)
+function NplCadEnvironment:rotate_extrude__(shape,options)
 	options = options or {};
 	local parent = self:getNode__();
 
-	local node = NplCadEnvironment.read_rotateExtrude(shape,options);
+	local node = NplCadEnvironment.read_rotate_extrude(shape,options);
 	parent:addChild(node);
 	return node;
 end
-function NplCadEnvironment.read_rotateExtrude(shape,options)
+function NplCadEnvironment.read_rotate_extrude(shape,options)
 	local node = nil;
 	local obj = nil;
 	local o;
@@ -1128,12 +1126,41 @@ function NplCadEnvironment.read_rotateExtrude(shape,options)
 					fn = options.fn;
 				end
 			end
-			o = CSGModel:new():init(obj:rotateExtrude({angle = angle,resolution = fn}),"rotateExtrude");
+			o = CSGModel:new():init(obj:rotateExtrude({angle = angle,resolution = fn}),"rotate_extrude");
 			node:setDrawable(o);	-- cag should be destroy by this.
-			node:setTag("extrude","rotateExtrude");
+			node:setTag("extrude","rotate_extrude");
 		else
-			log("obj isn't a shape,cannot be rotateExtrude.");
+			log("obj isn't a shape,cannot be rotate_extrude.");
 		end
 	end
+	return node;
+end
+
+
+--[[
+polyhedron
+     Parameters:
+       points: points list for this polyhedron
+       faces: trangles list for this polyhedron
+--]]
+function NplCadEnvironment.polyhedron(options)
+	local self = getfenv(2);
+	return self:polyhedron__(options);
+end
+function NplCadEnvironment:polyhedron__(options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_polyhedron(options);
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_polyhedron(options)
+	local node = Node.create("");
+	local o = CSGModel:new():init(CSGFactory.polyhedron(options));
+	if(o ~= nil) then
+		node:setDrawable(o);
+	end
+	NplCadEnvironment.log("read_polyhedron end");
 	return node;
 end
