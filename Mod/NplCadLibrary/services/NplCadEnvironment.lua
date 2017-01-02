@@ -15,6 +15,7 @@ NPL.load("(gl)Mod/NplCadLibrary/core/Transform.lua");
 NPL.load("(gl)Mod/NplCadLibrary/core/Node.lua");
 NPL.load("(gl)Mod/NplCadLibrary/core/Scene.lua");
 NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
+NPL.load("(gl)Mod/NplCadLibrary/drawables/CAGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/doms/DomParser.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
@@ -25,6 +26,7 @@ local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
 local Scene = commonlib.gettable("Mod.NplCadLibrary.core.Scene");
 local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
+local CAGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CAGModel");
 local DomParser = commonlib.gettable("Mod.NplCadLibrary.doms.DomParser");
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
@@ -476,15 +478,36 @@ function NplCadEnvironment:translate__(p1,p2,p3,p4)
 	local x,y,z, options,obj;
 	if(type(p1) == "table") then
 		options = p1;
-		x = options[1];
-		y = options[2];
-		z = options[3];
+		if #options == 3 then
+			x = options[1];
+			y = options[2];
+			z = options[3];
+		elseif #options == 2 then
+			x = options[1];
+			y = 0;
+			z = options[2];
+		else
+			NplCadEnvironment.log("translate should have 2 or 3 coords");
+			return;
+		end
 		obj = p2;
 	elseif(type(p1) == "number") then
-		x=p1;
-		y=tonumber(p2);
-		z=tonumber(p3);
-		obj = p4;
+		if ( type(p2) == "number" and type(p3) == "number" ) then
+			x = p1;
+			y = tonumber(p2);
+			z = tonumber(p3);
+			obj = p4;
+		elseif (type(p2) == "number" and type(p3) ~= "number") then
+			x = p1;
+			y = 0;
+			z = tonumber(p2);
+			obj = p3;	
+		else 
+			NplCadEnvironment.log("translate should have 2 or 3 coords");	
+		end
+	else
+		NplCadEnvironment.log("translate should have a coords array");
+		return;		
 	end
 	if(not obj)then
 		obj = self:push__();
@@ -551,9 +574,21 @@ function NplCadEnvironment:scale__(options,obj)
 		z = options;
 	end
 	if(is_array(options))then
-		x = options[1] or 1;
-		y = options[2] or 1;
-		z = options[3] or 1;
+		if #options == 3 then
+			x = options[1] or 1;
+			y = options[2] or 1;
+			z = options[3] or 1;
+		elseif #options == 2 then
+			x = options[1] or 1;
+			y = 1;
+			z = options[2] or 1;
+		else
+			NplCadEnvironment.log("scale should have 2 or 3 coords");
+			return;
+		end
+	else
+		NplCadEnvironment.log("scale should have a coords array");
+		return;		
 	end
 	if(not obj)then
 		obj = self:push__();
@@ -645,7 +680,7 @@ function NplCadEnvironment.read_circle(p,...)
 	end
 
 	local o;
-	o = CSGModel:new():init(CAGFactory.circle({radius = r, resolution = fn}),"circle",true);
+	o = CAGModel:new():init(CAGFactory.circle({radius = r, resolution = fn}),"circle");
 
 	-- {center={}}
 	if(is_table(p) and p.center and is_table(p.center)) then         -- preparing individual x,y,z center
@@ -754,10 +789,10 @@ function NplCadEnvironment.read_square(p)
 	local o;
 	if(round)then
 		--NOTE:Unimplemented
-		--o = CSGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedSquare");
-		o = CSGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square",true);
+		--o = CAGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedSquare");
+		o = CAGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square");
 	else
-		o = CSGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square",true);
+		o = CAGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square");
 	end
 	if(is_table(p) and p.center and is_array(p.center))then
 		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
@@ -827,7 +862,7 @@ function NplCadEnvironment.read_polygon(p)
 		points = p.points; 
 	end 
 
-	o = CSGModel:new():init(CAGFactory.polygon(points),"polygon",true);
+	o = CAGModel:new():init(CAGFactory.polygon(points),"polygon");
 
 	if(is_table(p) and p.center and is_array(p.center))then
 		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
@@ -900,7 +935,7 @@ function NplCadEnvironment.read_innerToCAG(path)
 	if(is_path(path)) then
 		obj = path;
 		if(obj.closed == true) then
-			o = CSGModel:new():init(obj:innerToCAG(),"innerToCAG",true);
+			o = CAGModel:new():init(obj:innerToCAG(),"innerToCAG");
 			node:setDrawable(o);
 			node:setTag("shape","innerToCAG");
 		else
@@ -949,7 +984,7 @@ function NplCadEnvironment.read_expandToCAG(path,options)
 			end
 		end
 
-		o = CSGModel:new():init(obj:expandToCAG(pathradius,fn),"expandToCAG",true);
+		o = CAGModel:new():init(obj:expandToCAG(pathradius,fn),"expandToCAG");
 		node:setDrawable(o);
 		node:setTag("shape","expandToCAG");
 	else

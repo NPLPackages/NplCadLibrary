@@ -3,7 +3,7 @@ Title: CSGModel
 Author(s): leio
 Date: 2016/8/17
 Desc: 
-Defines a drawable object that can be attached to a Node.
+Defines a 3d csg drawable object that can be attached to a Node.
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
@@ -30,103 +30,56 @@ local CSGModel = commonlib.inherit(commonlib.gettable("Mod.NplCadLibrary.core.Dr
 local math3d = commonlib.gettable("mathlib.math3d");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 
-CSGModel.csg_node = nil;
-CSGModel.cag_node = nil;
-CSGModel.model_type = nil;
-CSGModel.options = nil;
-CSGModel.worldMatrix= Matrix4.IDENTITY;
+CSGModel.csg_node= nil;
 
-function CSGModel:init(node,model_type,is2D)
-	is2D = is2D or false;
-	if not is2D then
-		self.csg_node = node;
-	else
-		self.cag_node = node;
-		self.csg_node= self.cag_node:toCSG(0.01);
-	end
+function CSGModel:init(node,model_type)
 	self.model_type = model_type;
-	self.worldMatrix = Matrix4.IDENTITY;
+	self.csg_node = node;
 	return self;
 end
 function CSGModel:ctor()
 	self.csg_node = nil;
-	self.cag_node = nil;
 end
 function CSGModel:getTypeName()
 	return "Model";
 end
-function CSGModel:getCSGNode()
+function CSGModel:getModelNode()
 	return self.csg_node;
 end
-
-function CSGModel.equalsColor(color_1,color_2)
-	return color_1 and color_2 and (color_1[1] == color_2[1] and color_1[2] == color_2[2] and color_1[3] == color_2[3]);
-end
-
-CSGModel.default_color = {1,1,1};
-function CSGModel.setColor(color)
-	if(not self.csg_node or  not self.csg_node.polygons)then 
-		return 
-	end
-
-	if(CSGModel.equalsColor(color,CSGModel.default_color))then
-		return;
-	end
-
-	color = color or {};
-	color[1] = color[1] or 1;
-	color[2] = color[2] or 1;
-	color[3] = color[3] or 1;
-	for k,v in ipairs(self.csg_node.polygons) do
-		v.shared = v.shared or {};
-		v.shared.color = color;
-	end
-end
-
-function CSGModel.applyMatrix(matrix,applyMeshTransform)
-	if(not self.csg_node)then 
-		return 
-	end
-
-	if(applyMeshTransform) then
-		if(matrix) then
-			for __,polygon in ipairs(self.csg_node.polygons) do
-				for __,vertex in ipairs(polygon.vertices) do
-					math3d.VectorMultiplyMatrix(vertex.pos, vertex.pos, matrix);
-				end
-				polygon.plane = nil;
-			end
-		end
-	else
-		self.worldMatrix = matrix;
-	end
-
-end
-
-function CSGModel.toMesh()
-	if(not self.csg_node)then 
-		return 
-	end
-	
-	local vertices = {};
-	local indices = {};
-	local normals = {};
-	local colors = {};
-	
+function CSGModel:applyMeshTransform(matrix)
 	for __,polygon in ipairs(self.csg_node.polygons) do
-		local start_index = #vertices+1;
-		local normal = polygon:GetPlane().normal;
 		for __,vertex in ipairs(polygon.vertices) do
-			vertices[#vertices+1] = vertex.pos;
-			normals[#normals+1] = normal;
-			colors[#colors+1] = polygon.shared and polygon.shared.color or white;
+			math3d.VectorMultiplyMatrix(vertex.pos, vertex.pos, matrix);
 		end
-		local size = #(polygon.vertices) - 1;
-		for i = 2,size do
-			indices[#indices+1] = start_index;
-			indices[#indices+1] = start_index + i-1;
-			indices[#indices+1] = start_index + i;
-		end
+		polygon.plane = nil;
 	end
-	return self.worldMatrix,vertices,indices,normals,colors;
+end
+
+function CSGModel:toMesh()
+	if(not self.csg_node)then 
+		return 
+	end
+	return self:csgToMesh(self.csg_node);
+end
+
+function CSGModel:union(other)
+	local result_node = self.csg_node:union(other:getModelNode());
+	return CSGModel:new():init(result_node,"model");
+end
+
+function CSGModel:subtract(other)
+	local result_node = self.csg_node:subtract(other:getModelNode());
+	return CSGModel:new():init(result_node,"model");
+end
+
+function CSGModel:intersect(other)
+	local result_node = self.csg_node:intersect(other:getModelNode());
+	return CSGModel:new():init(result_node,"model");
+end
+
+function CSGModel:getElements()
+	if(self.csg_node == nil) then
+		return 0;
+	end
+	return self.csg_node:GetPolygonCount();
 end

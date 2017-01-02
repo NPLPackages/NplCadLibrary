@@ -19,26 +19,43 @@
     </ProjectConfiguration>
   </ItemGroup>
   <ItemGroup>
+    <None Include="Mod\NplCadLibrary\cag\CAG.lua" />
+    <None Include="Mod\NplCadLibrary\cag\CAGFactory.lua" />
+    <None Include="Mod\NplCadLibrary\cag\CAGSide.lua" />
+    <None Include="Mod\NplCadLibrary\cag\CAGVertex.lua" />
     <None Include="Mod\NplCadLibrary\core\Drawable.lua" />
     <None Include="Mod\NplCadLibrary\core\Node.lua" />
     <None Include="Mod\NplCadLibrary\core\Scene.lua" />
     <None Include="Mod\NplCadLibrary\core\Transform.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSG.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGBSPNode.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGConnector.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGConnectorList.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGFactory.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGLine2D.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGLine3D.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGMatrix4x4.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGOrthoNormalBasis.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGPath2D.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGPlane.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGPolygon.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGPolygon2D.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGVector.lua" />
+    <None Include="Mod\NplCadLibrary\csg\CSGVector2D.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGVertex.lua" />
     <None Include="Mod\NplCadLibrary\doms\DomBase.lua" />
     <None Include="Mod\NplCadLibrary\doms\DomCSGModel.lua" />
     <None Include="Mod\NplCadLibrary\doms\DomNode.lua" />
     <None Include="Mod\NplCadLibrary\doms\DomParser.lua" />
     <None Include="Mod\NplCadLibrary\doms\DomScene.lua" />
+    <None Include="Mod\NplCadLibrary\drawables\CAGModel.lua" />
     <None Include="Mod\NplCadLibrary\drawables\CSGModel.lua" />
     <None Include="Mod\NplCadLibrary\services\CSGService.lua" />
     <None Include="Mod\NplCadLibrary\services\NplCadEnvironment.lua" />
+    <None Include="Mod\NplCadLibrary\testcase\Testcase.lua" />
     <None Include="Mod\NplCadLibrary\utils\Color.lua" />
+    <None Include="Mod\NplCadLibrary\utils\mathext.lua" />
+    <None Include="Mod\NplCadLibrary\utils\tableext.lua" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AF211159-FD04-4C43-A272-FFF915D5B24D}</ProjectGuid>

@@ -23,26 +23,24 @@ local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local math3d = commonlib.gettable("mathlib.math3d");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 
-local white = {1,1,1};
-
-function CSGService.operateTwoNodes(pre_csg_node,cur_csg_node,csg_action)
+function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable_action)
 	local bResult = false;
-	if(pre_csg_node and cur_csg_node)then
-		if(csg_action == "union")then
-			cur_csg_node = pre_csg_node:union(cur_csg_node);
+	if(pre_drawable_node and cur_drawable_node)then
+		if(drawable_action == "union")then
+			cur_drawable_node = pre_drawable_node:union(cur_drawable_node);
 			bResult = true;
-		elseif(csg_action == "difference")then
-			cur_csg_node = pre_csg_node:subtract(cur_csg_node);
+		elseif(drawable_action == "difference")then
+			cur_drawable_node = pre_drawable_node:subtract(cur_drawable_node);
 			bResult = true;
-		elseif(csg_action == "intersection")then
-			cur_csg_node = pre_csg_node:intersect(cur_csg_node);
+		elseif(drawable_action == "intersection")then
+			cur_drawable_node = pre_drawable_node:intersect(cur_drawable_node);
 			bResult = true;
 		else
 			-- Default action is "union".
-			--cur_csg_node = pre_csg_node:union(cur_csg_node);
+			--cur_drawable_node = pre_drawable_node:union(cur_drawable_node);
 		end
 	end
-	return cur_csg_node,bResult;
+	return cur_drawable_node,bResult;
 end
 
 -- find tag value in all of its parent recursively
@@ -141,15 +139,15 @@ function CSGService.getRenderList(scene)
 		-- added by lighter
 		-- check if this node and it's children should applyMeshTransform
 		local actionName, actionNode = CSGService.findTagValue(node,"csg_action");
-		if(actionNode ~= nil and node.applyMeshTransform == false) then
+		if(actionName ~= nil and node.applyMeshTransform == false) then
 			node:markApplyMeshTransform();
 		end
 
 		-- apply color and transform if need.
-		local draw_model = CSGService.applayCSGNodeColorAndTransform(node);
-		if(draw_model)then
-			actionNode:pushActionParam(draw_model);
-			LOG.std(nil, "info", "CSG", "begin csg_node with %d polygons", draw_model.csg_node:GetPolygonCount());
+		local drawable = CSGService.applayDrawableColorAndTransform(node);
+		if(drawable)then
+			actionNode:pushActionParam(drawable);
+			LOG.std(nil, "info", "CSG", "begin drawable_node with %d polygons/sides", drawable:getElements());
 		else
 			LOG.std(nil, "info", "CSG", "begin node with (%s) tag", node:getTag("csg_action") or "empty");
 		end
@@ -160,26 +158,26 @@ function CSGService.getRenderList(scene)
 		if(action_params) then
 			local actionName = node:getTag("csg_action");
 			local fromTime = ParaGlobal.timeGetTime();
-			local result_draw_model = CSGService.doCSGNodeAction(actionName, action_params);
-			LOG.std(nil, "info", "CSG", "csg_node action (%s: with %d nodes) finished in %.3f seconds with %d polygons", 
+			local result_drawable = CSGService.doDrawablelAction(actionName, action_params);
+			LOG.std(nil, "info", "CSG", "drawable_node action (%s: with %d nodes) finished in %.3f seconds with %d polygons(sides)", 
 				actionName or "none", action_params and #action_params or 0, 
-				(ParaGlobal.timeGetTime()-fromTime)/1000, result_draw_model and result_draw_model:getCSGNode() and result_draw_model:getCSGNode():GetPolygonCount() or 0);
+				(ParaGlobal.timeGetTime()-fromTime)/1000, result_drawable and result_drawable:getElements() or 0);
 			local actionName, actionNode = CSGService.findTagValue(node:getParent() or scene,"csg_action");
 			if(actionNode ~= node) then
-				actionNode:pushActionParam(result_draw_model);
+				actionNode:pushActionParam(result_drawable);
 			end
 		end
 	end
 
 	scene:visit(BeforeChildVisit_, AfterChildVisit_);
 
-	-- convert all resulting csg_nodes to meshes
+	-- convert all resulting drawable_nodes to meshes
 	local render_list = {};
 
 	local result = scene:popAllActionParams();
 	if(result) then
 		for i = 1, #result do
-			local world_matrix,vertices,indices,normals,colors = result[i].toMesh();
+			local world_matrix,vertices,indices,normals,colors = result[i]:toMesh();
 			table.insert(render_list,{
 				world_matrix = world_matrix,
 				vertices = vertices,
@@ -194,87 +192,72 @@ function CSGService.getRenderList(scene)
 end
 
 -- @param csg_action: name of the operation. 
--- @param csg_nodes: array of csg node operands
+-- @param drawable_nodes: array of csg node operands
 -- @return csgNode, bSucceed:  csgNode is the result.
-function CSGService.doCSGNodeAction(csg_action, csg_nodes)
-	local len = #csg_nodes;
+function CSGService.doDrawablelAction(drawable_action, drawable_nodes)
+	local len = #drawable_nodes;
 	if(len == 0)then
 		return;
 	end
-	local first_node = csg_nodes[1];
+	local first_node = drawable_nodes[1];
 	local result_node = first_node;
 	local bSucceed = true;
 	for i=2, len do
-		result_node, bSucceed = CSGService.operateTwoNodes(result_node, csg_nodes[i], csg_action);
+		result_node, bSucceed = CSGService.operateTwoNodes(result_node, drawable_nodes[i], drawable_action);
 		if(not bSucceed) then
 			break;
 		end
 	end
-
-	-- add by lighter
-	-- unified return a drawable model
-	local resultModel = nil;
-	if(bSucceed) then
-		resultModel = CSGModel:new():init(result_node,"mesh");
-	end
-	return resultModel, bSucceed;
+	return result_node, bSucceed;
 end
 
-function CSGService.findCsgNode(node)
-		if(not node)then return end
-		local drawable = node:getDrawable();
-		if(drawable and drawable.getCSGNode)then
-			local cur_csg_node = drawable:getCSGNode();
-			return cur_csg_node;
-		end
-end
 function CSGService.visitNode(node,input_params)
 	if(not node)then return end
 	local nodes_map = input_params.nodes_map;
-	if(nodes_map[node]["csg_node"])then
+	if(nodes_map[node]["drawable_node"])then
 		return
 	end
 	local child = node:getFirstChild();
 	local top_csg_action = CSGService.findTagValue(node,"csg_action");
 	local temp_list = {};
 	while(child) do
-		local csg_node = nodes_map[child]["csg_node"];
-		if(csg_node)then
+		local drawable_node = nodes_map[child]["drawable_node"];
+		if(drawable_node)then
 			if(top_csg_action)then
 				table.insert(temp_list,{
-					csg_node = csg_node,
+					drawable_node = drawable_node,
 				});	
 			else
 				table.insert(input_params.result,{
-					csg_node = csg_node,
+					drawable_node = drawable_node,
 				});	
 			end
 			
 		end
-		nodes_map[child]["csg_node"] = nil;
+		nodes_map[child]["drawable_node"] = nil;
 		child = child:getNextSibling();
 	end	
-	local csg_node = CSGService.doCSGOperation(top_csg_action, temp_list);
-	nodes_map[node]["csg_node"] = csg_node;
+	local drawable_node = CSGService.doCSGOperation(top_csg_action, temp_list);
+	nodes_map[node]["drawable_node"] = drawable_node;
 end
 
 
 -- @param node: a scene node
--- @return csg_node, if scene node is a csg node and world transformation is applied to it. 
--- modified by lighter: function name changed form getTransformedCSGNode to "applayCSGNodeColorAndTransform"
+-- @return drawable_node, if scene node is a csg node and world transformation is applied to it. 
+-- modified by lighter: function name changed form getTransformedCSGNode to "applayDrawableColorAndTransform"
 --	I didn't understand why ** clone a new node for operation **
-function CSGService.applayCSGNodeColorAndTransform(node)
+function CSGService.applayDrawableColorAndTransform(node)
 	local drawable = node:getDrawable();
-	if(drawable and drawable.getCSGNode)then
+	if(drawable and drawable:getModelNode())then
 		local color = CSGService.findTagValue(node,"color");
 		if(color)then
-			drawable.setColor(color);
+			drawable:setColor(color);
 		end
 
 		local world_matrix = node:getWorldMatrix();
-		drawable.applyMatrix(world_matrix,node.applyMeshTransform);
+		drawable:applyMatrix(world_matrix,node.applyMeshTransform);
 
-		-- unified return a drawable model.
+		-- unified return a drawable node.
 		return drawable;
 	end
 end

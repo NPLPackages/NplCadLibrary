@@ -45,6 +45,9 @@ function CAG:ctor()
 	self.sides = {};
 end
 
+function CAG:GetSideCount()
+	return #self.sides;
+end
 
 -- Construct a CAG from a list of `CAG.Side` instances.
 function CAG.fromSides(sides)
@@ -676,54 +679,6 @@ function CAG:check()
 	return true;
 end
 --[[
-canonicalized()
-    if (self.isCanonicalized)
-        return self;
-    } else {
-        local factory = new CAG.fuzzyCAGFactory();
-        local result = factory.getCAG(self);
-        result.isCanonicalized = true;
-        return result;
-    }
-end
-
-toCompactBinary()
-    local cag = self.canonicalized();
-    local numsides = cag.sides.length;
-    local vertexmap = {};
-    local vertices = {};
-    local numvertices = 0;
-    local sideVertexIndices = new Uint32Array(2 * numsides);
-    local sidevertexindicesindex = 0;
-    cag.sides.map(function(side)
-        [side.vertex0, side.vertex1].map(function(v)
-            local vertextag = v.getTag();
-            local vertexindex;
-            if (!(vertextag in vertexmap))
-                vertexindex = numvertices++;
-                vertexmap[vertextag] = vertexindex;
-                vertices.push(v);
-            } else {
-                vertexindex = vertexmap[vertextag];
-            }
-            sideVertexIndices[sidevertexindicesindex++] = vertexindex;
-        });
-    });
-    local vertexData = new Float64Array(numvertices * 2);
-    local verticesArrayIndex = 0;
-    vertices.map(function(v)
-        local pos = v.pos;
-        vertexData[verticesArrayIndex++] = pos._x;
-        vertexData[verticesArrayIndex++] = pos._y;
-    });
-    local result = {
-        'class': "CAG",
-        sideVertexIndices: sideVertexIndices,
-        vertexData: vertexData
-    };
-    return result;
-end
-
 function CAG:getOutlinePaths()
     --local cag = self.canonicalized();
     local sideTagToSideMap = {};
