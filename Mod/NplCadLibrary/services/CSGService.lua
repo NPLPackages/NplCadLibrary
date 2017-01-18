@@ -135,17 +135,15 @@ function CSGService.getRenderList(scene)
 	
 	local function BeforeChildVisit_(node)
 		node:getWorldMatrix();
-
-		-- added by lighter
-		-- check if this node and it's children should applyMeshTransform
+		
 		local actionName, actionNode = CSGService.findTagValue(node,"csg_action");
-		if(actionName ~= nil and node.applyMeshTransform == false) then
-			node:markApplyMeshTransform();
-		end
+		local drawable = node:getDrawable();
+		if(drawable and drawable:getModelNode())then
+			local color = CSGService.findTagValue(node,"color");
+			if(color)then
+				drawable:setColor(color);
+			end
 
-		-- apply color and transform if need.
-		local drawable = CSGService.applayDrawableColorAndTransform(node);
-		if(drawable)then
 			actionNode:pushActionParam(drawable);
 			LOG.std(nil, "info", "CSG", "begin drawable_node with %d polygons/sides", drawable:getElements());
 		else
@@ -158,12 +156,14 @@ function CSGService.getRenderList(scene)
 		if(action_params) then
 			local actionName = node:getTag("csg_action");
 			local fromTime = ParaGlobal.timeGetTime();
-			local result_drawable = CSGService.doDrawablelAction(actionName, action_params);
+			local result_drawable = CSGService.doDrawablelAction(actionName, action_params,node);
 			LOG.std(nil, "info", "CSG", "drawable_node action (%s: with %d nodes) finished in %.3f seconds with %d polygons(sides)", 
 				actionName or "none", action_params and #action_params or 0, 
 				(ParaGlobal.timeGetTime()-fromTime)/1000, result_drawable and result_drawable:getElements() or 0);
 			local actionName, actionNode = CSGService.findTagValue(node:getParent() or scene,"csg_action");
 			if(actionNode ~= node) then
+				-- result_drawable is build from other drawables,it's node hasn't apply yet.then apply it before be pushed. 
+				result_drawable:setNode(node);
 				actionNode:pushActionParam(result_drawable);
 			end
 		end
@@ -194,15 +194,18 @@ end
 -- @param csg_action: name of the operation. 
 -- @param drawable_nodes: array of csg node operands
 -- @return csgNode, bSucceed:  csgNode is the result.
-function CSGService.doDrawablelAction(drawable_action, drawable_nodes)
+function CSGService.doDrawablelAction(drawable_action, drawable_nodes, operation_node)
 	local len = #drawable_nodes;
 	if(len == 0)then
 		return;
 	end
 	local first_node = drawable_nodes[1];
+	local first_node_transform = first_node:applyTransform(operation_node);
 	local result_node = first_node;
 	local bSucceed = true;
 	for i=2, len do
+		local drawable_node_transform = drawable_nodes[i]:applyTransform(operation_node);
+
 		result_node, bSucceed = CSGService.operateTwoNodes(result_node, drawable_nodes[i], drawable_action);
 		if(not bSucceed) then
 			break;
@@ -240,28 +243,6 @@ function CSGService.visitNode(node,input_params)
 	local drawable_node = CSGService.doCSGOperation(top_csg_action, temp_list);
 	nodes_map[node]["drawable_node"] = drawable_node;
 end
-
-
--- @param node: a scene node
--- @return drawable_node, if scene node is a csg node and world transformation is applied to it. 
--- modified by lighter: function name changed form getTransformedCSGNode to "applayDrawableColorAndTransform"
---	I didn't understand why ** clone a new node for operation **
-function CSGService.applayDrawableColorAndTransform(node)
-	local drawable = node:getDrawable();
-	if(drawable and drawable:getModelNode())then
-		local color = CSGService.findTagValue(node,"color");
-		if(color)then
-			drawable:setColor(color);
-		end
-
-		local world_matrix = node:getWorldMatrix();
-		drawable:applyMatrix(world_matrix,node.applyMeshTransform);
-
-		-- unified return a drawable node.
-		return drawable;
-	end
-end
-
 
 -- Read csg code from a file.
 function CSGService.readFile(filepath)

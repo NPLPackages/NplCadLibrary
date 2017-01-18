@@ -47,12 +47,6 @@ function Node:ctor()
 	self.bounds = nil;
 	-- The dirty bits used for optimization.
 	self.dirtyBits = 0;
-
-	-- added by lighter.
-	-- The mesh_build flag.if this flag be set,means *this* node and all it's *children* nodes 's mesh will be
-	-- transform by itself's world matrix.otherwise we keep it's origin mesh,WebGL will done this transform in
-	-- client side.
-	self.applyMeshTransform = false;
 end
 -- Return the type name of this class.
 -- @return The type name of this class:"Node".
@@ -351,15 +345,4 @@ function Node:findNodes(id,nodes_result,recursive,exactMatch)
 		end
 	end
 	return count;
-end
-
--- added by lighter
--- mark this node and it's children with *applyMeshTransform* flag.
-function Node:markApplyMeshTransform()
-	self.applyMeshTransform = true;
-	local child = self:getFirstChild();
-	while(child) do
-		child.applyMeshTransform = true;
-		child = child:getNextSibling();
-	end
 end

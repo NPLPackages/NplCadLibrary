@@ -17,14 +17,14 @@ local Drawable = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.co
 Drawable.default_color = {1,1,1};
 Drawable.node = nil;
 Drawable.model_type = nil;
-Drawable.worldMatrix= Matrix4.IDENTITY;
+Drawable.worldMatrix= nil;
 Drawable.color= Drawable.default_color;
 
 function Drawable:ctor()
 	echo("Drawable:ctor()");
 	self.node = nil;
 	self.model_type = nil;
-	self.worldMatrix= Matrix4.IDENTITY;
+	self.worldMatrix= nil;
 	self.color= Drawable.default_color;
 end
 function Drawable:getTypeName()
@@ -68,16 +68,17 @@ function Drawable:setColor(color)
 	self.color = color;
 end
 
-function Drawable:applyMatrix(matrix,applyMeshTransform)
+function Drawable:applyTransform(operationNode)
+	local operationWorldMatrix = operationNode:getWorldMatrix();
+	local myWorldMatrix = self.node:getWorldMatrix();
+	self.worldMatrix = operationWorldMatrix;
 
-	if(applyMeshTransform) then
-		if(matrix) then
-			self:applyMeshTransform(matrix);
-		end
-	else
-		self.worldMatrix = matrix;
-	end
+	local operationInverseMatrix = operationWorldMatrix:inverse();
+	local transformMatrix = Matrix4.__mul(myWorldMatrix,operationInverseMatrix);
 
+	self:applyMeshTransform(transformMatrix);
+
+	return transformMatrix;
 end
 
 function Drawable:csgToMesh(csg)
@@ -101,6 +102,9 @@ function Drawable:csgToMesh(csg)
 			indices[#indices+1] = start_index + i-1;
 			indices[#indices+1] = start_index + i;
 		end
+	end
+	if(self.worldMatrix == nil) then
+		self.worldMatrix = self.node:getWorldMatrix();
 	end
 	return self.worldMatrix,vertices,indices,normals,colors;
 end
