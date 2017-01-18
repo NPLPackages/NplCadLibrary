@@ -169,8 +169,8 @@ end
 -- Fourth element is taken as 1
 function CSGMatrix4x4:rightMultiply1x2Vector(v)
     local v0 = v[1];
-    local v1 = v[2];
-    local v2 = 0;
+    local v1 = 0;
+    local v2 = v[2];
     local v3 = 1;
     local x = v0 * self.elements[1] + v1 * self.elements[2] + v2 * self.elements[3] + v3 * self.elements[4];
     local y = v0 * self.elements[5] + v1 * self.elements[6] + v2 * self.elements[7] + v3 * self.elements[8];
@@ -183,7 +183,7 @@ function CSGMatrix4x4:rightMultiply1x2Vector(v)
         y = y * invw;
         z = z * invw;
     end
-    return CSGVector2D:new():init(x, y);
+    return CSGVector2D:new():init(x, z);
 end
 
 -- Multiply a CSG.Vector2D (interpreted as 2 column, 1 row) by self matrix
@@ -191,8 +191,8 @@ end
 -- Fourth element is taken as 1
 function CSGMatrix4x4:leftMultiply1x2Vector(v)
     local v0 = v[1];
-    local v1 = v[2];
-    local v2 = 0;
+    local v1 = 0;
+    local v2 = v[2];
     local v3 = 1;
     local x = v0 * self.elements[1] + v1 * self.elements[5] + v2 * self.elements[9] + v3 * self.elements[13];
     local y = v0 * self.elements[2] + v1 * self.elements[6] + v2 * self.elements[10] + v3 * self.elements[14];
@@ -205,7 +205,7 @@ function CSGMatrix4x4:leftMultiply1x2Vector(v)
         y = y * invw;
         z = z * invw;
     end
-    return CSGVector2D:new():init(x, y);
+    return CSGVector2D:new():init(x, z);
 end
 
 -- determine whether self matrix is a mirroring transformation

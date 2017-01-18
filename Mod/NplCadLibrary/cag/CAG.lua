@@ -310,7 +310,7 @@ function CAG:subtract(cag)
     end
     local r = self:_toCSGWall(-1, 1);
 	for k,v in ipairs(cags) do
-		r = r:subtractSub(v:_toCSGWall(-1, 1));
+		r = r:subtract(v:_toCSGWall(-1, 1));
 	end
     r = CAG.fromFakeCSG(r);
     return r;
@@ -325,7 +325,7 @@ function CAG:intersect(cag)
     end
     local r = self:_toCSGWall(-1, 1);
 	for k,v in ipairs(cags) do
-		r = r:intersectSub(v:_toCSGWall(-1, 1));
+		r = r:intersect(v:_toCSGWall(-1, 1));
 	end
     r = CAG.fromFakeCSG(r);
     return r;
