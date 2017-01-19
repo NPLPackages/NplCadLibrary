@@ -25,6 +25,12 @@
     <Filter Include="Mod\NplCadLibrary\utils">
       <UniqueIdentifier>{cd38d36e-1829-4a72-bd4f-befe161a9a9b}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mod\NplCadLibrary\cag">
+      <UniqueIdentifier>{dd8012d3-f4ab-4372-8cc0-c7ee9d93a548}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="Mod\NplCadLibrary\testcase">
+      <UniqueIdentifier>{be3bb96f-db48-43e8-9cb1-6a60b1adf98e}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Mod\NplCadLibrary\core\Drawable.lua">
@@ -86,6 +92,57 @@
     </None>
     <None Include="Mod\NplCadLibrary\csg\CSGBSPNode.lua">
       <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\utils\mathext.lua">
+      <Filter>Mod\NplCadLibrary\utils</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\utils\tableext.lua">
+      <Filter>Mod\NplCadLibrary\utils</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGConnector.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGConnectorList.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGLine2D.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGLine3D.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGMatrix4x4.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGOrthoNormalBasis.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGPath2D.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGPolygon2D.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGVector2D.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\cag\CAG.lua">
+      <Filter>Mod\NplCadLibrary\cag</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\cag\CAGFactory.lua">
+      <Filter>Mod\NplCadLibrary\cag</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\cag\CAGSide.lua">
+      <Filter>Mod\NplCadLibrary\cag</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\cag\CAGVertex.lua">
+      <Filter>Mod\NplCadLibrary\cag</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\testcase\Testcase.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\drawables\CAGModel.lua">
+      <Filter>Mod\NplCadLibrary\drawables</Filter>
     </None>
   </ItemGroup>
 </Project>

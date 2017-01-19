@@ -242,11 +242,15 @@ function Node:getWorldMatrix()
 			else
 				self.world = self:getMatrix();
 			end
+			--[[
+			-- modified by lighter.
+			-- shouldn't calc world matrix for children. children's world matrix calcing will be done when they are visited. 
 			local child = self:getFirstChild();
 			while(child) do
 				child:getWorldMatrix();
 				child = child:getNextSibling();
 			end
+			--]]
 		end
 	end
 	return self.world;
@@ -342,4 +346,3 @@ function Node:findNodes(id,nodes_result,recursive,exactMatch)
 	end
 	return count;
 end
-

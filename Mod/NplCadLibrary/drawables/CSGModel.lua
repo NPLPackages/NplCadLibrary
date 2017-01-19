@@ -3,7 +3,7 @@ Title: CSGModel
 Author(s): leio
 Date: 2016/8/17
 Desc: 
-Defines a drawable object that can be attached to a Node.
+Defines a 3d csg drawable object that can be attached to a Node.
 use the lib:
 ------------------------------------------------------------
 NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
@@ -17,6 +17,9 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
+NPL.load("(gl)script/ide/math/math3d.lua");
+NPL.load("(gl)script/ide/math/Matrix4.lua");
+
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
@@ -24,40 +27,59 @@ local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 local CSGModel = commonlib.inherit(commonlib.gettable("Mod.NplCadLibrary.core.Drawable"), commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel"));
-CSGModel.csg_node = nil;
-CSGModel.cag_node = nil;
-CSGModel.model_type = nil;
-CSGModel.options = nil;
-function CSGModel:init(node,model_type,is2D)
-	is2D = is2D or false;
-	if not is2D then
-		self.csg_node = node;
-	else
-		self.cag_node = node;
-		self.csg_node= self.cag_node:toCSG(0.01);
-	end
+local math3d = commonlib.gettable("mathlib.math3d");
+local Matrix4 = commonlib.gettable("mathlib.Matrix4");
+
+CSGModel.csg_node= nil;
+
+function CSGModel:init(node,model_type)
 	self.model_type = model_type;
+	self.csg_node = node;
 	return self;
 end
 function CSGModel:ctor()
 	self.csg_node = nil;
-	self.cag_node = nil;
 end
 function CSGModel:getTypeName()
 	return "Model";
 end
-function CSGModel:getCSGNode()
+function CSGModel:getModelNode()
 	return self.csg_node;
 end
-
---[[
-function CSGModel:toMesh()
-	return CSGService.toMesh(self.csg_node);
-end
-function CSGModel:applyMatrix(matrix)
-	CSGService.applyMatrix(self.csg_node,matrix);
-	if(self.cag_node ~= nil) then
-		self.cag_node = CSGService.applyMatrixCAG(self.cag_node,matrix);
+function CSGModel:applyMeshTransform(matrix)
+	for __,polygon in ipairs(self.csg_node.polygons) do
+		for __,vertex in ipairs(polygon.vertices) do
+			math3d.VectorMultiplyMatrix(vertex.pos, vertex.pos, matrix);
+		end
+		polygon.plane = nil;
 	end
 end
---]]
+
+function CSGModel:toMesh()
+	if(not self.csg_node)then 
+		return 
+	end
+	return self:csgToMesh(self.csg_node);
+end
+
+function CSGModel:union(other)
+	local result_node = self.csg_node:union(other:getModelNode());
+	return CSGModel:new():init(result_node,"model");
+end
+
+function CSGModel:subtract(other)
+	local result_node = self.csg_node:subtract(other:getModelNode());
+	return CSGModel:new():init(result_node,"model");
+end
+
+function CSGModel:intersect(other)
+	local result_node = self.csg_node:intersect(other:getModelNode());
+	return CSGModel:new():init(result_node,"model");
+end
+
+function CSGModel:getElements()
+	if(self.csg_node == nil) then
+		return 0;
+	end
+	return self.csg_node:GetPolygonCount();
+end

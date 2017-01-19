@@ -15,6 +15,7 @@ NPL.load("(gl)Mod/NplCadLibrary/core/Transform.lua");
 NPL.load("(gl)Mod/NplCadLibrary/core/Node.lua");
 NPL.load("(gl)Mod/NplCadLibrary/core/Scene.lua");
 NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
+NPL.load("(gl)Mod/NplCadLibrary/drawables/CAGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/doms/DomParser.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
@@ -25,6 +26,7 @@ local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
 local Scene = commonlib.gettable("Mod.NplCadLibrary.core.Scene");
 local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
+local CAGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CAGModel");
 local DomParser = commonlib.gettable("Mod.NplCadLibrary.doms.DomParser");
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
@@ -81,7 +83,9 @@ function NplCadEnvironment:new()
 		specified_indexs = {},
 	};
 	setmetatable(o, self);
-	self.__index = self
+	self.__index = self;
+	-- we need scene for log writing.
+	NplCadEnvironment.scene= o.scene;
 	return o;
 end
 
@@ -140,13 +144,9 @@ function NplCadEnvironment.current()
 	return node;
 end
 
+-- 'scene' new belong to NplCadEnvironment.
 function NplCadEnvironment.log(...)
-	local self = getfenv(2);
-	self:log__(...);
-end
-
-function NplCadEnvironment:log__(...)
-	self.scene:log(...);
+	NplCadEnvironment.scene:log(...);
 end
 
 function NplCadEnvironment.union()
@@ -478,15 +478,36 @@ function NplCadEnvironment:translate__(p1,p2,p3,p4)
 	local x,y,z, options,obj;
 	if(type(p1) == "table") then
 		options = p1;
-		x = options[1];
-		y = options[2];
-		z = options[3];
+		if #options == 3 then
+			x = options[1];
+			y = options[2];
+			z = options[3];
+		elseif #options == 2 then
+			x = options[1];
+			y = 0;
+			z = options[2];
+		else
+			NplCadEnvironment.log("translate should have 2 or 3 coords");
+			return;
+		end
 		obj = p2;
 	elseif(type(p1) == "number") then
-		x=p1;
-		y=tonumber(p2);
-		z=tonumber(p3);
-		obj = p4;
+		if ( type(p2) == "number" and type(p3) == "number" ) then
+			x = p1;
+			y = tonumber(p2);
+			z = tonumber(p3);
+			obj = p4;
+		elseif (type(p2) == "number" and type(p3) ~= "number") then
+			x = p1;
+			y = 0;
+			z = tonumber(p2);
+			obj = p3;	
+		else 
+			NplCadEnvironment.log("translate should have 2 or 3 coords");	
+		end
+	else
+		NplCadEnvironment.log("translate should have a coords array");
+		return;		
 	end
 	if(not obj)then
 		obj = self:push__();
@@ -553,9 +574,21 @@ function NplCadEnvironment:scale__(options,obj)
 		z = options;
 	end
 	if(is_array(options))then
-		x = options[1] or 1;
-		y = options[2] or 1;
-		z = options[3] or 1;
+		if #options == 3 then
+			x = options[1] or 1;
+			y = options[2] or 1;
+			z = options[3] or 1;
+		elseif #options == 2 then
+			x = options[1] or 1;
+			y = 1;
+			z = options[2] or 1;
+		else
+			NplCadEnvironment.log("scale should have 2 or 3 coords");
+			return;
+		end
+	else
+		NplCadEnvironment.log("scale should have a coords array");
+		return;		
 	end
 	if(not obj)then
 		obj = self:push__();
@@ -647,7 +680,7 @@ function NplCadEnvironment.read_circle(p,...)
 	end
 
 	local o;
-	o = CSGModel:new():init(CAGFactory.circle({radius = r, resolution = fn}),"circle",true);
+	o = CAGModel:new():init(CAGFactory.circle({radius = r, resolution = fn}),"circle");
 
 	-- {center={}}
 	if(is_table(p) and p.center and is_table(p.center)) then         -- preparing individual x,y,z center
@@ -756,10 +789,10 @@ function NplCadEnvironment.read_square(p)
 	local o;
 	if(round)then
 		--NOTE:Unimplemented
-		--o = CSGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedSquare");
-		o = CSGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square",true);
+		--o = CAGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedSquare");
+		o = CAGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square");
 	else
-		o = CSGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square",true);
+		o = CAGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square");
 	end
 	if(is_table(p) and p.center and is_array(p.center))then
 		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
@@ -829,7 +862,7 @@ function NplCadEnvironment.read_polygon(p)
 		points = p.points; 
 	end 
 
-	o = CSGModel:new():init(CAGFactory.polygon(points),"polygon",true);
+	o = CAGModel:new():init(CAGFactory.polygon(points),"polygon");
 
 	if(is_table(p) and p.center and is_array(p.center))then
 		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
@@ -902,7 +935,7 @@ function NplCadEnvironment.read_innerToCAG(path)
 	if(is_path(path)) then
 		obj = path;
 		if(obj.closed == true) then
-			o = CSGModel:new():init(obj:innerToCAG(),"innerToCAG",true);
+			o = CAGModel:new():init(obj:innerToCAG(),"innerToCAG");
 			node:setDrawable(o);
 			node:setTag("shape","innerToCAG");
 		else
@@ -951,7 +984,7 @@ function NplCadEnvironment.read_expandToCAG(path,options)
 			end
 		end
 
-		o = CSGModel:new():init(obj:expandToCAG(pathradius,fn),"expandToCAG",true);
+		o = CAGModel:new():init(obj:expandToCAG(pathradius,fn),"expandToCAG");
 		node:setDrawable(o);
 		node:setTag("shape","expandToCAG");
 	else
@@ -969,19 +1002,19 @@ rectangular_extrude(path,{width = 0.1, height = 0.2, fn = 8})
 -- fn default is 32
 --]]
 
-function NplCadEnvironment.rectangularExtrude(path,options)
+function NplCadEnvironment.rectangular_extrude(path,options)
 	local self = getfenv(2);
-	return self:rectangularExtrude__(path,options);
+	return self:rectangular_extrude__(path,options);
 end
-function NplCadEnvironment:rectangularExtrude__(path,options)
+function NplCadEnvironment:rectangular_extrude__(path,options)
 	options = options or {};
 	local parent = self:getNode__();
 
-	local node = NplCadEnvironment.read_rectangularExtrude(path,options);
+	local node = NplCadEnvironment.read_rectangular_extrude(path,options);
 	parent:addChild(node);
 	return node;
 end
-function NplCadEnvironment.read_rectangularExtrude(path,options)
+function NplCadEnvironment.read_rectangular_extrude(path,options)
 	local node = Node.create("");
 	local obj = nil;
 	local o;
@@ -1025,19 +1058,19 @@ extrude(shape,{offset = {0,10,0}, twistangle = 360, twiststeps = 100})
 -- twiststeps default is 32
 --]]
 
-function NplCadEnvironment.linearExtrude(shape,options)
+function NplCadEnvironment.linear_extrude(shape,options)
 	local self = getfenv(2);
-	return self:linearExtrude__(shape,options);
+	return self:linear_extrude__(shape,options);
 end
-function NplCadEnvironment:linearExtrude__(shape,options)
+function NplCadEnvironment:linear_extrude__(shape,options)
 	options = options or {};
 	local parent = self:getNode__();
 
-	local node = NplCadEnvironment.read_linearExtrude(shape,options);
+	local node = NplCadEnvironment.read_linear_extrude(shape,options);
 	parent:addChild(node);
 	return node;
 end
-function NplCadEnvironment.read_linearExtrude(shape,options)
+function NplCadEnvironment.read_linear_extrude(shape,options)
 	local node = nil;
 	local obj = nil;
 	local o;
@@ -1079,36 +1112,36 @@ function NplCadEnvironment.read_linearExtrude(shape,options)
 			end
 			o = CSGModel:new():init(obj:extrude({offset = {x,y,z},twistangle = twistangle,twiststeps = twiststeps}),"extrude");
 			node:setDrawable(o);
-			node:setTag("extrude","linearExtrude");
+			node:setTag("extrude","linear_extrude");
 		else
-			log("obj isn't a shape,cannot be linearExtrude.");
+			log("obj isn't a shape,cannot be linear_extrude.");
 		end
 	end
 	return node;
 end
 
 --[[
-rotateExtrude
+rotate_extrude
 arguments: options dict with angle and resolution, both optional
-rotateExtrude(shape,angle)
-rotateExtrude(shape,{angle = a, fn = 8})
+rotate_extrude(shape,angle)
+rotate_extrude(shape,{angle = a, fn = 8})
 -- angle default is 360
 -- fn default is 32
 --]]
 
-function NplCadEnvironment.rotateExtrude(shape,options)
+function NplCadEnvironment.rotate_extrude(shape,options)
 	local self = getfenv(2);
-	return self:rotateExtrude__(shape,options);
+	return self:rotate_extrude__(shape,options);
 end
-function NplCadEnvironment:rotateExtrude__(shape,options)
+function NplCadEnvironment:rotate_extrude__(shape,options)
 	options = options or {};
 	local parent = self:getNode__();
 
-	local node = NplCadEnvironment.read_rotateExtrude(shape,options);
+	local node = NplCadEnvironment.read_rotate_extrude(shape,options);
 	parent:addChild(node);
 	return node;
 end
-function NplCadEnvironment.read_rotateExtrude(shape,options)
+function NplCadEnvironment.read_rotate_extrude(shape,options)
 	local node = nil;
 	local obj = nil;
 	local o;
@@ -1128,12 +1161,41 @@ function NplCadEnvironment.read_rotateExtrude(shape,options)
 					fn = options.fn;
 				end
 			end
-			o = CSGModel:new():init(obj:rotateExtrude({angle = angle,resolution = fn}),"rotateExtrude");
+			o = CSGModel:new():init(obj:rotateExtrude({angle = angle,resolution = fn}),"rotate_extrude");
 			node:setDrawable(o);	-- cag should be destroy by this.
-			node:setTag("extrude","rotateExtrude");
+			node:setTag("extrude","rotate_extrude");
 		else
-			log("obj isn't a shape,cannot be rotateExtrude.");
+			log("obj isn't a shape,cannot be rotate_extrude.");
 		end
 	end
+	return node;
+end
+
+
+--[[
+polyhedron
+     Parameters:
+       points: points list for this polyhedron
+       faces: trangles list for this polyhedron
+--]]
+function NplCadEnvironment.polyhedron(options)
+	local self = getfenv(2);
+	return self:polyhedron__(options);
+end
+function NplCadEnvironment:polyhedron__(options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_polyhedron(options);
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_polyhedron(options)
+	local node = Node.create("");
+	local o = CSGModel:new():init(CSGFactory.polyhedron(options));
+	if(o ~= nil) then
+		node:setDrawable(o);
+	end
+	NplCadEnvironment.log("read_polyhedron end");
 	return node;
 end

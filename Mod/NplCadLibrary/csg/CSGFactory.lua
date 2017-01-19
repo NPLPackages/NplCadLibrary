@@ -399,6 +399,75 @@ function CSGFactory.roundedCube(options)
         return res;
 
 end
+
+--[[
+	polyhedron accepts openscad style arguments. I.e. define face vertices clockwise looking from outside
+     Parameters:
+       points: points list for this polyhedron
+       polygons or triangles: triangles list for this polyhedron
+--]]
+
+function CSGFactory.polyhedron(options)
+        options = options or {};
+
+        if (options.points == nil) then
+			local errorMessage = "polyhedron needs 'points' arrays";
+			LOG.std(nil, "error", "CSGFactory.polyhedron", errorMessage);
+			error(errorMessage);
+        end
+
+		if ((options.polygons or options.triangles) == nil) then
+			local errorMessage = "polyhedron needs 'polygons' or 'triangles' arrays";
+			LOG.std(nil, "error", "CSGFactory.polyhedron", errorMessage);
+			error(errorMessage);
+		end
+        
+		local polyField = "triangles";
+		if(options.triangles == nil) then
+			polyField = polygons;
+		end
+
+		local points = CSGFactory.parseOptionAs3DVectorList(options, "points", {
+                {1, 1, 0},
+                {1, -1, 0},
+                {-1, -1, 0},
+                {-1, 1, 0},
+                {0, 0, 1}
+            });
+		local vertices = {};
+		for _,pt in ipairs(points) do
+			table.insert(vertices,CSGVertex:new():init(pt));
+		end
+
+        local polys = CSGFactory.parseOption(options, polyField, {
+                {0, 1, 4},
+                {1, 2, 4},
+                {2, 3, 4},
+                {3, 0, 4},
+                {1, 0, 3},
+                {2, 1, 3}
+            });
+
+		local polygons ={};
+        -- openscad convention defines inward normals - so we have to invert here
+		for kf,face in ipairs(polys) do
+			face = CSGFactory.reverseTable(face);
+			local vs = {};
+			for _,index in ipairs(face) do
+				table.insert(vs,vertices[index+1]);
+			end
+			table.insert(polygons,CSGPolygon:new():init(vs));
+		end
+
+
+        -- TODO: facecenters as connectors? probably overkill. Maybe centroid
+        -- the re-tesselation here happens because it's so easy for a user to
+        -- create parametrized polyhedrons that end up with 1-2 dimensional polygons.
+        -- These will create infinite loops at CSG.Tree()
+        return CSG.fromPolygons(polygons);	
+end
+
+
 -- Parse an option from the options object
 -- If the option is not present, return the default value
 function CSGFactory.parseOption(options, optionname, defaultvalue)
@@ -467,4 +536,13 @@ function CSGFactory.parseOptionAs2DVector(options, optionname, defaultvalue)
 	local result = CSGFactory.parseOption(options, optionname, defaultvalue);
     result = CSGVector2D:new():init(result);
     return result;
+end
+
+function CSGFactory.parseOptionAs3DVectorList(options, optionname, defaultvalue)
+	local result = CSGFactory.parseOption(options, optionname, defaultvalue);
+	local list = {};
+	for _,v in ipairs(result) do
+		table.insert(list,CSGVector:new():init(v));
+	end
+	return list;
 end

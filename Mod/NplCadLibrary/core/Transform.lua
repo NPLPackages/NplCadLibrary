@@ -38,7 +38,7 @@ Transform.DIRTY_NOTIFY			= DIRTY_NOTIFY;
 --					"TransformChanged"
 function Transform:ctor()
 	-- The scale component of the transform.
-	self.scale			=	vector3d:new({1,1,1});
+	self.scaling			=	vector3d:new({1,1,1});
 	-- The rotation component of the transform.
 	self.rotation		=	Quaternion:new():identity();
 	-- The translation component of the transform.
@@ -150,7 +150,7 @@ function Transform:getMatrix()
 	if(a ~= 0)then
 		if(not self:isStatic())then
 			local hasScale = true;
-			if(self.scale[1] == 1 and self.scale[2] == 1 and self.scale[3] == 1 )then
+			if(self.scaling[1] == 1 and self.scaling[2] == 1 and self.scaling[3] == 1 )then
 				hasScale = false;
 			end
 			local hasRotation = (not self.rotation:equals(Quaternion.IDENTITY));
@@ -160,7 +160,7 @@ function Transform:getMatrix()
 				self.matrix = r_matrix * self.matrix;
 			end
 			if(hasScale)then
-				self.matrix:setScale(self.scale[1], self.scale[2], self.scale[3]);	
+				self.matrix:setScale(self.scaling[1], self.scaling[2], self.scaling[3]);	
 			end
 			local a = mathlib.bit.bor(DIRTY_TRANSLATION, DIRTY_ROTATION);
 			a = mathlib.bit.bor(a, DIRTY_SCALE);
@@ -176,7 +176,7 @@ function Transform:getTranslation()
 	return self.translation;
 end
 function Transform:getScale()
-	return self.scale;
+	return self.scaling;
 end
 -- Scales this transform's scale component by the given factors along each axis.
 -- @param sx The factor to scale by in the x direction.
@@ -186,7 +186,14 @@ function Transform:scale(sx,sy,sz)
 	if(self:isStatic())then
 		return;
 	end
-	self.scale:MulByVector({sx,sy,sz});
+
+	local x,y,z = 1,1,1;
+	if(sz ~= nil)then
+		x,y,z = sx,sy,sz;
+	else
+		x,y,z = sx,1,sy;
+	end
+	self.scaling:MulByVector({x,y,z});
 	self:dirty(DIRTY_SCALE);
 end
 -- Scales this transform's scale component by the given scale factor along the x axis.
@@ -195,7 +202,7 @@ function Transform:scaleX(value)
 	if(self:isStatic())then
 		return;
 	end
-	self.scale[1] = self.scale[1] * value;
+	self.scaling[1] = self.scaling[1] * value;
 	self:dirty(DIRTY_SCALE);
 end
 -- Scales this transform's scale component by the given scale factor along the y axis.
@@ -204,7 +211,7 @@ function Transform:scaleY(value)
 	if(self:isStatic())then
 		return;
 	end
-	self.scale[2] = self.scale[2] * value;
+	self.scaling[2] = self.scaling[2] * value;
 	self:dirty(DIRTY_SCALE);
 end
 -- Scales this transform's scale component by the given scale factor along the z axis.
@@ -213,7 +220,7 @@ function Transform:scaleZ(value)
 	if(self:isStatic())then
 		return;
 	end
-	self.scale[3] = self.scale[3] * value;
+	self.scaling[3] = self.scaling[3] * value;
 	self:dirty(DIRTY_SCALE);
 end
 -- Rotates this transform's rotation component by the given rotation.
@@ -266,7 +273,13 @@ function Transform:translate(tx,ty,tz)
 	if(self:isStatic())then
 		return;
 	end
-	local v = vector3d:new({tx,ty,tz});
+	local x,y,z = 0,0,0;
+	if(tz ~= nil)then
+		x,y,z = tx,ty,tz;
+	else
+		x,y,z = tx,0,ty;
+	end
+	local v = vector3d:new({x,y,z});
 	self.translation = self.translation + v;
 	self:dirty(DIRTY_TRANSLATION);
 end
@@ -305,7 +318,7 @@ function Transform:set(scale,rotation,translation)
 	if(self:isStatic())then
 		return;
 	end
-	self.scale:set(scale);
+	self.scaling:set(scale);
 	self.rotation:set(rotation);
 	self.translation:set(translation);
 	local a = mathlib.bit.bor(DIRTY_TRANSLATION,DIRTY_ROTATION);
@@ -317,7 +330,7 @@ function Transform:setIdentity()
 	if(self:isStatic())then
 		return;
 	end
-	self.scale:set({1,1,1});
+	self.scaling:set({1,1,1});
 	self.rotation:set({0,0,0,1});
 	self.translation:set({0,0,0});
 	local a = mathlib.bit.bor(DIRTY_TRANSLATION,DIRTY_ROTATION);
@@ -332,10 +345,18 @@ function Transform:setScale(sx,sy,sz)
 	if(self:isStatic())then
 		return;
 	end
-	if(not sx or not sy or not sz)then
+	if(not sx or not sy)then
 		return;
 	end
-	self.scale:set({sx,sy,sz});
+
+	local x,y,z = 1,1,1;
+	if(sz ~= nil)then
+		x,y,z = sx,sy,sz;
+	else
+		x,y,z = sx,1,sy;
+	end
+
+	self.scaling:set({x,y,z});
 	self:dirty(DIRTY_SCALE);
 end
 -- Sets the scale factor along the x-axis for this transform to the specified value.
@@ -344,7 +365,7 @@ function Transform:setScaleX(value)
 	if(self:isStatic())then
 		return;
 	end
-	self.scale[1] = value;
+	self.scaling[1] = value;
 	self:dirty(DIRTY_SCALE);
 end
 -- Sets the scale factor along the y-axis for this transform to the specified value.
@@ -353,7 +374,7 @@ function Transform:setScaleY(value)
 	if(self:isStatic())then
 		return;
 	end
-	self.scale[2] = value;
+	self.scaling[2] = value;
 	self:dirty(DIRTY_SCALE);
 end
 -- Sets the scale factor along the z-axis for this transform to the specified value.
@@ -362,7 +383,7 @@ function Transform:setScaleZ(value)
 	if(self:isStatic())then
 		return;
 	end
-	self.scale[3] = value;
+	self.scaling[3] = value;
 	self:dirty(DIRTY_SCALE);
 end
 -- Sets the rotation component for this transform to the specified values.
@@ -394,10 +415,18 @@ function Transform:setTranslation(tx,ty,tz)
 	if(self:isStatic())then
 		return;
 	end
-	if(not tx or not ty or not tz)then
+	if(not tx or not ty)then
 		return;
 	end
-	self.translation:set({tx,ty,tz});
+
+	local x,y,z = 0,0,0;
+	if(tz ~= nil)then
+		x,y,z = tx,ty,tz;
+	else
+		x,y,z = tx,0,ty;
+	end
+
+	self.translation:set({x,y,z});
 	self:dirty(DIRTY_TRANSLATION);
 end
 -- Sets the translation factor along the x-axis for thie transform to the specified values.
