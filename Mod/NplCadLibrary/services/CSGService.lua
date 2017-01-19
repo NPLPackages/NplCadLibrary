@@ -133,17 +133,21 @@ function CSGService.getRenderList(scene)
 		return
 	end
 	
+	-- apply color to drawable.
+	local function applyColor(node,drawable)
+		local color = CSGService.findTagValue(node,"color");
+		if(color)then
+			drawable:setColor(color);
+		end
+	end
+
 	local function BeforeChildVisit_(node)
 		node:getWorldMatrix();
 		
 		local actionName, actionNode = CSGService.findTagValue(node,"csg_action");
 		local drawable = node:getDrawable();
 		if(drawable and drawable:getModelNode())then
-			local color = CSGService.findTagValue(node,"color");
-			if(color)then
-				drawable:setColor(color);
-			end
-
+			applyColor(node,drawable);
 			actionNode:pushActionParam(drawable);
 			LOG.std(nil, "info", "CSG", "begin drawable_node with %d polygons/sides", drawable:getElements());
 		else
@@ -164,6 +168,7 @@ function CSGService.getRenderList(scene)
 			if(actionNode ~= node) then
 				-- result_drawable is build from other drawables,it's node hasn't apply yet.then apply it before be pushed. 
 				result_drawable:setNode(node);
+				applyColor(node,result_drawable);
 				actionNode:pushActionParam(result_drawable);
 			end
 		end
