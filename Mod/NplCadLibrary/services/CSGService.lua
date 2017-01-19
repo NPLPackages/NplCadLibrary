@@ -62,6 +62,22 @@ function CSGService.findTagValue(node,name)
 	return nil, lastNode;
 end
 
+function CSGService.equalsColor(color_1,color_2)
+	return color_1 and color_2 and (color_1[1] == color_2[1] and color_1[2] == color_2[2] and color_1[3] == color_2[3]);
+end
+-- build code from an existed file.
+function CSGService.buildFile(filepath)
+	if(not filepath)then
+		return
+	end
+	local full_path = ParaIO.GetCurDirectory(0)..filepath;
+	local file = ParaIO.open(full_path, "r");
+	if(file:IsValid()) then
+		local text = file:GetText();
+		file:close();
+		return CSGService.buildPageContent(text);
+	end
+end
 --[[
 	return {
 		successful = successful,
