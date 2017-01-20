@@ -49,6 +49,10 @@ end
 function CSGModel:applyMeshTransform(matrix)
 	for __,polygon in ipairs(self.csg_node.polygons) do
 		for __,vertex in ipairs(polygon.vertices) do
+			-- by lighter:2017.1.20 23:46
+			-- fixed mesh transform error.diffrent vertex pos may be used same pos.cause pos be transformed multi times.
+			vertex:detach();
+
 			math3d.VectorMultiplyMatrix(vertex.pos, vertex.pos, matrix);
 		end
 		polygon.plane = nil;

@@ -54,17 +54,17 @@ end
 
 function CAGModel:union(other)
 	local result_node = self.cag_node:union(other:getModelNode());
-	return CAGModel:new():init(result_node,"model");
+	return CAGModel:new():init(result_node,"shape");
 end
 
 function CAGModel:subtract(other)
 	local result_node = self.cag_node:subtract(other:getModelNode());
-	return CAGModel:new():init(result_node,"model");
+	return CAGModel:new():init(result_node,"shape");
 end
 
 function CAGModel:intersect(other)
 	local result_node = self.cag_node:intersect(other:getModelNode());
-	return CAGModel:new():init(result_node,"model");
+	return CAGModel:new():init(result_node,"shape");
 end
 
 function CAGModel:getElements()
