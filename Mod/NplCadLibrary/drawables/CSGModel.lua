@@ -47,13 +47,24 @@ function CSGModel:getModelNode()
 	return self.csg_node;
 end
 function CSGModel:applyMeshTransform(matrix)
+	function NormalMultiplyMatrix(r,v,m)
+		local x,y,z = v[1], v[2], v[3];
+		r[1] = x*m[1] + y*m[5] + z*m[9];
+		r[2] = x*m[2] + y*m[6] + z*m[10];
+		r[3] = x*m[3] + y*m[7] + z*m[11];
+	end
+
 	for __,polygon in ipairs(self.csg_node.polygons) do
 		for __,vertex in ipairs(polygon.vertices) do
 			-- by lighter:2017.1.20 23:46
 			-- fixed mesh transform error.diffrent vertex pos may be used same pos.cause pos be transformed multi times.
-			vertex:detach();
-
+			vertex.pos = vertex.pos:clone();
 			math3d.VectorMultiplyMatrix(vertex.pos, vertex.pos, matrix);
+			
+			if(vertex.normal ~= nil) then
+				vertex.normal = vertex.normal:clone();
+				NormalMultiplyMatrix(vertex.normal,vertex.normal,matrix);
+			end
 		end
 		polygon.plane = nil;
 	end

@@ -468,7 +468,7 @@ function Testcase.MatrixDecomp()
 		local pitch = i * math_pi / 180;
 		rotationQuat = rotationQuat:FromEulerAngles(yaw,roll,pitch);
 
-		local mr = rotationQuat:ToRotationMatrix(resultMatrix);
+		local mr = rotationQuat:ToRotationMatrix();
 		local matrix = ms * mr * mt;
 		echo(matrix);
 

@@ -1,5 +1,7 @@
 NPL.load("(gl)script/ide/math/Matrix4.lua");
+NPL.load("(gl)script/ide/math/Quaternion.lua");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
+local Quaternion = commonlib.gettable("mathlib.Quaternion");
 
 function Matrix4:Decompose()
 	local m00, m01, m02, m03 = self[1], self[2], self[3], self[4];
@@ -67,4 +69,49 @@ function Matrix4:Decompose()
     QZ = QZ * s;
 
 	return {translation={m30, m31, m32},scaling={scaling_x,scaling_y,scaling_z},rotation={QX,QY,QZ,QW}};
+end
+
+function Matrix4.canCombineToShape(cur,pre)
+	local cur_result = cur:Decompose();
+	local pre_result = pre:Decompose();
+	
+	local cur_quatDecomp = Quaternion:new():set(cur_result.rotation);
+	local cur_yaw, cur_roll, cur_pitch = cur_quatDecomp:ToEulerAngles();
+	local pre_quatDecomp = Quaternion:new():set(pre_result.rotation);
+	local pre_yaw, pre_roll, pre_pitch = pre_quatDecomp:ToEulerAngles();
+
+	local is2D = ((cur_result.translation[2] == 0) and (cur_result.scaling[2] == 1) and (cur_roll == 0) and (cur_pitch == 0));
+	local sameIn2D = ((cur_result.translation[2] == pre_result.translation[2]) and (cur_result.scaling[2] == pre_result.scaling[2]) and (cur_roll == pre_roll) and (cur_pitch == pre_pitch));
+	local new_transform,new_cur,new_pre = nil,nil,nil;
+
+	if(sameIn2D and not is2D) then
+		local mt = Matrix4:new():identity():makeTrans(0,cur_result.translation[2],0);
+		local ms = Matrix4:new():identity();
+		ms:setScale(1,cur_result.scaling[2],1);
+				
+		local rotationQuat = Quaternion:new();
+		rotationQuat = rotationQuat:FromEulerAngles(0, cur_roll, cur_pitch);
+		local mr = rotationQuat:ToRotationMatrix();
+		new_transform = ms * mr * mt;
+
+
+		mt = Matrix4:new():identity():makeTrans(cur_result.translation[1],0,cur_result.translation[3]);
+		ms = Matrix4:new():identity();
+		ms:setScale(cur_result.scaling[1],1,cur_result.scaling[3]);
+		rotationQuat = rotationQuat:FromEulerAngles(cur_yaw, 0, 0);
+		mr = rotationQuat:ToRotationMatrix();
+		new_cur = ms * mr * mt;
+
+		mt = Matrix4:new():identity():makeTrans(pre_result.translation[1],0,pre_result.translation[3]);
+		ms = Matrix4:new():identity();
+		ms:setScale(pre_result.scaling[1],1,pre_result.scaling[3]);
+		rotationQuat = rotationQuat:FromEulerAngles(pre_yaw, 0, 0);
+		mr = rotationQuat:ToRotationMatrix();
+		new_pre = ms * mr * mt;
+	else
+		new_cur = cur;
+		new_pre = pre;
+	end
+
+	return sameIn2D,new_transform,new_cur,new_pre;
 end

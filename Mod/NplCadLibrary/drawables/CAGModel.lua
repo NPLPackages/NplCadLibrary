@@ -11,6 +11,7 @@ local CAGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CAGModel");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)Mod/NplCadLibrary/core/Drawable.lua");
+NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGMatrix4x4.lua");
 NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)script/ide/math/Matrix4.lua");
@@ -18,7 +19,7 @@ NPL.load("(gl)script/ide/math/Matrix4.lua");
 local math3d = commonlib.gettable("mathlib.math3d");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 local CSGMatrix4x4 = commonlib.gettable("Mod.NplCadLibrary.csg.CSGMatrix4x4");
-
+local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 local CAGModel = commonlib.inherit(commonlib.gettable("Mod.NplCadLibrary.core.Drawable"), commonlib.gettable("Mod.NplCadLibrary.drawables.CAGModel"));
 
 CAGModel.cag_node= nil;
@@ -72,4 +73,10 @@ function CAGModel:getElements()
 		return 0;
 	end
 	return self.cag_node:GetSideCount();
+end
+
+function CAGModel:toCSGModel()
+	local csg_model = CSGModel:new():init(self.cag_node:toCSG(0.01),"model");
+	csg_model:setNode(node);
+	return csg_model;
 end

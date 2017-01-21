@@ -16,6 +16,8 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGMatrix4x4.lua");
 NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/NplCadEnvironment.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/matrix_decomp.lua");
+
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGMatrix4x4");
 local CSGMatrix4x4 = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
@@ -23,9 +25,37 @@ local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local math3d = commonlib.gettable("mathlib.math3d");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 
-function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable_action)
+function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable_action,operation_node)
 	local bResult = false;
 	if(pre_drawable_node and cur_drawable_node)then
+
+		-- 2d shape and 3d model are mixed 
+		local cur_transform,cur_world = cur_drawable_node:getMeshTransform(operation_node);
+		local pre_transform,pre_world = pre_drawable_node:getMeshTransform(operation_node);
+		local can_combine,new_transform,new_cur,new_pre = false,nil,nil,nil;
+		if(pre_drawable_node:getTypeName()=="Model" and cur_drawable_node:getTypeName()=="Model") then
+			-- do nothing
+		elseif(pre_drawable_node:getTypeName()=="Model" and cur_drawable_node:getTypeName()=="Shape") then
+			cur_drawable_node = cur_drawable_node:toCSGModel();
+		elseif(pre_drawable_node:getTypeName()=="Shape" and cur_drawable_node:getTypeName()=="Model") then
+			pre_drawable_node = pre_drawable_node:toCSGModel();
+		elseif(pre_drawable_node:getTypeName()=="Shape" and cur_drawable_node:getTypeName()=="Shape") then
+			can_combine,new_transform,cur_transform,pre_transform = Matrix4.canCombineToShape(cur_transform,pre_transform);
+			if(not can_combine) then
+				cur_drawable_node = cur_drawable_node:toCSGModel();
+				pre_drawable_node = pre_drawable_node:toCSGModel();
+			elseif(new_transform ~= nil) then
+				new_transform = new_transform * cur_world;
+				cur_world = Matrix4.IDENTITY;
+				pre_world = Matrix4.IDENTITY;
+			else
+				-- do nothing	
+			end
+		end
+		cur_drawable_node:applyTransform(cur_transform,cur_world);
+		pre_drawable_node:applyTransform(pre_transform,pre_world);
+		
+		-- do action
 		if(drawable_action == "union")then
 			cur_drawable_node = pre_drawable_node:union(cur_drawable_node);
 			bResult = true;
@@ -38,6 +68,14 @@ function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable
 		else
 			-- Default action is "union".
 			--cur_drawable_node = pre_drawable_node:union(cur_drawable_node);
+		end
+
+		if bResult then
+			-- result_drawable is build from other drawables,it's node hasn't apply yet.then apply it before be pushed. 
+			cur_drawable_node:setNode(operation_node);
+			if(new_transform ~= nil) then
+				cur_drawable_node:applyTransform(nil,new_transform);
+			end
 		end
 	end
 	return cur_drawable_node,bResult;
@@ -182,8 +220,6 @@ function CSGService.getRenderList(scene)
 				(ParaGlobal.timeGetTime()-fromTime)/1000, result_drawable and result_drawable:getElements() or 0);
 			local actionName, actionNode = CSGService.findTagValue(node:getParent() or scene,"csg_action");
 			if(actionNode ~= node) then
-				-- result_drawable is build from other drawables,it's node hasn't apply yet.then apply it before be pushed. 
-				result_drawable:setNode(node);
 				applyColor(node,result_drawable);
 				actionNode:pushActionParam(result_drawable);
 			end
@@ -221,13 +257,14 @@ function CSGService.doDrawablelAction(drawable_action, drawable_nodes, operation
 		return;
 	end
 	local first_node = drawable_nodes[1];
-	local first_node_transform = first_node:applyTransform(operation_node);
+	if(len == 1) then
+		first_node:applyTransform(first_node:getMeshTransform(operation_node));
+	end
+
 	local result_node = first_node;
 	local bSucceed = true;
 	for i=2, len do
-		local drawable_node_transform = drawable_nodes[i]:applyTransform(operation_node);
-
-		result_node, bSucceed = CSGService.operateTwoNodes(result_node, drawable_nodes[i], drawable_action);
+		result_node, bSucceed = CSGService.operateTwoNodes(result_node, drawable_nodes[i], drawable_action, operation_node);
 		if(not bSucceed) then
 			break;
 		end
