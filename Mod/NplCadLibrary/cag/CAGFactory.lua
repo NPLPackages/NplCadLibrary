@@ -143,7 +143,7 @@ function CAGFactory.roundedRectangle(options)
     end
     radius = radius:abs(); -- negative radii make no sense
     local roundradius = CSGFactory.parseOptionAsFloat(options, "roundradius", 0.2);
-    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSG.defaultResolution2D);
+    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution2D);
     local maxroundradius = math.min(radius[1], radius[2]);
     maxroundradius = maxroundradius - 0.1;
     roundradius = math.min(roundradius, maxroundradius);
