@@ -80,8 +80,11 @@ function NplCadEnvironment:new()
 		scene =  Scene.create("nplcad_scene");
 		nodes_stack = {},
 		math = math,
+		string = string,
 		specified_indexs = {},
 	};
+	-- also expose the _G for explaining npl only. 
+	o._G = o; 
 	setmetatable(o, self);
 	self.__index = self;
 	-- we need scene for log writing.
