@@ -8,6 +8,5 @@ local path2 = path2d({ arc = {center={0,0,0},radius=2,startangle=30,endangle= 27
 translate({2,0,-4},expandToCAG(path2));
 
 local path3 = path2d( {{0,3},{2,2}});
-path3 = path3:appendBezier({{0,2},{2,1},{2,0},{0,0}},{resolution =4});
---path3 = path3:appendPoints({{0,2},{2,1},{2,0},{0,0}});
+path3 = path3:appendBezier({{0,2},{2,1},{2,0},{0,0},{-2,0},{-2,1}},{resolution =16});
 translate({-3,0,-4},expandToCAG(path3));

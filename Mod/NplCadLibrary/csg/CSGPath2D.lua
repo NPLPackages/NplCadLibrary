@@ -237,15 +237,18 @@ function CSGPath2D:appendBezier(controlpoints, options)
         table.insert(controlpoints_parsed,p);
     end
 
-    local bezier_order = #controlpoints_parsed;
-    local fact = 1;
-    for i = 1,  bezier_order+1, 1 do
-        if (i > 1) then
-			fact = fact * (i-1);
+    local bezier_order = #controlpoints_parsed-1;
+    
+	-- factorials array. 1,1,2,
+	local fact = 1;
+    for i = 0,  bezier_order, 1 do
+        if (i > 0) then
+			fact = fact * i;
 		end
         table.insert(factorials,fact);
     end
-    local binomials = {};
+    
+	local binomials = {};
     for i = 1, bezier_order+1, 1 do
         local binomial = factorials[bezier_order+1] / (factorials[i] * factorials[bezier_order +2 - i]);
         table.insert(binomials,binomial);
@@ -262,8 +265,8 @@ function CSGPath2D:appendBezier(controlpoints, options)
 		local k;
 		
 		-- bezier_order+1 index out of range
-		for k = 1, bezier_order, 1 do		-- for k = 1, bezier_order+1, 1 do
-            if (k == (bezier_order)) then		-- if (k == (bezier_order+1)) then
+		for k = 1, bezier_order+1, 1 do		-- for k = 1, bezier_order+1, 1 do
+            if (k == (bezier_order+1)) then		-- if (k == (bezier_order+1)) then
 				one_minus_t_n_minus_k = 1;
 			end
             local bernstein_coefficient = binomials[k] * t_k * one_minus_t_n_minus_k;
@@ -277,8 +280,8 @@ function CSGPath2D:appendBezier(controlpoints, options)
     local newpoints = {};
     local newpoints_t = {};
     local numsteps = bezier_order + 1;
-    for i = 1, numsteps, 1 do
-        local t = (i-1) / (numsteps - 1);
+    for i = 0, numsteps-1, 1 do
+        local t = i / (numsteps - 1);
         local point = getPointForT(t);
         table.insert(newpoints,point);
         table.insert(newpoints_t,t);
@@ -306,8 +309,8 @@ function CSGPath2D:appendBezier(controlpoints, options)
 
             -- re - evaluate the angles, starting at the previous junction since it has changed:
             subdivide_base = subdivide_base -1;
-            if (subdivide_base < 1) then
-				subdivide_base = 1;
+            if (subdivide_base < 2) then
+				subdivide_base = 2;
 			end
         else
             subdivide_base = subdivide_base + 1;

@@ -510,12 +510,12 @@ function CAG:expandedShell(radius, resolution)
 end
 
 function CAG:expand(radius, resolution)
-    local result = self.union(self.expandedShell(radius, resolution));
+    local result = self:union(self:expandedShell(radius, resolution));
     return result;
 end
 
 function CAG:contract(radius, resolution)
-    local result = self.subtract(self.expandedShell(radius, resolution));
+    local result = self:subtract(self:expandedShell(radius, resolution));
     return result;
 end
 

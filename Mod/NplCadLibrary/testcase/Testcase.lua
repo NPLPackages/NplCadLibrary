@@ -19,6 +19,10 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/core/Drawable.lua");
 NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/drawables/CAGModel.lua");
+NPL.load("(gl)script/ide/math/Matrix4.lua");
+NPL.load("(gl)script/ide/math/vector.lua");
+NPL.load("(gl)script/ide/math/Quaternion.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/matrix_decomp.lua");
 
 local mathext = commonlib.gettable("Mod.NplCadLibrary.utils.mathext");
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
@@ -41,6 +45,9 @@ local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 local Drawable = commonlib.gettable("Mod.NplCadLibrary.core.Drawable");
 local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 local CAGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CAGModel");
+local Matrix4 = commonlib.gettable("mathlib.Matrix4");
+local vector3d = commonlib.gettable("mathlib.vector3d");
+local Quaternion = commonlib.gettable("mathlib.Quaternion");
 
 local Testcase = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.testcase.Testcase"));
 
@@ -62,6 +69,7 @@ function Testcase.Run()
 	Testcase.TestMatrix4x4();
 	Testcase.TestCAG();
 	Testcase.TestClass();
+	Testcase.MatrixDecomp();
 end
 
 function Testcase.TestUtil()
@@ -441,4 +449,42 @@ function Testcase.TestClass()
 	echo(result2);
 	echo(shape.node);
 	echo(shape:getTypeName());
+end
+
+function Testcase.MatrixDecomp()
+	echo("*****MatrixDecomp******");
+	
+	local rotationQuat = Quaternion:new();
+	local i,x = 0,0;
+	local math_pi = 3.1415926;
+
+	for i=-180,180,1 do
+		local mt = Matrix4:new():identity():makeTrans(11.32148229302237,7.626224465189316,-13.4092143985971);
+		local ms = Matrix4:new():identity();
+		ms:setScale(1.1,2.2,3.3);
+
+		local yaw = i * math_pi / 180;
+		local roll = i * math_pi / 180;
+		local pitch = i * math_pi / 180;
+		rotationQuat = rotationQuat:FromEulerAngles(yaw,roll,pitch);
+
+		local mr = rotationQuat:ToRotationMatrix();
+		local matrix = ms * mr * mt;
+		echo(matrix);
+
+		local result = matrix:Decompose();
+		local quatDecomp = Quaternion:new():set(result.rotation);
+		yaw, roll, pitch = quatDecomp:ToEulerAngles();
+		local eulerAngles = {yaw * 180 / math_pi,roll * 180 / math_pi,pitch * 180 / math_pi};
+		
+		echo(result);
+		echo(eulerAngles);
+		echo("==================");
+		--[[
+		for x=1,4 do
+			echo(math.abs(result.rotation[x]-rotationQuat[x]));
+			assert(math.abs(result.rotation[x]-rotationQuat[x])<0.00001);  
+		end
+		]]--
+	end
 end

@@ -1,0 +1,30 @@
+-- 1.2d元素经过3d变换。并且无法合并为2d布尔运算，将被转换成3d元素，结果也是3d元素         
+push();
+translate(0, 0, 1);
+    difference();
+        push();
+            translate(0.25,0.75,0.25);
+            rotate({0,0,-45});
+            square({size={0.5,0.5},center = true});
+        pop();
+        push();
+            translate(0.125,0.75,0.125);
+            rotate({0,0,45});
+            square({size={0.25,0.25},center = true});
+        pop();
+pop();
+-- 2.2d元素经过3d变换。但是具备相同的3d变化成分，将在2d空间进行布尔运算，结果仍然是2d元素   
+push();
+translate(0, 0, 3);
+    difference();
+        push();
+            translate(0.25,0.75,0.25);
+            rotate({0,0,-45});
+            square({size={0.5,0.5},center = true});
+        pop();
+        push();
+            translate(0.125,0.75,0.125);
+            rotate({0,0,-45});
+            square({size={0.25,0.25},center = true});
+        pop();
+pop();

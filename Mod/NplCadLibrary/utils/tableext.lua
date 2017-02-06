@@ -12,7 +12,7 @@ function tableext.concat(t1,t2)
 end
 
 -- Notice!! index begin from 1 !!! not 0
-function tableext.splice(t,index,howmany,element1,...)
+function tableext.splice(t,index,howmany,...)
 	index = index or 1;
 	howmany = howmany or 0;
 
@@ -22,7 +22,8 @@ function tableext.splice(t,index,howmany,element1,...)
 	end
 	local a = {...};
 	for k,v in ipairs(a) do
-		table.insert(t,v);
+		table.insert(t,index,v);
+		index = index + 1;
 	end
 	return t;
 end

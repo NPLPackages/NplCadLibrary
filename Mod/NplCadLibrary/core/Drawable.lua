@@ -68,17 +68,22 @@ function Drawable:setColor(color)
 	self.color = color;
 end
 
-function Drawable:applyTransform(operationNode)
+function Drawable:getMeshTransform(operationNode)
 	local operationWorldMatrix = operationNode:getWorldMatrix();
-	local myWorldMatrix = self.node:getWorldMatrix();
-	self.worldMatrix = operationWorldMatrix;
+	if(operationNode ~= self.node) then
+		local myWorldMatrix = self.node:getWorldMatrix();
+		local operationInverseMatrix = operationWorldMatrix:inverse();
+		local transformMatrix = Matrix4.__mul(myWorldMatrix,operationInverseMatrix);
+		return transformMatrix,operationWorldMatrix;
+	end
+	return Matrix4.IDENTITY,operationWorldMatrix;
+end
 
-	local operationInverseMatrix = operationWorldMatrix:inverse();
-	local transformMatrix = Matrix4.__mul(myWorldMatrix,operationInverseMatrix);
-
-	self:applyMeshTransform(transformMatrix);
-
-	return transformMatrix;
+function Drawable:applyTransform(transform,world)
+	self.worldMatrix = world;
+	if(transform ~= nil) then
+		self:applyMeshTransform(transform);
+	end
 end
 
 function Drawable:csgToMesh(csg)

@@ -1202,3 +1202,169 @@ function NplCadEnvironment.read_polyhedron(options)
 	NplCadEnvironment.log("read_polyhedron end");
 	return node;
 end
+
+
+--[[
+rectangle();
+rectangle({center = x});
+rectangle({center = {x,y}});
+rectangle({radius = w});
+rectangle({radius = {w,h}});
+rectangle({center = {0,0}, radius = {w,h}});
+--]]
+function NplCadEnvironment.rectangle(options)
+	local self = getfenv(2);
+	return self:rectangle__(options);
+end
+function NplCadEnvironment:rectangle__(options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_rectangle(options);
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_rectangle(p)
+	local node = Node.create("");
+	local center = {0,0};
+	local radius = {1,1};
+
+	if(is_table(p))then 
+		if(p.center) then
+			if(is_array(p.center))then
+				center[1] = p.center[1];
+				center[2] = p.center[2]; 
+			elseif(is_number(p.center)) then
+				center[1] = p.center;
+				center[2] = p.center; 				
+			end
+		end
+		if(p.radius)then
+			if(is_array(p.radius))then
+				radius[1] = p.radius[1]/2;
+				radius[2] = p.radius[2]/2; 
+			elseif(is_number(p.radius)) then
+				radius[1] = p.radius/2;
+				radius[2] = p.radius/2; 				
+			end			
+		end
+	end 
+
+	local o = CAGModel:new():init(CAGFactory.rectangle({center = center,  radius = radius}),"rectangle");
+	node:setDrawable(o);
+	node:setTag("shape","rectangle");
+	return node;
+end
+
+--[[
+roundedRectangle();
+roundedRectangle({center = x});
+roundedRectangle({center = {x,y}});
+roundedRectangle({radius = w});
+roundedRectangle({radius = {w,h}});
+roundedRectangle({center = {0,0}, radius = {w,h}});
+roundedRectangle({center = {0,0}, radius = {w,h},roundradius = 1,resolution = 32});
+--]]
+function NplCadEnvironment.roundedRectangle(options)
+	local self = getfenv(2);
+	return self:roundedRectangle__(options);
+end
+function NplCadEnvironment:roundedRectangle__(options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_roundedRectangle(options);
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_roundedRectangle(p)
+	local node = Node.create("");
+	local center = {0,0};
+	local radius = {1,1};
+	local roundradius  = 0.2;
+	local resolution = 8;
+
+	if(is_table(p))then 
+		if(p.center) then
+			if(is_array(p.center))then
+				center[1] = p.center[1];
+				center[2] = p.center[2]; 
+			elseif(is_number(p.center)) then
+				center[1] = p.center;
+				center[2] = p.center; 				
+			end
+		end
+		if(p.radius)then
+			if(is_array(p.radius))then
+				radius[1] = p.radius[1]/2;
+				radius[2] = p.radius[2]/2; 
+			elseif(is_number(p.radius)) then
+				radius[1] = p.radius/2;
+				radius[2] = p.radius/2; 				
+			end			
+		end
+		if(p.roundradius and is_number(p.roundradius))then
+			roundradius = p.roundradius;
+		end
+		if(p.resolution and is_number(p.resolution))then
+			resolution = p.resolution;
+		end
+	end 
+
+	local o = CAGModel:new():init(CAGFactory.roundedRectangle({center = center,  radius = radius, roundradius = roundradius, resolution = resolution}),"roundedRectangle");
+	node:setDrawable(o);
+	node:setTag("shape","roundedRectangle");
+	return node;
+end
+
+--[[
+ellipse();
+ellipse({center = x});
+ellipse({center = {x,y}});
+ellipse({radius = w});
+ellipse({radius = {w,h}});
+ellipse({center = {0,0}, radius = {w,h}});
+--]]
+function NplCadEnvironment.ellipse(options)
+	local self = getfenv(2);
+	return self:ellipse__(options);
+end
+function NplCadEnvironment:ellipse__(options)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_ellipse(options);
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_ellipse(p)
+	local node = Node.create("");
+	local center = {0,0};
+	local radius = {1,1};
+
+	if(is_table(p))then 
+		if(p.center) then
+			if(is_array(p.center))then
+				center[1] = p.center[1];
+				center[2] = p.center[2]; 
+			elseif(is_number(p.center)) then
+				center[1] = p.center;
+				center[2] = p.center; 				
+			end
+		end
+		if(p.radius)then
+			if(is_array(p.radius))then
+				radius[1] = p.radius[1]/2;
+				radius[2] = p.radius[2]/2; 
+			elseif(is_number(p.radius)) then
+				radius[1] = p.radius/2;
+				radius[2] = p.radius/2; 				
+			end			
+		end
+	end 
+
+	local o = CAGModel:new():init(CAGFactory.ellipse({center = center,  radius = radius}),"ellipse");
+	node:setDrawable(o);
+	node:setTag("shape","ellipse");
+	return node;
+end
