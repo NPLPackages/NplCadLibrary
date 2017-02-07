@@ -69,6 +69,12 @@ function CSGModel:applyMeshTransform(matrix)
 		polygon.plane = nil;
 	end
 end
+function CSGModel:applyColor(color)
+	for __,polygon in ipairs(self.csg_node.polygons) do
+		polygon.shared = polygon.shared or {};
+		polygon.shared.color = color;
+	end
+end
 
 function CSGModel:toMesh()
 	if(not self.csg_node)then 

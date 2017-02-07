@@ -45,6 +45,8 @@ function CAGModel:applyMeshTransform(matrix)
 		self.cag_node.sides[key] = side:transform(matrix4x4);
 	end
 end
+function CAGModel:applyColor(color)
+end
 
 function CAGModel:toMesh()
 	if(not self.cag_node)then 

@@ -42,7 +42,9 @@ function Drawable:getModelNode()
 	error("pure virtual function be called: Drawable:getModelNode()");
 	return nil;
 end
-
+function Drawable:applyColor(color)
+	error("pure virtual function be called: Drawable:applyColor()");
+end
 function Drawable:getNode()
 	return self.node;
 end
@@ -66,6 +68,7 @@ function Drawable:setColor(color)
 	color[3] = color[3] or 1;
 
 	self.color = color;
+	self:applyColor(color);
 end
 
 function Drawable:getMeshTransform(operationNode)
@@ -99,7 +102,7 @@ function Drawable:csgToMesh(csg)
 		for __,vertex in ipairs(polygon.vertices) do
 			vertices[#vertices+1] = vertex.pos;
 			normals[#normals+1] = normal;
-			colors[#colors+1] = self.color;
+			colors[#colors+1] = polygon.shared and polygon.shared.color  or self.color;
 		end
 		local size = #(polygon.vertices) - 1;
 		for i = 2,size do
