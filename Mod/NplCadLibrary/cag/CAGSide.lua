@@ -11,14 +11,14 @@ local CAGSide = commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide");
 --]]
 
 -- include CAGVertex
+NPL.load("(gl)script/ide/math/vector2d.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
 
+local vector2d = commonlib.gettable("mathlib.vector2d");
 local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
-local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
@@ -62,7 +62,7 @@ function CAGSide._fromFakePolygon(polygon)
 		-- filter out when v.pos[3] <= 0
 		if v.pos[2] > 0 then
 			table.insert(vert1Indices,k);
-			table.insert(pts2d,CSGVector2D:new():init(v.pos[1], v.pos[3]));
+			table.insert(pts2d,vector2d:new(v.pos[1], v.pos[3]));
         end
  	end
 		
@@ -97,7 +97,7 @@ function CAGSide:flipped()
 end
 
 function CAGSide:direction()
-    return self.vertex1.pos:minus(self.vertex0.pos);
+    return self.vertex1.pos:sub(self.vertex0.pos);
 end
 
 function CAGSide:lengthSquared()

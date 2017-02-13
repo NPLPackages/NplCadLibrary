@@ -34,14 +34,10 @@
     <None Include="Mod\NplCadLibrary\csg\CSGFactory.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGLine2D.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGLine3D.lua" />
-    <None Include="Mod\NplCadLibrary\csg\CSGMatrix4x4.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGOrthoNormalBasis.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGPath2D.lua" />
-    <None Include="Mod\NplCadLibrary\csg\CSGPlane.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGPolygon.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGPolygon2D.lua" />
-    <None Include="Mod\NplCadLibrary\csg\CSGVector.lua" />
-    <None Include="Mod\NplCadLibrary\csg\CSGVector2D.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGVertex.lua" />
     <None Include="Mod\NplCadLibrary\doms\DomBase.lua" />
     <None Include="Mod\NplCadLibrary\doms\DomCSGModel.lua" />
@@ -52,9 +48,19 @@
     <None Include="Mod\NplCadLibrary\drawables\CSGModel.lua" />
     <None Include="Mod\NplCadLibrary\services\CSGService.lua" />
     <None Include="Mod\NplCadLibrary\services\NplCadEnvironment.lua" />
-    <None Include="Mod\NplCadLibrary\testcase\Testcase.lua" />
+    <None Include="Mod\NplCadLibrary\testcase\TestConnector.lua" />
+    <None Include="Mod\NplCadLibrary\testcase\TestFrame.lua" />
+    <None Include="Mod\NplCadLibrary\testcase\TestLine2D.lua" />
+    <None Include="Mod\NplCadLibrary\testcase\TestLine3D.lua" />
+    <None Include="Mod\NplCadLibrary\testcase\TestObjectPool.lua" />
+    <None Include="Mod\NplCadLibrary\testcase\TestOrthoNormalBasis.lua" />
+    <None Include="Mod\NplCadLibrary\testcase\TestPolygon.lua" />
+    <None Include="Mod\NplCadLibrary\testcase\TestVertex.lua" />
     <None Include="Mod\NplCadLibrary\utils\Color.lua" />
+    <None Include="Mod\NplCadLibrary\utils\commonlib_ext.lua" />
     <None Include="Mod\NplCadLibrary\utils\mathext.lua" />
+    <None Include="Mod\NplCadLibrary\utils\matrix_decomp.lua" />
+    <None Include="Mod\NplCadLibrary\utils\ObjectPool.lua" />
     <None Include="Mod\NplCadLibrary\utils\tableext.lua" />
   </ItemGroup>
   <PropertyGroup Label="Globals">

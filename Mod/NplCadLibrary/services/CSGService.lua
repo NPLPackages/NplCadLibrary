@@ -11,16 +11,13 @@ local output = CSGService.buildPageContent("cube();")
 commonlib.echo(output);
 ------------------------------------------------------------
 ]]
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGMatrix4x4.lua");
+
 NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/NplCadEnvironment.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/matrix_decomp.lua");
 
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
-local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGMatrix4x4");
-local CSGMatrix4x4 = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local math3d = commonlib.gettable("mathlib.math3d");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");

@@ -1,5 +1,13 @@
 local tableext = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.utils.tableext"));
 
+function tableext.copy(t1,t2,each_fun)
+	for k,v in ipairs(t2) do
+		if each_fun ~= nil then
+			v = each_fun(v);
+		end
+		table.insert(t1,v);
+	end
+end
 function tableext.concat(t1,t2)
 	local t = {};
 	for k,v in ipairs(t1) do
@@ -51,5 +59,11 @@ end
 function tableext.is_array(input)
 	if(input and type(input) == "table" and (#input) > 0)then
 		return true;
+	end
+end
+function tableext.clear(input)
+	if(input and type(input) == "table" and (#input) > 0) then
+		local table = input.GetTable("TableName")
+		table:Clear()
 	end
 end

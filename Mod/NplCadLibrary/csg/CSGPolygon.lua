@@ -18,21 +18,36 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 -------------------------------------------------------
 ]]
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPlane.lua");
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
 
-local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
+NPL.load("(gl)script/ide/math/Plane.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
+
+local Plane = commonlib.gettable("mathlib.Plane");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
-local CSGPolygon = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon"));
+local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
+
+local CSGPolygon = commonlib.inherit_ex(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon"));
 
 -- {vertices, shared, plane(optional)}
 function CSGPolygon:ctor()
+	self.vertices = self.vertices or {};
+	self.plane = self.plane or Plane:new();
+	self.shared = nil;
+	tableext.clear(self.vertices);
 end
 
 function CSGPolygon:init(vertices, shared)
-	self.vertices = vertices or {};
+	vertices = vertices or {};
+	--[[
+	local function clone(v)
+		return v:clone();
+	end
+	--]]
+	tableext.copy(self.vertices,vertices,nil);
 	self.shared = shared;
-	self.plane = CSGPlane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos);	
+	self.plane:set(Plane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos));	
 	return self;
 end
 
@@ -40,7 +55,7 @@ end
 function CSGPolygon:GetPlane()
 	if(not self.plane) then
 		local vertices = self.vertices;
-		self.plane = CSGPlane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos);	
+		self.plane:set(Plane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos));	
 	end
 	return self.plane;
 end
@@ -48,34 +63,23 @@ end
 -- performs a deep copy of all its internal data. 
 -- used whenever data is about to be modified for implicit copy-on-write object.
 function CSGPolygon:detach()
-	local result = {};
-	local vertices = self.vertices;
-	for i=1, #vertices do
-		result[#result+1] = vertices[i]:clone();
+	for i = #self.vertices, 1, -1 do
+		self.vertices[i] = self.vertices[i]:clone();
 	end
-	self.vertices = result;
-	self.plane = self.plane and self.plane:clone();
 	return self;
 end
 
 function CSGPolygon:clone()
-	local p = CSGPolygon:new();
-	p.vertices = self.vertices;
-	p.shared = self.shared;
-	p.plane = self.plane;
-	return p;
+	return CSGPolygon:new():init(self.vertices,self.shared,self.plane);
 end
 
 function CSGPolygon:flip()
-	local result = {};
-	local vertices = self.vertices;
-	for i = #vertices, 1, -1 do
-		result[#result+1] = vertices[i]:clone():flip();
+	for i = #self.vertices, 1, -1 do
+		self.vertices[i]:flip();
 	end
-	self.vertices = result;
 
 	if(self.plane) then
-		self.plane = self.plane:clone():flip();
+		self.plane:inverse();
 	end
 	return self;
 end
@@ -89,15 +93,13 @@ end
 
 -- Affine transformation of polygon. Returns a new CSG.Polygon
 function CSGPolygon:transform(matrix4x4) 
-    local newvertices = {};
 	for k,v in ipairs(self.vertices) do 
-        table.insert(newvertices, CSGVertex:new():init(v.pos:transform(matrix4x4)));
+        v:transform(matrix4x4);
     end
-	local newplane = self:GetPlane():transform(matrix4x4);
+	self:GetPlane():transform(matrix4x4);
     if (matrix4x4:isMirroring()) then
-        -- need to reverse the vertex order
-        -- in order to preserve the inside/outside orientation:
-        newvertices = tableext.reverse(newvertices);
+        local newvertices = tableext.reverse(self.vertices);
+		tableext.copy(self.vertices,newvertices);
     end
-    return CSGPolygon:new():init(newvertices, self.shared);
+    return self;
 end

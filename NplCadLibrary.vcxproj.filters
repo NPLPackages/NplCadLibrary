@@ -48,13 +48,7 @@
     <None Include="Mod\NplCadLibrary\csg\CSG.lua">
       <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
-    <None Include="Mod\NplCadLibrary\csg\CSGPlane.lua">
-      <Filter>Mod\NplCadLibrary\csg</Filter>
-    </None>
     <None Include="Mod\NplCadLibrary\csg\CSGPolygon.lua">
-      <Filter>Mod\NplCadLibrary\csg</Filter>
-    </None>
-    <None Include="Mod\NplCadLibrary\csg\CSGVector.lua">
       <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
     <None Include="Mod\NplCadLibrary\csg\CSGVertex.lua">
@@ -111,9 +105,6 @@
     <None Include="Mod\NplCadLibrary\csg\CSGLine3D.lua">
       <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
-    <None Include="Mod\NplCadLibrary\csg\CSGMatrix4x4.lua">
-      <Filter>Mod\NplCadLibrary\csg</Filter>
-    </None>
     <None Include="Mod\NplCadLibrary\csg\CSGOrthoNormalBasis.lua">
       <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
@@ -121,9 +112,6 @@
       <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
     <None Include="Mod\NplCadLibrary\csg\CSGPolygon2D.lua">
-      <Filter>Mod\NplCadLibrary\csg</Filter>
-    </None>
-    <None Include="Mod\NplCadLibrary\csg\CSGVector2D.lua">
       <Filter>Mod\NplCadLibrary\csg</Filter>
     </None>
     <None Include="Mod\NplCadLibrary\cag\CAG.lua">
@@ -138,11 +126,41 @@
     <None Include="Mod\NplCadLibrary\cag\CAGVertex.lua">
       <Filter>Mod\NplCadLibrary\cag</Filter>
     </None>
-    <None Include="Mod\NplCadLibrary\testcase\Testcase.lua">
-      <Filter>Mod\NplCadLibrary\testcase</Filter>
-    </None>
     <None Include="Mod\NplCadLibrary\drawables\CAGModel.lua">
       <Filter>Mod\NplCadLibrary\drawables</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\utils\matrix_decomp.lua">
+      <Filter>Mod\NplCadLibrary\utils</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\utils\ObjectPool.lua">
+      <Filter>Mod\NplCadLibrary\utils</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\utils\commonlib_ext.lua">
+      <Filter>Mod\NplCadLibrary\utils</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\testcase\TestVertex.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\testcase\TestLine3D.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\testcase\TestFrame.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\testcase\TestObjectPool.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\testcase\TestLine2D.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\testcase\TestConnector.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\testcase\TestOrthoNormalBasis.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\testcase\TestPolygon.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
     </None>
   </ItemGroup>
 </Project>

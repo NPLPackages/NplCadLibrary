@@ -10,11 +10,8 @@ NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
 local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
 -------------------------------------------------------
 --]]
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
-local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 
 local CAGVertex = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex"));
-
 
 function CAGVertex:ctor()
 	--self.pos;

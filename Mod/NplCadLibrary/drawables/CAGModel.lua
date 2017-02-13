@@ -12,13 +12,11 @@ local CAGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CAGModel");
 ]]
 NPL.load("(gl)Mod/NplCadLibrary/core/Drawable.lua");
 NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGMatrix4x4.lua");
 NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)script/ide/math/Matrix4.lua");
 
 local math3d = commonlib.gettable("mathlib.math3d");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
-local CSGMatrix4x4 = commonlib.gettable("Mod.NplCadLibrary.csg.CSGMatrix4x4");
 local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 local CAGModel = commonlib.inherit(commonlib.gettable("Mod.NplCadLibrary.core.Drawable"), commonlib.gettable("Mod.NplCadLibrary.drawables.CAGModel"));
 
@@ -39,7 +37,6 @@ function CAGModel:getModelNode()
 	return self.cag_node;
 end
 function CAGModel:applyMeshTransform(matrix)
-	local matrix4x4 = CSGMatrix4x4:new():init(matrix);
 	for key,side in ipairs(self.cag_node.sides) do
 		-- once we need to be transform to vertices,we should lost it's height.
 		self.cag_node.sides[key] = side:transform(matrix4x4);
