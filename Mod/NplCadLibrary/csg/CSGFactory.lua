@@ -200,7 +200,7 @@ function CSGFactory.sphere(options)
         local polygons = {};
 		for slice1 = 0, resolution do
 			local angle = math_pi * 2.0 * slice1 / resolution;
-            local cylinderpoint = xvector:MulByFloat(math_cos(angle)):add(zvector:MulByFloat(math_sin(angle)));
+            local cylinderpoint = xvector:clone():MulByFloat(math_cos(angle)):add(zvector:clone():MulByFloat(math_sin(angle)));
             if (slice1 > 0) then
                 -- cylinder vertices:
                 local vertices = {};
@@ -211,21 +211,21 @@ function CSGFactory.sphere(options)
                     local sinpitch = math_sin(pitch);
                     if (slice2 > 0) then
                         vertices = {};
-						table.insert(vertices,CSGVertex:new():init(center:add(prevcylinderpoint:MulByFloat(prevcospitch):sub(yvector:MulByFloat(prevsinpitch)))));
-                        table.insert(vertices,CSGVertex:new():init(center:add(cylinderpoint:MulByFloat(prevcospitch):sub(yvector:MulByFloat(prevsinpitch)))));
+						table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(prevcospitch):sub(yvector:clone():MulByFloat(prevsinpitch)))));
+                        table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(prevcospitch):sub(yvector:clone():MulByFloat(prevsinpitch)))));
                         
                         if (slice2 < qresolution) then
-                            table.insert(vertices,CSGVertex:new():init(center:add(cylinderpoint:MulByFloat(cospitch):sub(yvector:MulByFloat(sinpitch)))));
+                            table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(cospitch):sub(yvector:clone():MulByFloat(sinpitch)))));
                         end
-                        table.insert(vertices,CSGVertex:new():init(center:add(prevcylinderpoint:MulByFloat(cospitch):sub(yvector:MulByFloat(sinpitch)))));
+                        table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(cospitch):sub(yvector:clone():MulByFloat(sinpitch)))));
 						table.insert(polygons,CSGPolygon:new():init(vertices));
                         vertices = {};
-                        table.insert(vertices,CSGVertex:new():init(center:add(prevcylinderpoint:MulByFloat(prevcospitch):add(yvector:MulByFloat(prevsinpitch)))));
-                        table.insert(vertices,CSGVertex:new():init(center:add(cylinderpoint:MulByFloat(prevcospitch):add(yvector:MulByFloat(prevsinpitch)))));
+                        table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(prevcospitch):add(yvector:clone():MulByFloat(prevsinpitch)))));
+                        table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(prevcospitch):add(yvector:clone():MulByFloat(prevsinpitch)))));
                         if (slice2 < qresolution) then
-                            table.insert(vertices,CSGVertex:new():init(center:add(cylinderpoint:MulByFloat(cospitch):add(yvector:MulByFloat(sinpitch)))));
+                            table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(cospitch):add(yvector:clone():MulByFloat(sinpitch)))));
                         end
-                        table.insert(vertices,CSGVertex:new():init(center:add(prevcylinderpoint:MulByFloat(cospitch):add(yvector:MulByFloat(sinpitch)))));
+                        table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(cospitch):add(yvector:clone():MulByFloat(sinpitch)))));
 
 						vertices = CSGFactory.reverseTable(vertices);
 						table.insert(polygons,CSGPolygon:new():init(vertices));
@@ -277,9 +277,9 @@ function CSGFactory.cylinder(options)
 		return;
 	end
 	local slices = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution2D);
-    local ray = e:sub(s);
+    local ray = e:clone():sub(s);
 
-	local axisZ = ray:normalize()
+	local axisZ = ray:clone():normalize()
 	local isY = (math.abs(axisZ[2]) > 0.5);
 	local isY_v1;
 	local isY_v2;
@@ -291,7 +291,7 @@ function CSGFactory.cylinder(options)
 		isY_v2 = 1;
 	end
 	local axisX = vector3d:new(isY_v1, isY_v2, 0):cross(axisZ):normalize();
-	local axisY = axisX:cross(axisZ):normalize();
+	local axisY = axisX:clone():cross(axisZ):normalize();
 	local start_value = CSGVertex:new():init(s, axisZ:negated());
 	local end_value = CSGVertex:new():init(e, axisZ:normalize());
 	local polygons = {};
@@ -300,9 +300,9 @@ function CSGFactory.cylinder(options)
 	function point(stack, slice, radius,normalBlend)
 		normalBlend = normalBlend or 0;
 		local angle = slice * math.pi * 2;
-		local out = axisX:MulByFloat(math.cos(angle)):add(axisY:MulByFloat(math.sin(angle)));
-		local pos = s:add(ray:MulByFloat(stack)):add(out:MulByFloat(radius));
-		local normal = out:MulByFloat(1 - math.abs(normalBlend)):add(axisZ:MulByFloat(normalBlend));
+		local out = axisX:clone():MulByFloat(math.cos(angle)):add(axisY:clone():MulByFloat(math.sin(angle)));
+		local pos = s:clone():add(ray:clone():MulByFloat(stack)):add(out:clone():MulByFloat(radius));
+		local normal = out:clone():MulByFloat(1 - math.abs(normalBlend)):add(axisZ:clone():MulByFloat(normalBlend));
 		return CSGVertex:new():init(pos, normal);
 	end
 	local i;

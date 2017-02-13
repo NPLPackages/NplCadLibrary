@@ -16,7 +16,8 @@ local CSGBSPNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode");
 -------------------------------------------------------
 ]]
 NPL.load("(gl)script/ide/math/Plane.lua");
-
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSGBSPNode = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode"));
 
 -- move polygons from source to result, if result is nil, a new table is created. 
@@ -106,7 +107,7 @@ function CSGBSPNode:clipPolygons(polygons)
 	end
 	local front, back;
 	for k,p in ipairs(polygons) do
-		local front1, back1, coplanarFront, coplanarBack = self.plane:splitPolygon(p,front, back, front, back);
+		local front1, back1, coplanarFront, coplanarBack = self:splitPolygon(p,front, back, front, back);
 		if(not front) then
 			front = front1 or coplanarFront;
 		end
@@ -174,11 +175,11 @@ function CSGBSPNode:build(polygons)
 		self.polygons[#self.polygons+1] = polygons[1];
 
 		for i = 2, #polygons do
-			front, back, self.polygons = self.plane:splitPolygon(polygons[i], self.polygons, self.polygons, front, back);
+			front, back, self.polygons = self:splitPolygon(polygons[i], self.polygons, self.polygons, front, back);
 		end	
 	else
 		for i = 1, #polygons do
-			front, back, self.polygons = self.plane:splitPolygon(polygons[i], self.polygons, self.polygons, front, back);
+			front, back, self.polygons = self:splitPolygon(polygons[i], self.polygons, self.polygons, front, back);
 		end	
 	end
 	
@@ -214,6 +215,7 @@ local FRONT = 1;
 local BACK = 2;
 local SPANNING = 3;
 local EPSILON = 0.00001;
+local bor = mathlib.bit.bor;
 
 -- Split `polygon` by self plane if needed, then put the polygon or polygon
 -- fragments in the appropriate lists. Coplanar polygons go into either
@@ -267,8 +269,8 @@ function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, ba
 			local j = (i % size) + 1;
 			local ti = types[i];
 			local tj = types[j];
-			local vi = vertices[i]
-			local vj = vertices[j];
+			local vi = vertices[i]:clone();
+			local vj = vertices[j]:clone();
 			if(ti ~= BACK)then
 				frontCount = frontCount + 1;
 				f[frontCount] = vi;
@@ -284,7 +286,7 @@ function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, ba
 			end
 			if(bor(ti, tj) == SPANNING)then
 				local t = (plane_w - plane_normal:dot(vi.pos)) / plane_normal:dot(vj.pos:clone_from_pool():sub(vi.pos));
-				local v = vi:interpolate(vj, t);
+				local v = vi:clone():interpolate(vj, t);
 				frontCount = frontCount + 1;
 				f[frontCount] = v;
 				backCount = backCount + 1;

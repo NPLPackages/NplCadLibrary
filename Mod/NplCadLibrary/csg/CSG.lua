@@ -26,6 +26,7 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGBSPNode.lua");
 
 local vector3d = commonlib.gettable("mathlib.vector3d");
 local Plane = commonlib.gettable("mathlib.Plane");
+local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
 local CSGPolygon = commonlib.inherit_ex(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon"));
 
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");

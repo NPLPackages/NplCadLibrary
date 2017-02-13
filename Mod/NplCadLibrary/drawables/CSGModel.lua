@@ -64,7 +64,7 @@ function CSGModel:applyMeshTransform(matrix)
 				NormalMultiplyMatrix(vertex.normal,vertex.normal,matrix);
 			end
 		end
-		polygon.plane = nil;
+		polygon.plane:transform(matrix);
 	end
 end
 function CSGModel:applyColor(color)

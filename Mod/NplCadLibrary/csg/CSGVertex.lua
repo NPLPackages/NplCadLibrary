@@ -60,6 +60,7 @@ end
 function CSGVertex:interpolate(other, t)
 	self.pos = self.pos:interpolate(other.pos,t);
 	self.normal = self.normal and self.normal:interpolate(other.normal,t);
+	return self;
 end
 
 function CSGVertex:equals(v)

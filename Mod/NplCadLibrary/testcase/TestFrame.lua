@@ -28,6 +28,7 @@ NPL.load("(gl)Mod/NplCadLibrary/testcase/TestConnector.lua");
 NPL.load("(gl)Mod/NplCadLibrary/testcase/TestOrthoNormalBasis.lua");
 NPL.load("(gl)Mod/NplCadLibrary/testcase/TestPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/testcase/TestVector3D.lua");
+NPL.load("(gl)Mod/NplCadLibrary/testcase/TestTableExt.lua");
 
 local vector3d = commonlib.gettable("mathlib.vector3d");
 local vector2d = commonlib.gettable("mathlib.vector2d");
@@ -59,6 +60,7 @@ local TestConnector = commonlib.gettable("Mod.NplCadLibrary.testcase.TestConnect
 local TestOrthoNormalBasis = commonlib.gettable("Mod.NplCadLibrary.testcase.TestOrthoNormalBasis");
 local TestPolygon = commonlib.gettable("Mod.NplCadLibrary.testcase.TestPolygon");
 local TestVector3D = commonlib.gettable("Mod.NplCadLibrary.testcase.TestVector3D");
+local TestTableExt = commonlib.gettable("Mod.NplCadLibrary.testcase.TestTableExt");
 
 local suits = {};
 
@@ -95,6 +97,7 @@ function TestFrame.Run()
 	TestFrame.registTestSuit("TestConnector",TestConnector);
 	TestFrame.registTestSuit("TestOrthoNormalBasis",TestOrthoNormalBasis);
 	TestFrame.registTestSuit("TestPolygon",TestPolygon);
+	TestFrame.registTestSuit("TestTableExt",TestTableExt);
 
 	for key, value in TestFrame.pairsByKeys(suits) do
 		TestFrame.runSuit(key,value);	      
