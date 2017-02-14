@@ -120,126 +120,54 @@ end
 http://gamedev.stackexchange.com/questions/16585/how-do-you-programmatically-generate-a-sphere
 --]]
 
-function CSGFactory.sphere2(options)
+function CSGFactory.sphere(options)
 	options = options or {};
 	local c = CSGFactory.parseOptionAs3DVector(options, "center", {0, 0, 0});
     local r = CSGFactory.parseOptionAsFloat(options, "radius", 1);
-    local slices = CSGFactory.parseOptionAsInt(options, "slices", 16);
-    local stacks = CSGFactory.parseOptionAsInt(options, "stacks", 8);
+    local slices = CSGFactory.parseOptionAsInt(options, "slices", 32);
+    local stacks = CSGFactory.parseOptionAsInt(options, "stacks", 32);
 
 	
 	local polygons = {};
-	local vertices;
+	local orign_vertices = {};
 	local function vertex(theta, phi) 
 		theta = theta * math.pi * 2;
-		phi = phi * math.pi;
+		phi = phi * math.pi * 2;
 		local sinPhi = math.sin(phi);
 		local dir = vector3d:new(
 		  math.cos(theta) * sinPhi,
-		  math.sin(theta) * sinPhi,
-		  math.cos(phi)
+		  math.cos(phi),
+		  math.sin(theta) * sinPhi
 		);
-		table.insert(vertices,CSGVertex:new():init(c:add(dir:MulByFloat(r)), dir));
+		return CSGVertex:new():init(c:clone():add(dir:clone():MulByFloat(r)), dir);
 	end
-	local i;
-	local j;
+	local i,j,index,v,i1,j1;
+	local which = {{0,0},{1,0},{1,1},{0,1}};	-- polygon index
 	for i=0,slices-1 do
-		for j=0,stacks-1 do
+		for j=0,stacks/2-1 do
 			vertices = {};
-			vertex(i / slices, j / stacks);
-			if (j > 0) then
-				vertex((i + 1) / slices, j / stacks);
+			for x=1,4 do
+				if x == 1 or x == 4 or ((x == 2) and (j > 0)) or ((x==3) and (j < stacks - 1)) then
+					i1 = (i + which[x][1]);
+					j1 = (j + which[x][2]);
+					index = j1 +  i1 * slices + 1;
+					--  optimized for calc only once.
+					if (orign_vertices[index]== nil) then
+						v = vertex(i1 / slices, j1 / stacks);
+						orign_vertices[index] = v;
+					else
+						v = orign_vertices[index]:clone();
+					end
+					table.insert(vertices,v);
+				end
 			end
-			if (j < stacks - 1) then
-				vertex((i + 1) / slices, (j + 1) / stacks);
-			end
-			vertex(i / slices, (j + 1) / stacks);
 			table.insert(polygons,CSGPolygon:new():init(vertices));
 		end
 	end
 	return CSG.fromPolygons(polygons);
 end
---[[
-//	Construct a solid sphere
-    //
-    // Parameters:
-    //   center: center of sphere (default {0,0,0})
-    //   radius: radius of sphere (default 1), must be a scalar
-    //   resolution: determines the number of polygons per 360 degree revolution (default 12)
-    //   axes: (optional) an array with 3 vectors for the x, y and z base vectors
-    //
-    // Example usage:
-    //
-    //     var sphere = CSGFactory.sphere({
-    //       center: {0, 0, 0},
-    //       radius: 2,
-    //       resolution: 32,
-    //     });
 
---]]
-function CSGFactory.sphere(options)
-        options = options or {};
-        local center = CSGFactory.parseOptionAs3DVector(options, "center", {0, 0, 0});
-        local radius = CSGFactory.parseOptionAsFloat(options, "radius", 1);
-        local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution3D);
-        local xvector, yvector, zvector;
-        if (options["axes"])then
-            xvector = options.axes[1]:normalize():MulByFloat(radius);
-            yvector = options.axes[2]:normalize():MulByFloat(radius);
-            zvector = options.axes[3]:normalize():MulByFloat(radius);
-        else
-            xvector = vector3d:new(1, 0, 0):MulByFloat(radius);
-            yvector = vector3d:new(0, 1, 0):MulByFloat(radius);
-            zvector = vector3d:new(0, 0, 1):MulByFloat(radius);
-        end
-        if (resolution < 4) then
-			resolution = 4;
-		end
-        local qresolution = math_ceil(resolution / 4);
-        local prevcylinderpoint;
-        local polygons = {};
-		for slice1 = 0, resolution do
-			local angle = math_pi * 2.0 * slice1 / resolution;
-            local cylinderpoint = xvector:clone():MulByFloat(math_cos(angle)):add(zvector:clone():MulByFloat(math_sin(angle)));
-            if (slice1 > 0) then
-                -- cylinder vertices:
-                local vertices = {};
-                local prevcospitch, prevsinpitch;
-                for slice2 = 0, qresolution do
-                    local pitch = 0.5 * math_pi * slice2 / qresolution;
-                    local cospitch = math_cos(pitch);
-                    local sinpitch = math_sin(pitch);
-                    if (slice2 > 0) then
-                        vertices = {};
-						table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(prevcospitch):sub(yvector:clone():MulByFloat(prevsinpitch)))));
-                        table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(prevcospitch):sub(yvector:clone():MulByFloat(prevsinpitch)))));
-                        
-                        if (slice2 < qresolution) then
-                            table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(cospitch):sub(yvector:clone():MulByFloat(sinpitch)))));
-                        end
-                        table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(cospitch):sub(yvector:clone():MulByFloat(sinpitch)))));
-						table.insert(polygons,CSGPolygon:new():init(vertices));
-                        vertices = {};
-                        table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(prevcospitch):add(yvector:clone():MulByFloat(prevsinpitch)))));
-                        table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(prevcospitch):add(yvector:clone():MulByFloat(prevsinpitch)))));
-                        if (slice2 < qresolution) then
-                            table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(cospitch):add(yvector:clone():MulByFloat(sinpitch)))));
-                        end
-                        table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(cospitch):add(yvector:clone():MulByFloat(sinpitch)))));
 
-						vertices = CSGFactory.reverseTable(vertices);
-						table.insert(polygons,CSGPolygon:new():init(vertices));
-                    end
-                    prevcospitch = cospitch;
-                    prevsinpitch = sinpitch;
-                end
-            end
-            prevcylinderpoint = cylinderpoint;
-		end
-        
-        local result = CSG.fromPolygons(polygons);
-        return result;
-end
 --[[
 	 Construct a solid cylinder.
     
@@ -292,35 +220,36 @@ function CSGFactory.cylinder(options)
 	end
 	local axisX = vector3d:new(isY_v1, isY_v2, 0):cross(axisZ):normalize();
 	local axisY = axisX:clone():cross(axisZ):normalize();
-	local start_value = CSGVertex:new():init(s, axisZ:negated());
-	local end_value = CSGVertex:new():init(e, axisZ:normalize());
+	local start_value = CSGVertex:new():init(s, axisZ:clone():negated());
+	local end_value = CSGVertex:new():init(e, axisZ);
 	local polygons = {};
 
 
-	function point(stack, slice, radius,normalBlend)
-		normalBlend = normalBlend or 0;
+	function point(stack, slice, radius,normal_input)
 		local angle = slice * math.pi * 2;
 		local out = axisX:clone():MulByFloat(math.cos(angle)):add(axisY:clone():MulByFloat(math.sin(angle)));
 		local pos = s:clone():add(ray:clone():MulByFloat(stack)):add(out:clone():MulByFloat(radius));
-		local normal = out:clone():MulByFloat(1 - math.abs(normalBlend)):add(axisZ:clone():MulByFloat(normalBlend));
+		local normal = normal_input or out;
 		return CSGVertex:new():init(pos, normal);
 	end
 	local i;
 	for i = 0,slices-1 do
 		local t0 = i / slices;
 		local t1 = (i + 1) / slices;
+
+		-- todo: can be optimized for calc only once.
 		if(radiusStart == radiusEnd)then
-			table.insert(polygons,CSGPolygon:new():init({start_value:clone(true), point(0, t0, radiusEnd, -1), point(0, t1, radiusEnd, -1)}));
-			table.insert(polygons,CSGPolygon:new():init({point(0, t1, radiusEnd), point(0, t0, radiusEnd, 0), point(1, t0, radiusEnd, 0), point(1, t1, radiusEnd, 0)}));
-			table.insert(polygons,CSGPolygon:new():init({end_value:clone(true), point(1, t1, radiusEnd, 1), point(1, t0, radiusEnd, 1)}));
+			table.insert(polygons,CSGPolygon:new():init({start_value:clone(true), point(0, t0, radiusEnd, start_value.normal), point(0, t1, radiusEnd, start_value.normal)}));
+			table.insert(polygons,CSGPolygon:new():init({point(0, t1, radiusEnd), point(0, t0, radiusEnd), point(1, t0, radiusEnd), point(1, t1, radiusEnd)}));
+			table.insert(polygons,CSGPolygon:new():init({end_value:clone(true), point(1, t1, radiusEnd, end_value.normal), point(1, t0, radiusEnd, end_value.normal)}));
 		else
 			if(radiusStart > 0)then
-				table.insert(polygons,CSGPolygon:new():init({start_value:clone(true), point(0, t0, radiusStart, -1), point(0, t1, radiusStart, -1)}));
-				table.insert(polygons,CSGPolygon:new():init({point(0, t0, radiusStart), point(1, t0, radiusEnd, 0), point(0, t1, radiusStart, 0)}));
+				table.insert(polygons,CSGPolygon:new():init({start_value:clone(true), point(0, t0, radiusStart, start_value.normal), point(0, t1, radiusStart, start_value.normal)}));
+				table.insert(polygons,CSGPolygon:new():init({point(0, t0, radiusStart), point(1, t0, radiusEnd), point(0, t1, radiusStart)}));
 			end
 			if(radiusEnd > 0)then
-				table.insert(polygons,CSGPolygon:new():init({end_value:clone(true), point(1, t1, radiusEnd, 0), point(1, t0, radiusEnd, 0)}));
-				table.insert(polygons,CSGPolygon:new():init({point(1, t0, radiusEnd, 1), point(1, t1, radiusEnd, 1), point(0, t1, radiusStart, 1)}));
+				table.insert(polygons,CSGPolygon:new():init({end_value:clone(true), point(1, t1, radiusEnd, end_value.normal), point(1, t0, radiusEnd, end_value.normal)}));
+				table.insert(polygons,CSGPolygon:new():init({point(1, t0, radiusEnd), point(1, t1, radiusEnd), point(0, t1, radiusStart)}));
 			end
 		end
 		
