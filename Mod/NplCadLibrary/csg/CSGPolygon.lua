@@ -74,10 +74,7 @@ function CSGPolygon:clone()
 end
 
 function CSGPolygon:flip()
-	for i = #self.vertices, 1, -1 do
-		self.vertices[i]:flip();
-	end
-
+	self.vertices = tableext.reverse(self.vertices, CSGVertex.flip);
 	if(self.plane) then
 		self.plane:inverse();
 	end
@@ -98,8 +95,7 @@ function CSGPolygon:transform(matrix4x4)
     end
 	self:GetPlane():transform(matrix4x4);
     if (matrix4x4:isMirroring()) then
-        local newvertices = tableext.reverse(self.vertices);
-		tableext.copy(self.vertices,newvertices);
+		self.vertices = tableext.reverse(self.vertices);
     end
     return self;
 end

@@ -35,3 +35,28 @@ function TestTableExt.test_clear()
 	tableext.clear(t1);
 	echo(#t1);
 end
+
+function TestTableExt.test_reverse()
+	local t = {1,2,3,4,5,6,7,8,9,10};
+	echo(t);
+	tableext.reverse(t);
+	echo(t);
+
+	t = {1,2,3,4,5,6,7,8,9};
+	echo(t);
+	tableext.reverse(t);
+	echo(t);
+
+	local function add(x)
+		return x + 1;
+	end
+	t = {1,2,3,4,5,6,7,8,9,10};
+	echo(t);
+	tableext.reverse(t, add);
+	echo(t);
+
+	t = {1,2,3,4,5,6,7,8,9};
+	echo(t);
+	tableext.reverse(t, add);
+	echo(t);
+end

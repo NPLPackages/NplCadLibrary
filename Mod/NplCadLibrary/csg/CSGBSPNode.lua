@@ -17,6 +17,9 @@ local CSGBSPNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode");
 ]]
 NPL.load("(gl)script/ide/math/Plane.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
+
+local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSGBSPNode = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode"));
 
@@ -231,6 +234,7 @@ function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, ba
 	--Classify each point as well as the entire polygon into one of the above four classes.
     local polygonType = 0;
     
+	tableext.clear(types);
 	local vertices = polygon.vertices;
 	for i = 1, #vertices do
 		local v = vertices[i];
@@ -246,6 +250,7 @@ function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, ba
 		polygonType = bor(polygonType, type);
 		types[i] = type;
 	end
+
 	if(polygonType == COPLANAR)then
 		if(plane_normal:dot(polygon:GetPlane():GetNormal()) > 0)then
 			coplanarFront = coplanarFront or {};
@@ -269,11 +274,11 @@ function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, ba
 			local j = (i % size) + 1;
 			local ti = types[i];
 			local tj = types[j];
-			local vi = vertices[i]:clone();
-			local vj = vertices[j]:clone();
+			local vi = vertices[i];
+			local vj = vertices[j];
 			if(ti ~= BACK)then
 				frontCount = frontCount + 1;
-				f[frontCount] = vi;
+				f[frontCount] = vi:clone();
 			end
 			if(ti ~= FRONT)then
 				if(ti ~= BACK)then
@@ -281,7 +286,7 @@ function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, ba
 					b[backCount] = vi:clone();
 				else
 					backCount = backCount + 1;
-					b[backCount] = vi;
+					b[backCount] = vi:clone();
 				end
 			end
 			if(bor(ti, tj) == SPANNING)then

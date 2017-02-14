@@ -291,7 +291,7 @@ function NplCadEnvironment.read_sphere(p)
 	if(not is_table(p)) then
 		r = p;
 	end
-	off = {r,r,r};       -- center: false (default)
+	off = {0,0,0};       -- center: false (default)
 
 	local o;
 	if(type=='geodesic')then

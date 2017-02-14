@@ -47,14 +47,19 @@ function tableext.slice(t,_start,_end)
 	return new_table;
 end
 
-function tableext.reverse(tab)  
-    local tmp = {}  
-    for i = 1, #tab do  
-        local key = #tab  
-        tmp[i] = table.remove(tab)  
-    end  
-  
-    return tmp ;
+function tableext.reverse(tab,each_fun)  
+    local p = 1;
+	local q = #tab;
+	while q > p do
+		if each_fun ~= nil then
+			tab[p],tab[q] = each_fun(tab[q]),each_fun(tab[p]);
+		else
+			tab[p],tab[q] = tab[q],tab[p];
+		end
+		p = p + 1;
+		q = q - 1;
+	end
+    return tab;
 end  
 function tableext.is_array(input)
 	if(input and type(input) == "table" and (#input) > 0)then
