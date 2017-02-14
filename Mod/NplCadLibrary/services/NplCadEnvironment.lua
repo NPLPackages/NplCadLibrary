@@ -291,7 +291,7 @@ function NplCadEnvironment.read_sphere(p)
 	if(not is_table(p)) then
 		r = p;
 	end
-	off = {0,0,0};       -- center: false (default)
+	off = {r,r,r};       -- center: false (default)
 
 	local o;
 	if(type=='geodesic')then
@@ -420,31 +420,32 @@ function NplCadEnvironment.read_cylinder(p,...)
 		else
 			r = r2;
 		end
-			if(is_table(p) and p.center and is_table(p.center)) then         -- preparing individual x,y,z center
+
+		if(is_table(p) and p.center and is_table(p.center)) then         -- preparing individual x,y,z center
 			if(p.center[1])then
 				off[1] = 0;
 			else
 				off[1] = r;
 			end
 			if(p.center[2])then
-				off[2] = 0;
+				off[2] = -h/2;
 			else
-				off[2] = r;
+				off[2] = 0;
 			end
 			if(p.center[3])then
-				off[3] = -h/2;
-			else
 				off[3] = 0;
+			else
+				off[3] = r;
 			end
-			elseif(is_table(p) and p.center==true) then 
-				off = {0,0,-h/2};
-			elseif(is_table(p) and p.center==false) then
-				off = {0,0,0};
-			end
-			--if(off[0]||off[1]||off[2]) o = o.translate(off);
-			if(off[1] ~= 0 or off[2] ~= 0 or off[3] ~= 0)then
-				node:translate(off[1],off[2],off[3]);
-			end
+		elseif(is_table(p) and p.center==true) then 
+			off = {0,-h/2,0};
+		elseif(is_table(p) and p.center==false) then
+			off = {r,0,r};
+		end
+		--if(off[0]||off[1]||off[2]) o = o.translate(off);
+		if(off[1] ~= 0 or off[2] ~= 0 or off[3] ~= 0)then
+			node:translate(off[1],off[2],off[3]);
+		end
 	end
 	node:setDrawable(o);
 	return node;
