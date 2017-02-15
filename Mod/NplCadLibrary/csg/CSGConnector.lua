@@ -51,7 +51,7 @@ function CSGConnector:ctor()
 		self.axisvector = self.axisvector or vector3d:new_from_pool(0,0,0);
 		self.normalvector = self.normalvector or vector3d:new_from_pool(0,0,0);
 	else
-		self.normal = self.normal or vector3d:new();
+		self.point = self.normal or vector3d:new();
 		self.axisvector = self.axisvector or vector3d:new();
 		self.normalvector = self.normalvector or vector3d:new();
 	end

@@ -69,7 +69,7 @@ function CAGFactory.ellipse(options)
     local res = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution2D);
 
     local e2 = CSGPath2D:new():init({{c[1],c[2] + r[2]}});
-    e2 = e2:appendArc({c[1],c[2] - r[2]}, {
+	e2 = e2:appendArc({c[1],c[2] - r[2]}, {
         xradius = r[1],
         yradius =  r[2],
         xaxisrotation =  0,
@@ -113,7 +113,7 @@ function CAGFactory.rectangle(options)
     r = r:abs(); -- negative radii make no sense
     local rswap = vector2d:new(r[1], -r[2]);
     local points = {
-        c:add(r), c:add(rswap), c:sub(r), c:sub(rswap)
+        c:clone():add(r), c:clone():add(rswap), c:clone():sub(r), c:clone():sub(rswap)
     };
     return CAG.fromPoints(points);
 end
@@ -134,13 +134,13 @@ function CAGFactory.roundedRectangle(options)
         end
         corner1 = CSGFactory.parseOptionAs2DVector(options, "corner1", {0, 0});
         corner2 = CSGFactory.parseOptionAs2DVector(options, "corner2", {1, 1});
-        center = corner1:add(corner2):MulByFloat(0.5);
-        radius = corner2:sub(corner1):MulByFloat(0.5);
+        center = corner1:clone():add(corner2):MulByFloat(0.5);
+        radius = corner2:clone():sub(corner1):MulByFloat(0.5);
 	else
         center = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
         radius = CSGFactory.parseOptionAs2DVector(options, "radius", {1, 1});
     end
-    radius = radius:abs(); -- negative radii make no sense
+    radius = radius:clone():abs(); -- negative radii make no sense
     local roundradius = CSGFactory.parseOptionAsFloat(options, "roundradius", 0.2);
     local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution2D);
     local maxroundradius = math.min(radius[1], radius[2]);

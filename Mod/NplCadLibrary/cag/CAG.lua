@@ -11,9 +11,12 @@ NPL.load("(gl)Mod/NplCadLibrary/cag/CAG.lua");
 local CAG = commonlib.gettable("Mod.NplCadLibrary.cag.CAG");
 -------------------------------------------------------
 --]]
+NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
+
 NPL.load("(gl)script/ide/math/bit.lua");
 NPL.load("(gl)script/ide/math/vector.lua");
 NPL.load("(gl)script/ide/math/vector2d.lua");
+NPL.load("(gl)script/ide/math/Matrix4.lua");
 
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGSide.lua");
@@ -28,6 +31,7 @@ NPL.load("(gl)Mod/NplCadLibrary/utils/mathext.lua");
 
 local vector3d = commonlib.gettable("mathlib.vector3d");
 local vector2d = commonlib.gettable("mathlib.vector2d");
+local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 
 local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
 local CAGSide = commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide");
@@ -40,11 +44,12 @@ local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
 local mathext = commonlib.gettable("Mod.NplCadLibrary.utils.mathext");
 
-local CAG = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAG"));
+local CAG = commonlib.inherit_ex(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAG"));
 
 
 function CAG:ctor()
-	self.sides = {};
+	self.sides = self.sides or {};
+	tableext.clear(self.sides);
 end
 
 function CAG:GetSideCount()
@@ -54,7 +59,7 @@ end
 -- Construct a CAG from a list of `CAG.Side` instances.
 function CAG.fromSides(sides)
     local cag = CAG:new();
-    cag.sides = sides;
+	tableext.copy(cag.sides,sides,nil);
     return cag;
 end
 
@@ -75,8 +80,7 @@ function CAG.fromPoints(points)
 	
 	-- build side from points array
     for k,v in ipairs(points)  do
-		local point = vector2d:new(v);
-		local vertex = CAGVertex:new():init(point);
+		local vertex = CAGVertex:new():init(v);
 		local side = CAGSide:new():init(prevvertex, vertex);
 		table.insert(sides,side);
 		prevvertex = vertex;
@@ -113,8 +117,7 @@ function CAG.fromPointsNoCheck(points)
 	
 	-- build side from points array
     for k,v in ipairs(points)  do
-		local point = vector2d:new(v);
-		local vertex = CAGVertex:new():init(point);
+		local vertex = CAGVertex:new():init(v);
 		local side = CAGSide:new():init(prevvertex, vertex);
 		table.insert(sides,side);
 		prevvertex = vertex;
@@ -140,13 +143,13 @@ end
 -- returns true if the lines strictly intersect, the end points are not counted!
 function CAG.linesIntersect(p0start, p0end, p1start, p1end)
     if (p0end:equals(p1start) or p1end:equals(p0start)) then
-        local d = p1end:sub(p1start):normalize():add(p0end:sub(p0start):normalize()):length();
+        local d = p1end:clone():sub(p1start):normalize():add(p0end:clone():sub(p0start):normalize()):length();
         if (d < tonumber("1e-5")) then
             return true;
         end
     else
-        local d0 = p0end:sub(p0start);
-        local d1 = p1end:sub(p1start);
+        local d0 = p0end:clone():sub(p0start);
+        local d1 = p1end:clone():sub(p1start);
 
 		-- lines are parallel
         if math.abs(d0:cross(d1)) < tonumber("1e-9") then 
@@ -175,8 +178,8 @@ function CAG:_toVector3DPairs(m)
 	for k,side in ipairs(self.sides) do
 		local p0 = side.vertex0.pos;
 		local p1 = side.vertex1.pos;
-		local vector0 = p0:toVector3D();
-		local vector1 = p1:toVector3D();
+		local vector0 = p0:toVector3D(0);
+		local vector1 = p1:toVector3D(0);
 		if m ~= nil then
 			vector0 = vector0:transform(m);
 			vector1 = vector1:transform(m);
@@ -213,8 +216,8 @@ function CAG:_toPlanePolygons(options)
 
     -- create plane as a (partial non-closed) CSG in XY plane
     local bounds = self:getBounds();
-    bounds[1] = bounds[1]:sub(vector2d:new(1, 1));
-    bounds[2] = bounds[2]:add(vector2d:new(1, 1));
+    bounds[1] = bounds[1] - vector2d:new(1, 1);
+    bounds[2] = bounds[2] + vector2d:new(1, 1);
     local csgshell = self:_toCSGWall(-1, 1);
     local csgplane = CSG.fromPolygons({CSGPolygon:new():init({
         CSGVertex:new():init(vector3d:new(bounds[1][1], 0, bounds[1][2])),
@@ -229,9 +232,10 @@ function CAG:_toPlanePolygons(options)
     -- only keep the polygons in the z plane:
     local polys = {};
 	for k,polygon in ipairs(csgplane.polygons) do
-		if(math.abs(polygon:GetPlane().normal[2]) > 0.99) then
+		local normal = polygon:GetPlane():GetNormal();
+		if(math.abs(normal[2]) > 0.99) then
 		    if (flipped) then
-				polygon = polygon:flip();
+				polygon = polygon:clone():flip();
 			end
 			table.insert(polys,polygon);
 		end
@@ -360,12 +364,8 @@ function CAG:area()
 end
 
 function CAG:flipped()
-    local newsides = {};
-	for k,side in ipairs(self.sides) do
-		table.insert(newsides,side:flipped());
-	end
-	newsides = tableext.reverse(newsides);
-    return CAG.fromSides(newsides);
+    tableext.reverse(self.sides,CAGSide.flipped);
+    return self;
 end
 
 function CAG:getBounds()
@@ -377,10 +377,10 @@ function CAG:getBounds()
     end
     local maxpoint = minpoint;
 	for k,v in ipairs(self.sides) do
-        minpoint = minpoint:min(v.vertex0.pos);
-        minpoint = minpoint:min(v.vertex1.pos);
-        maxpoint = maxpoint:max(v.vertex0.pos);
-        maxpoint = maxpoint:max(v.vertex1.pos);
+        minpoint = minpoint:clone():min(v.vertex0.pos);
+        minpoint = minpoint:clone():min(v.vertex1.pos);
+        maxpoint = maxpoint:clone():max(v.vertex0.pos);
+        maxpoint = maxpoint:clone():max(v.vertex1.pos);
 	end
     return {minpoint, maxpoint};
 end
@@ -415,16 +415,16 @@ function CAG:expandedShell(radius, resolution)
     --local cag = self.canonicalized();
 
 	for k,side in ipairs(self.sides) do
-        local d = side.vertex1.pos:sub(side.vertex0.pos);
+        local d = side.vertex1.pos - side.vertex0.pos;
         local dl = d:length();
         if (dl > tonumber("1e-5")) then
             d = d:MulByFloat(1.0 / dl);
             local normal = d:normal():MulByFloat(radius);
             local shellpoints = {
-                side.vertex1.pos:add(normal),
-                side.vertex1.pos:sub(normal),
-                side.vertex0.pos:sub(normal),
-                side.vertex0.pos:add(normal)
+                side.vertex1.pos + normal,
+                side.vertex1.pos - normal,
+                side.vertex0.pos - normal,
+                side.vertex0.pos + normal
             };
             --  local newcag = CAG.fromPointsNoCheck(shellpoints);
             local newcag = CAG.fromPoints(shellpoints);
@@ -458,8 +458,8 @@ function CAG:expandedShell(radius, resolution)
         if (m.length == 2) then
             local end1 = m[1].p2;
             local end2 = m[2].p2;
-            angle1 = end1:sub(pcenter):angleDegrees();
-            angle2 = end2:sub(pcenter):angleDegrees();
+            angle1 = (end1-pcenter):angleDegrees();
+            angle2 = (end2-pcenter):angleDegrees();
             if (angle2 < angle1) then
 				angle2 = angle2 + 360;
 			end
@@ -497,7 +497,7 @@ function CAG:expandedShell(radius, resolution)
                 if (step == numsteps) then
 					angle = angle2; -- prevent rounding errors
 				end
-                local point = pcenter:add(vector2d.fromAngleDegrees(angle):MulByFloat(radius));
+                local point = pcenter + (vector2d.fromAngleDegrees(angle):MulByFloat(radius));
                 if ((not fullcircle) or (step > 0)) then
 					table.insert(points,point);
                 end
@@ -590,14 +590,14 @@ function CAG:extrude(options)
     local polygons = {};
     -- bottom and top
 	polygons = tableext.concat(polygons,self:_toPlanePolygons({translation= {0, 0, 0},normalVector= normalVector, flipped = not (offsetVector[2] < 0)}));
-    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = offsetVector,normalVector = normalVector:rotateY(twistangle + 180), flipped = (offsetVector[2] < 0)}));
+    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = offsetVector,normalVector = normalVector * Matrix4.rotationY(twistangle + 180), flipped = (offsetVector[2] < 0)}));
     -- walls
 	local i;
     for i = 0, twiststeps-1 ,1 do
-        local c1 = CSGConnector:new():init(offsetVector:MulByFloat(i / twiststeps), {0, offsetVector[2], 0},
-            normalVector:rotateY(i * twistangle/twiststeps + 180));
-        local c2 = CSGConnector:new():init(offsetVector:MulByFloat((i + 1) / twiststeps), {0, offsetVector[2], 0},
-            normalVector:rotateY((i + 1) * twistangle/twiststeps + 180));
+        local c1 = CSGConnector:new():init(offsetVector:clone():MulByFloat(i / twiststeps), {0, offsetVector[2], 0},
+            normalVector * Matrix4.rotationY(i * twistangle/twiststeps + 180));
+        local c2 = CSGConnector:new():init(offsetVector:clone():MulByFloat((i + 1) / twiststeps), {0, offsetVector[2], 0},
+            normalVector * Matrix4.rotationY((i + 1) * twistangle/twiststeps + 180));
 		polygons = tableext.concat(polygons,self:_toWallPolygons({toConnector1 = c1, toConnector2 = c2}));
     end
     return CSG.fromPolygons(polygons);
@@ -624,7 +624,7 @@ function CAG:rotateExtrude(options)
     if (alpha > 0 and alpha < 360) then
         -- we need to rotate negative to satisfy wall function condition of
         -- building in the direction of axis vector
-        local connE = CSGConnector:new():init(origin, axisV:rotateY(-alpha), normalV);
+        local connE = CSGConnector:new():init(origin, axisV * Matrix4.rotationY(-alpha), normalV);
         polygons = tableext.concat(polygons,
             self:_toPlanePolygons({toConnector = connS, flipped = true}));
         polygons = tableext.concat(polygons,
@@ -635,7 +635,7 @@ function CAG:rotateExtrude(options)
     local step = alpha/resolution;
 	local a;
     for a = step, alpha + EPS ,step do
-        connT2 = CSGConnector:new():init(origin, axisV:rotateY(-a), normalV);
+        connT2 = CSGConnector:new():init(origin, axisV * Matrix4.rotationY(-a), normalV);
         polygons = tableext.concat(polygons,self:_toWallPolygons(
             {toConnector1 = connT1, toConnector2 = connT2}));
         connT1 = connT2;

@@ -862,7 +862,7 @@ function NplCadEnvironment.read_polygon(p)
 	if(is_table(p) and p.points)then 
 		points = p.points; 
 	end 
-
+	local o;
 	o = CAGModel:new():init(CAGFactory.polygon(points),"polygon");
 
 	if(is_table(p) and p.center and is_array(p.center))then

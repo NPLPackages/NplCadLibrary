@@ -10,6 +10,7 @@ local CAGSide = commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide");
 -------------------------------------------------------
 --]]
 
+NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
 -- include CAGVertex
 NPL.load("(gl)script/ide/math/vector2d.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
@@ -24,15 +25,16 @@ local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
 
 -- we inherit from nil
-local CAGSide = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide"));
+local CAGSide = commonlib.inherit_ex(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide"));
 
 function CAGSide:ctor()
-	
+	self.vertex0 = self.vertex0 or CAGVertex:new();
+	self.vertex1=  self.vertex1 or CAGVertex:new();
 end
 
 function CAGSide:init(vertex0, vertex1)
-	self.vertex0 = vertex0 or self.vertex0;
-	self.vertex1 = vertex1 or self.vertex1;
+	self.vertex0:init(vertex0.pos);
+	self.vertex1:init(vertex1.pos);
 	return self;
 end
 
@@ -93,11 +95,12 @@ function CAGSide:toPolygon3D(y0, y1)
 end
 
 function CAGSide:flipped()
-	return CAGSide:new():init(self.vertex1, self.vertex0);
+	self.vertex1, self.vertex0 = self.vertex0, self.vertex1;
+	return self;
 end
 
 function CAGSide:direction()
-    return self.vertex1.pos:sub(self.vertex0.pos);
+    return self.vertex1.pos - self.vertex0.pos;
 end
 
 function CAGSide:lengthSquared()
@@ -111,8 +114,8 @@ function CAGSide:length()
 end
 
 function CAGSide:transform(matrix4x4)
-    local newp1 = self.vertex0.pos:transform(matrix4x4);
-    local newp2 = self.vertex1.pos:transform(matrix4x4);
-    return CAGSide:new():init(CAGVertex:new():init(newp1), CAGVertex:new():init(newp2));
+    self.vertex0.pos:transform(matrix4x4);
+    self.vertex1.pos:transform(matrix4x4);
+    return self;
 end
 

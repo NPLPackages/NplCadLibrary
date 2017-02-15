@@ -231,7 +231,7 @@ function CSGPath2D:appendBezier(controlpoints, options)
                 lastBezierControlPoint = self.points[#self.points - 1];
             end
             -- mirror the last bezier control point:
-            p = (self.points[#self.points] * 2):sub(lastBezierControlPoint);
+            p = (self.points[#self.points] * 2) - (lastBezierControlPoint);
         else
             p = vector2d:new(p); -- cast to Vector2D
         end
@@ -271,7 +271,7 @@ function CSGPath2D:appendBezier(controlpoints, options)
 				one_minus_t_n_minus_k = 1;
 			end
             local bernstein_coefficient = binomials[k] * t_k * one_minus_t_n_minus_k;
-            point = point:add(controlpoints_parsed[k]:MulByFloat(bernstein_coefficient));
+            point = point:add(controlpoints_parsed[k]:clone():MulByFloat(bernstein_coefficient));
             t_k = t_k * t;
             one_minus_t_n_minus_k = one_minus_t_n_minus_k * inv_1_minus_t;
         end
@@ -292,8 +292,8 @@ function CSGPath2D:appendBezier(controlpoints, options)
     local maxangle = math.pi * 2 / resolution; -- segments may have differ no more in angle than this
     local maxsinangle = math.sin(maxangle);
     while (subdivide_base < #newpoints) do
-        local dir1 = newpoints[subdivide_base]:sub(newpoints[subdivide_base - 1]):normalize();
-        local dir2 = newpoints[subdivide_base + 1]:sub(newpoints[subdivide_base]):normalize();
+        local dir1 = (newpoints[subdivide_base] - newpoints[subdivide_base - 1]):normalize();
+        local dir2 = (newpoints[subdivide_base + 1] - newpoints[subdivide_base]):normalize();
         local sinangle = dir1:cross(dir2); -- this is the sine of the angle
         if (math.abs(sinangle) > maxsinangle) then
             -- angle is too big, we need to subdivide
@@ -419,7 +419,7 @@ function CSGPath2D:appendArc(endpoint, options)
 		end
         local center_translated = vector2d:new(xradius * start_translated[2] / yradius, -yradius * start_translated[1] / xradius):MulByFloat(multiplier1);
         -- F.6.5.3:
-        local center = vector2d:new(cosphi * center_translated[1] - sinphi * center_translated[2], sinphi * center_translated[1] + cosphi * center_translated[2]):add((startpoint:add(endpoint)):MulByFloat(0.5));
+        local center = vector2d:new(cosphi * center_translated[1] - sinphi * center_translated[2], sinphi * center_translated[1] + cosphi * center_translated[2]):add((startpoint+endpoint):MulByFloat(0.5));
         -- F.6.5.5:
         local vec1 = vector2d:new((start_translated[1] - center_translated[1]) / xradius, (start_translated[2] - center_translated[2]) / yradius);
         local vec2 = vector2d:new((-start_translated[1] - center_translated[1]) / xradius, (-start_translated[2] - center_translated[2]) / yradius);

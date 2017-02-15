@@ -162,5 +162,11 @@
     <None Include="Mod\NplCadLibrary\testcase\TestPolygon.lua">
       <Filter>Mod\NplCadLibrary\testcase</Filter>
     </None>
+    <None Include="Mod\NplCadLibrary\testcase\TestTableExt.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\testcase\TestVector3d.lua">
+      <Filter>Mod\NplCadLibrary\testcase</Filter>
+    </None>
   </ItemGroup>
 </Project>
