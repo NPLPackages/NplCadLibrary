@@ -95,7 +95,10 @@ function CAGSide:toPolygon3D(y0, y1)
 end
 
 function CAGSide:flipped()
-	self.vertex1, self.vertex0 = self.vertex0, self.vertex1;
+	-- because our memory mode,dot not swap instance only.
+	local x,y = self.vertex0.pos:get();
+	self.vertex0.pos:set(self.vertex1.pos);
+	self.vertex1.pos:set(x,y);
 	return self;
 end
 

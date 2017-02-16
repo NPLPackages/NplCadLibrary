@@ -101,7 +101,7 @@ function Drawable:csgToMesh(csg)
 		local normal = polygon:GetPlane():GetNormal();
 		for __,vertex in ipairs(polygon.vertices) do
 			vertices[#vertices+1] = vertex.pos;
-			normals[#normals+1] = normal or vertex.normal;
+			normals[#normals+1] = normal;
 			colors[#colors+1] = polygon.shared and polygon.shared.color  or self.color;
 		end
 		local size = #(polygon.vertices) - 1;

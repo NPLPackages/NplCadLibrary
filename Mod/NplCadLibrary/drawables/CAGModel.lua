@@ -39,7 +39,7 @@ end
 function CAGModel:applyMeshTransform(matrix)
 	for key,side in ipairs(self.cag_node.sides) do
 		-- once we need to be transform to vertices,we should lost it's height.
-		self.cag_node.sides[key] = side:transform(matrix4x4);
+		self.cag_node.sides[key] = side:transform(matrix);
 	end
 end
 function CAGModel:applyColor(color)

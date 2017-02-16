@@ -58,6 +58,9 @@ function tableext.reverse(tab,each_fun)
 		end
 		p = p + 1;
 		q = q - 1;
+		if(p == q) and (each_fun ~= nil) then
+			tab[p] = each_fun(tab[q]);
+		end
 	end
     return tab;
 end  
