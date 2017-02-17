@@ -575,8 +575,7 @@ function NplCadEnvironment:scale__(options,obj)
 		x = options;
 		y = options;
 		z = options;
-	end
-	if(is_array(options))then
+	elseif(is_array(options))then
 		if #options == 3 then
 			x = options[1] or 1;
 			y = options[2] or 1;
