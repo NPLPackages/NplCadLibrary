@@ -147,7 +147,7 @@ function CSGFactory.sphere(options)
 		for j=0,stacks/2-1 do
 			vertices = {};
 			for x=1,4 do
-				if x == 1 or x == 4 or ((x == 2) and (j > 0)) or ((x==3) and (j < stacks - 1)) then
+				if x == 1 or x == 4 or ((x == 2) and (j > 0)) or ((x==3) and (j < stacks/2 - 1)) then
 					i1 = (i + which[x][1]);
 					j1 = (j + which[x][2]);
 					index = j1 +  i1 * slices + 1;
