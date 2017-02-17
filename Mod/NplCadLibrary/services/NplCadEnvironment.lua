@@ -80,8 +80,11 @@ function NplCadEnvironment:new()
 		scene =  Scene.create("nplcad_scene");
 		nodes_stack = {},
 		math = math,
+		string = string,
 		specified_indexs = {},
 	};
+	-- also expose the _G for explaining npl only. 
+	o._G = o; 
 	setmetatable(o, self);
 	self.__index = self;
 	-- we need scene for log writing.
@@ -573,8 +576,7 @@ function NplCadEnvironment:scale__(options,obj)
 		x = options;
 		y = options;
 		z = options;
-	end
-	if(is_array(options))then
+	elseif(is_array(options))then
 		if #options == 3 then
 			x = options[1] or 1;
 			y = options[2] or 1;
