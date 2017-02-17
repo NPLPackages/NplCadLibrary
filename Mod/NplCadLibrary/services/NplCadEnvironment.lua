@@ -297,9 +297,9 @@ function NplCadEnvironment.read_sphere(p)
 	if(type=='geodesic')then
 		--NOTE:Unimplemented
 		--o = geodesicSphere(p);
-		o = CSGModel:new():init(CSGFactory.sphere({radius = r, slices = fn, stacks = fn}),"sphere");
+		o = CSGModel:new():init(CSGFactory.sphere({radius = r, resolution = fn}),"sphere");
 	else 
-		o = CSGModel:new():init(CSGFactory.sphere({radius = r, slices = fn, stacks = fn}),"sphere");
+		o = CSGModel:new():init(CSGFactory.sphere({radius = r, resolution = fn}),"sphere");
 	end
 	if(is_table(p) and p.center and is_table(p.center)) then         -- preparing individual x,y,z center
 		if(p.center[1])then

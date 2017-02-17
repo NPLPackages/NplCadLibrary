@@ -124,9 +124,11 @@ function CSGFactory.sphere(options)
 	options = options or {};
 	local c = CSGFactory.parseOptionAs3DVector(options, "center", {0, 0, 0});
     local r = CSGFactory.parseOptionAsFloat(options, "radius", 1);
-    local slices = CSGFactory.parseOptionAsInt(options, "slices", 32);
-    local stacks = CSGFactory.parseOptionAsInt(options, "stacks", 32);
-
+    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", 32);
+	if (resolution < 4) then
+		resolution = 4;
+	end
+	local qresolution = math_ceil(resolution / 4) * 4;
 	
 	local polygons = {};
 	local orign_vertices = {};
@@ -143,17 +145,18 @@ function CSGFactory.sphere(options)
 	end
 	local i,j,index,v,i1,j1;
 	local which = {{0,0},{1,0},{1,1},{0,1}};	-- polygon index
-	for i=0,slices-1 do
-		for j=0,stacks/2-1 do
+	local vn = 0;
+	for i=0,resolution-1 do
+		for j=0,qresolution/2-1 do
 			vertices = {};
 			for x=1,4 do
-				if x == 1 or x == 4 or ((x == 2) and (j > 0)) or ((x==3) and (j < stacks/2 - 1)) then
+				if x == 1 or x == 4 or ((x == 2) and (j > 0)) or ((x==3) and (j < qresolution/2 - 1)) then
 					i1 = (i + which[x][1]);
 					j1 = (j + which[x][2]);
-					index = j1 +  i1 * slices + 1;
+					index = j1 +  i1 * resolution + 1;
 					--  optimized for calc only once.
 					if (orign_vertices[index]== nil) then
-						v = vertex(i1 / slices, j1 / stacks);
+						v = vertex(i1 / resolution, j1 / qresolution);
 						orign_vertices[index] = v;
 					else
 						v = orign_vertices[index]:clone();
@@ -161,6 +164,7 @@ function CSGFactory.sphere(options)
 					table.insert(vertices,v);
 				end
 			end
+			vn = vn + #vertices;
 			table.insert(polygons,CSGPolygon:new():init(vertices));
 		end
 	end
