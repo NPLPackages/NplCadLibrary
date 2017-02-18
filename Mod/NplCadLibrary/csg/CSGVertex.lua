@@ -63,10 +63,11 @@ function CSGVertex:interpolate(other, t)
 	return self;
 end
 
-function CSGVertex:equals(v)
-	return self.pos:equals(v.pos)
+function CSGVertex:equals(v,epsilon)
+	epsilon = epsilon or 0;
+	return self.pos:equals(v.pos,epsilon)
 			and ((self.normal == nil and v.normal == nil) or 
-				 (self.normal and v.normal and self.normal:equals(v.normal))
+				 (self.normal and v.normal and self.normal:equals(v.normal,epsilon))
 			);
 end
 

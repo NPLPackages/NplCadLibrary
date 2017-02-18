@@ -73,8 +73,9 @@ function CSGLine2D:reverse()
 	return self;
 end
 
-function CSGLine2D:equals(l)
-    return (l.normal:equals(self.normal) and (math.abs(l.w - self.w)<tonumber("1e-5")));
+function CSGLine2D:equals(l,epsilon)
+	epsilon = epsilon or 0;
+    return (l.normal:equals(self.normal,epsilon) and (math.abs(l.w - self.w)<=epsilon));
 end
 
 function CSGLine2D:origin()

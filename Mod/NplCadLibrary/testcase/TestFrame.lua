@@ -336,7 +336,7 @@ function TestFrame.TestPlane()
 	echo(Plane.fromPoints(vector3d:new(0,1,0),vector3d:new(0,0,1),vector3d:new(1,0,0)));
 	echo(Plane.fromVector3Ds(vector3d:new(0,1,0),vector3d:new(0,0,1),vector3d:new(1,0,0)));
 	echo(Plane.fromNormalAndPoint(vector3d:new(0,1,0),vector3d:new(1,1,1)));
-	echo(Plane.anyPlaneFromVector3Ds(vector3d:new(1,1,10),vector3d:new(2,2,2),vector3d:new(2,2,2)));
+	echo(Plane.anyPlaneFromVector3Ds(vector3d:new(1,1,10),vector3d:new(2,2,2),vector3d:new(2,2,2),tonumber("1e-5")));
 	echo(plane:clone());
 	echo(plane:inverse());
 	echo(plane:equals(plane:clone()));

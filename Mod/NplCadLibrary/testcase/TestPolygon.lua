@@ -25,9 +25,9 @@ function TestPolygon.test_Init()
 	local polygon = CSGPolygon:new():init(vertices);
 	local i;
 	for i=1, #vertices, 1 do
-		assert(polygon.vertices[i]:equals(vertices[i]));
+		assert(polygon.vertices[i]:equals(vertices[i],tonumber("1e-5")));
 	end
-	assert(polygon.plane:equals(plane));
+	assert(polygon.plane:equals(plane,tonumber("1e-5")));
 	assert(polygon:getVertexCnt() == #vertices);
 end
 
@@ -45,9 +45,9 @@ function TestPolygon.test_Clone()
 	local polygon = CSGPolygon:new():init(vertices);
 	local polygon2 = polygon:clone();
 	for i=1, #polygon.vertices, 1 do
-		assert(polygon.vertices[i]:equals(polygon2.vertices[i]));
+		assert(polygon.vertices[i]:equals(polygon2.vertices[i],tonumber("1e-5")));
 	end
-	assert(polygon.plane:equals(polygon2.plane));
+	assert(polygon.plane:equals(polygon2.plane,tonumber("1e-5")));
 	assert(#polygon.vertices == #polygon2.vertices);
 	assert(polygon:getVertexCnt() == #polygon.vertices);
 	assert(polygon2:getVertexCnt() == #polygon2.vertices);
@@ -67,7 +67,7 @@ function TestPolygon.test_GetPlane()
 	local polygon = CSGPolygon:new():init(vertices);
 	polygon:detach();
 	local p_plane = polygon:GetPlane();
-	assert(p_plane:equals(plane));
+	assert(p_plane:equals(plane,tonumber("1e-5")));
 end
 
 function TestPolygon.test_flip()
@@ -85,9 +85,9 @@ function TestPolygon.test_flip()
 	polygon:detach();
 	polygon:flip();
 	for i=1, #vertices, 1 do
-		assert(polygon.vertices[i]:equals(vertices[i]:flip()));
+		assert(polygon.vertices[i]:equals(vertices[#vertices-i+1]:flip(),tonumber("1e-5")));
 	end
-	assert(polygon.plane:equals(plane:inverse()));
+	assert(polygon.plane:equals(plane:inverse(),tonumber("1e-5")));
 end
 
 function TestPolygon.test_transform()
@@ -106,9 +106,9 @@ function TestPolygon.test_transform()
 	local matrix = TestFrame.randomMatrix();
 	polygon:transform(matrix);
 	for i=1, #vertices, 1 do
-		assert(polygon.vertices[i]:equals(vertices[i]:transform(matrix)));
+		assert(polygon.vertices[i]:equals(vertices[i]:transform(matrix),tonumber("1e-5")));
 	end
-	assert(polygon.plane:equals(plane:transform(matrix)));
+	assert(polygon.plane:equals(plane:transform(matrix),tonumber("1e-5")));
 end
 
 -- todo

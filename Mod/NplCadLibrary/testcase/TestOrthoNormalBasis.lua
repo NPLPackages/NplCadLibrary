@@ -12,17 +12,17 @@ local TestOrthoNormalBasis = commonlib.inherit(nil, commonlib.gettable("Mod.NplC
 function TestOrthoNormalBasis.test_Init()
 	local plane =  TestFrame.randomPlane();
 	local onb = CSGOrthoNormalBasis:new():init(plane);
-	assert(onb.plane:equals(plane));
+	assert(onb.plane:equals(plane,tonumber("1e-5")));
 end
 
 function TestOrthoNormalBasis.test_Clone()
 	local plane =  TestFrame.randomPlane();
 	local onb = CSGOrthoNormalBasis:new():init(plane);
 	local onb2 = onb:clone();
-	assert(onb.u:equals(onb2.u));
-	assert(onb.v:equals(onb2.v));
-	assert(onb.plane:equals(onb2.plane));
-	assert(onb.planeorigin:equals(onb2.planeorigin));
+	assert(onb.u:equals(onb2.u,tonumber("1e-5")));
+	assert(onb.v:equals(onb2.v,tonumber("1e-5")));
+	assert(onb.plane:equals(onb2.plane,tonumber("1e-5")));
+	assert(onb.planeorigin:equals(onb2.planeorigin,tonumber("1e-5")));
 end
 
 function TestOrthoNormalBasis.test_GetCartesian()
@@ -31,23 +31,23 @@ end
 
 function TestOrthoNormalBasis.test_Z0Plane()
 	local onb = CSGOrthoNormalBasis.Z0Plane();
-	assert(onb.u:equals(vector3d.unit_x));
-	assert(onb.v:equals(vector3d.unit_y));
-	assert(onb.plane:equals(Plane:new():init(0,0,1,0)));
-	assert(onb.planeorigin:equals(vector3d.zero));
+	assert(onb.u:equals(vector3d.unit_x,tonumber("1e-5")));
+	assert(onb.v:equals(vector3d.unit_y,tonumber("1e-5")));
+	assert(onb.plane:equals(Plane:new():init(0,0,1,0),tonumber("1e-5")));
+	assert(onb.planeorigin:equals(vector3d.zero,tonumber("1e-5")));
 end
 
 function TestOrthoNormalBasis.test_getProjectionMatrix()
 	local plane =  TestFrame.randomPlane();
 	local onb = CSGOrthoNormalBasis:new():init(plane);
 	local project = onb:getProjectionMatrix();
-	assert(onb.u:equals(vector3d:new(project[1],project[5],project[9])));
-	assert(onb.v:equals(vector3d:new(project[2],project[6],project[10])));
-	assert(onb.plane:GetNormal():equals(vector3d:new(project[3],project[7],project[11])));
-	assert(vector3d.zero:equals(vector3d:new(project[4],project[8],project[12])));
+	assert(onb.u:equals(vector3d:new(project[1],project[5],project[9]),tonumber("1e-5")));
+	assert(onb.v:equals(vector3d:new(project[2],project[6],project[10]),tonumber("1e-5")));
+	assert(onb.plane:GetNormal():equals(vector3d:new(project[3],project[7],project[11]),tonumber("1e-5")));
+	assert(vector3d.zero:equals(vector3d:new(project[4],project[8],project[12]),tonumber("1e-5")));
 	local translate1 = vector3d:new(project[13],project[14],project[15]);
 	local translate2 = vector3d:new(0,0,-onb.plane[4]);
-	assert(translate1:equals(translate2));
+	assert(translate1:equals(translate2,tonumber("1e-5")));
 	assert(project[16] == 1);
 end
 function TestOrthoNormalBasis.test_getInverseProjectionMatrix()
@@ -55,13 +55,13 @@ function TestOrthoNormalBasis.test_getInverseProjectionMatrix()
 	local onb = CSGOrthoNormalBasis:new():init(plane);
 	local project = onb:getProjectionMatrix();
 	project:inverse();
-	assert(onb.u:equals(vector3d:new(project[1],project[5],project[9])));
-	assert(onb.v:equals(vector3d:new(project[2],project[6],project[10])));
-	assert(onb.plane:GetNormal():equals(vector3d:new(project[3],project[7],project[11])));
-	assert(vector3d.zero:equals(vector3d:new(project[4],project[8],project[12])));
+	assert(onb.u:equals(vector3d:new(project[1],project[5],project[9]),tonumber("1e-5")));
+	assert(onb.v:equals(vector3d:new(project[2],project[6],project[10]),tonumber("1e-5")));
+	assert(onb.plane:GetNormal():equals(vector3d:new(project[3],project[7],project[11]),tonumber("1e-5")));
+	assert(vector3d.zero:equals(vector3d:new(project[4],project[8],project[12]),tonumber("1e-5")));
 	local translate1 = vector3d:new(project[13],project[14],project[15]);
 	local translate2 = vector3d:new(0,0,-onb.plane[4]);
-	assert(translate1:equals(translate2));
+	assert(translate1:equals(translate2,tonumber("1e-5")));
 	assert(project[16] == 1);
 end
 
@@ -79,7 +79,7 @@ function TestOrthoNormalBasis.test_transform()
 	assert(TestFrame.numberEquals(1,onb.plane:GetNormal():length()));	
 	assert(TestFrame.numberEquals(1,onb.u:length()));	
 	assert(TestFrame.numberEquals(1,onb.v:length()));	
-	assert(onb.plane:GetNormal():equals(onb.planeorigin * (1/onb.plane[4])));
+	assert(onb.plane:GetNormal():equals(onb.planeorigin * (1/onb.plane[4]),tonumber("1e-5")));
 
     local origin_transformed = vector3d.zero * matrix4x4;
     rightvector:sub(origin_transformed):normalize();
@@ -90,10 +90,10 @@ function TestOrthoNormalBasis.test_transform()
     local u = v * plane_normal;
     local planeorigin = plane_normal:MulByFloat(plane[4]);
 
-	assert(onb.u:equals(u));
-	assert(onb.v:equals(v));
-	assert(onb.plane:equals(plane));
-	assert(onb.planeorigin:equals(planeorigin));
+	assert(onb.u:equals(u,tonumber("1e-5")));
+	assert(onb.v:equals(v,tonumber("1e-5")));
+	assert(onb.plane:equals(plane,tonumber("1e-5")));
+	assert(onb.planeorigin:equals(planeorigin,tonumber("1e-5")));
 end
 	--[[
 	to2D

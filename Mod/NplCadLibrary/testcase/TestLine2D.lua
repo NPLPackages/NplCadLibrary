@@ -11,7 +11,7 @@ function TestLine2D.test_Init()
 	local normal = TestFrame.randomNormal2d();
 	local w = math.random()*100;
 	local line2d = CSGLine2D:new():init(normal,w);
-	assert(line2d.normal:equals(normal));
+	assert(line2d.normal:equals(normal,tonumber("1e-5")));
 	assert(TestFrame.numberEquals(line2d.w,w));
 end
 
@@ -20,7 +20,7 @@ function TestLine2D.test_Clone()
 	local w = math.random()*100;
 	local line2d = CSGLine2D:new():init(normal,w);
 	local line2d2 = line2d:clone();
-	assert(line2d.normal:equals(line2d2.normal));
+	assert(line2d.normal:equals(line2d2.normal,tonumber("1e-5")));
 	assert(TestFrame.numberEquals(line2d.w,line2d2.w));
 end
 function TestLine2D.test_FromPoints()
@@ -31,7 +31,7 @@ function TestLine2D.test_FromPoints()
     local direction = p2 - p1;
     local normal = direction:normal():negated():normalize();
     local w = p1:dot(normal);
-	assert(normal:equals(line2d.normal));
+	assert(normal:equals(line2d.normal,tonumber("1e-5")));
 	assert(TestFrame.numberEquals(line2d.w,w));
 end
 function TestLine2D.test_Reverse()
@@ -40,7 +40,7 @@ function TestLine2D.test_Reverse()
 	local line2d = CSGLine2D:new():init(normal,w);
 	line2d:reverse();
 	normal:negated();
-	assert(line2d.normal:equals(normal));
+	assert(line2d.normal:equals(normal,tonumber("1e-5")));
 	assert(TestFrame.numberEquals(line2d.w,-w));	
 end
 function TestLine2D.test_equals()
@@ -48,7 +48,7 @@ function TestLine2D.test_equals()
 	local w = math.random()*100;
 	local line2d = CSGLine2D:new():init(normal,w);
 	local line2d2 = line2d:clone();
-	assert(line2d:equals(line2d2));
+	assert(line2d:equals(line2d2,tonumber("1e-5")));
 end
 
 function TestLine2D.test_origin()
@@ -56,14 +56,14 @@ function TestLine2D.test_origin()
 	local w = math.random()*100;
 	local line2d = CSGLine2D:new():init(normal,w);
 	local origin = line2d:origin();
-	assert(origin:equals(normal * w));
+	assert(origin:equals(normal * w,tonumber("1e-5")));
 end
 function TestLine2D.test_direction()
 	local normal = TestFrame.randomNormal2d();
 	local w = math.random()*100;
 	local line2d = CSGLine2D:new():init(normal,w);
 	local direction = line2d:direction();
-	assert(direction:equals(normal:normalize():normal()));
+	assert(direction:equals(normal:normalize():normal(),tonumber("1e-5")));
 end
 function TestLine2D.test_xAtY()
 	local normal = TestFrame.randomNormal2d();

@@ -113,12 +113,13 @@ function CSGLine3D:distanceToPoint(point)
     return distancevector:length();
 end
 
-function CSGLine3D:equals(line3d)
-    if (not self.direction:equals(line3d.direction)) then
+function CSGLine3D:equals(line3d,epsilon)
+	epsilon = epsilon or 0;
+    if (not self.direction:equals(line3d.direction,epsilon)) then
 		return false;
 	end
     local distance = self:distanceToPoint(line3d.point);
-    if (distance > tonumber("1e-8")) then
+    if (distance > epsilon) then
 		return false;
 	end
     return true;

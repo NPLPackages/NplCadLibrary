@@ -9,7 +9,7 @@ function TestLine3D.test_Init()
 	local pos =  TestFrame.randomVector3d();
 	local normal = TestFrame.randomVector3d();
 	local line3d = CSGLine3D:new():init(pos,normal);
-	assert(line3d.point:equals(pos) and line3d.direction:equals(normal:normalize()));
+	assert(line3d.point:equals(pos,tonumber("1e-5")) and line3d.direction:equals(normal:normalize(),tonumber("1e-5")));
 end
 
 function TestLine3D.test_Clone()
@@ -21,8 +21,8 @@ function TestLine3D.test_Clone()
 	echo(line3d2.point);
 	echo(line3d.direction);
 	echo(line3d2.direction);--]]
-	assert(line3d.point:equals(line3d2.point));
-	assert(line3d.direction:equals(line3d2.direction));
+	assert(line3d.point:equals(line3d2.point,tonumber("1e-5")));
+	assert(line3d.direction:equals(line3d2.direction,tonumber("1e-5")));
 end
 function TestLine3D.test_FromPoints()
 	local p1 =  TestFrame.randomVector3d();
@@ -31,7 +31,7 @@ function TestLine3D.test_FromPoints()
 
 	local normal = p2-p1;
 	normal:normalize();
-	assert(p1:equals(line3d.point) and line3d.direction:equals(normal));		
+	assert(p1:equals(line3d.point,tonumber("1e-5")) and line3d.direction:equals(normal,tonumber("1e-5")));		
 end
 function TestLine3D.test_FromPlanes()
 	local p1 =  TestFrame.randomPlane();
@@ -59,8 +59,8 @@ function TestLine3D.test_Reverse()
 	local line3d = CSGLine3D:new():init(pos,norm);
 	line3d:reverse();
 	norm:negated();
-	assert(pos:equals(line3d.point));
-	assert(line3d.direction:equals(norm));	
+	assert(pos:equals(line3d.point,tonumber("1e-5")));
+	assert(line3d.direction:equals(norm,tonumber("1e-5")));	
 end
 function TestLine3D.test_onePointOnLine()
 	local pos =  TestFrame.randomVector3d();
@@ -80,8 +80,8 @@ function TestLine3D.test_Transform()
 	p1:transform(matrix);
 	local normal = p2 - p1;
 	normal:normalize();
-	assert(p1:equals(line3d.point));	
-	assert(normal:equals(line3d.direction));		
+	assert(p1:equals(line3d.point,tonumber("1e-5")));	
+	assert(normal:equals(line3d.direction,tonumber("1e-5")));		
 end
 function TestLine3D.test_IntersectWithPlane()
 	local pos =  TestFrame.randomVector3d();
@@ -115,7 +115,7 @@ function TestLine3D.test_Equals()
 	local line3d = CSGLine3D.fromPoints(pos,norm);
 
 	local line3d2 =  line3d:clone();
-	assert(line3d:equals(line3d2));
+	assert(line3d:equals(line3d2,tonumber("1e-5")));
 end
 
 function TestLine3D.test_DistanceToPoint()
