@@ -10,34 +10,36 @@ NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
 local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
 -------------------------------------------------------
 --]]
-NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
-NPL.load("(gl)script/ide/math/vector2d.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
+local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 
-local vector2d = commonlib.gettable("mathlib.vector2d");
-local CAGVertex = commonlib.inherit_ex(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex"));
+local CAGVertex = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex"));
+
 
 function CAGVertex:ctor()
-	if(commonlib.use_object_pool) then
-		self.pos = self.pos or vector2d:new_from_pool(0,0);
-	else
-		self.pos = self.pos or vector2d:new();
-	end
+	--self.pos;
 end
 
 function CAGVertex:init(pos)
-	self.pos:set(pos);
+	self.pos = pos or self.pos;
 	return self;
 end
 
 -- copy on write policy
 -- @param bDeepCopy: if true, we will perform deep copy, otherwise it is a shallow copy on write clone
-function CAGVertex:clone()
-	return CAGVertex:new(self.pos);
+function CAGVertex:clone(bDeepCopy)
+	local v = CAGVertex:new();
+	v.pos = self.pos;
+	if(bDeepCopy) then
+		v:detach();
+	end
+	return v;
 end
 
 -- performs a deep copy of all its internal data. 
 -- used whenever data is about to be modified for implicit copy-on-write object.
 function CAGVertex:detach()
+	self.pos = self.pos:clone();
 	return self;
 end
 
@@ -45,8 +47,9 @@ end
 --interpolating all properties using a parameter of `t`. Subclasses should
 --override this to interpolate additional properties.
 function CAGVertex:interpolate(other, t)
-	self.pos:lerp(other.pos,t);
-	return self;
+	return CAGVertex:new():init(
+		self.pos:lerp(other.pos,t)
+	);
 end
 
 function CAGVertex:getPosition()

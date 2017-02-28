@@ -21,7 +21,6 @@ NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/Color.lua");
-NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
@@ -865,7 +864,7 @@ function NplCadEnvironment.read_polygon(p)
 	if(is_table(p) and p.points)then 
 		points = p.points; 
 	end 
-	local o;
+
 	o = CAGModel:new():init(CAGFactory.polygon(points),"polygon");
 
 	if(is_table(p) and p.center and is_array(p.center))then

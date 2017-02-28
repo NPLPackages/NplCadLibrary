@@ -10,31 +10,29 @@ local CAGSide = commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide");
 -------------------------------------------------------
 --]]
 
-NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
 -- include CAGVertex
-NPL.load("(gl)script/ide/math/vector2d.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
 
-local vector2d = commonlib.gettable("mathlib.vector2d");
 local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
+local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
 
 -- we inherit from nil
-local CAGSide = commonlib.inherit_ex(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide"));
+local CAGSide = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide"));
 
 function CAGSide:ctor()
-	self.vertex0 = self.vertex0 or CAGVertex:new();
-	self.vertex1=  self.vertex1 or CAGVertex:new();
+	
 end
 
 function CAGSide:init(vertex0, vertex1)
-	self.vertex0:init(vertex0.pos);
-	self.vertex1:init(vertex1.pos);
+	self.vertex0 = vertex0 or self.vertex0;
+	self.vertex1 = vertex1 or self.vertex1;
 	return self;
 end
 
@@ -64,7 +62,7 @@ function CAGSide._fromFakePolygon(polygon)
 		-- filter out when v.pos[3] <= 0
 		if v.pos[2] > 0 then
 			table.insert(vert1Indices,k);
-			table.insert(pts2d,vector2d:new(v.pos[1], v.pos[3]));
+			table.insert(pts2d,CSGVector2D:new():init(v.pos[1], v.pos[3]));
         end
  	end
 		
@@ -95,15 +93,11 @@ function CAGSide:toPolygon3D(y0, y1)
 end
 
 function CAGSide:flipped()
-	-- because our memory mode,dot not swap instance only.
-	local x,y = self.vertex0.pos:get();
-	self.vertex0.pos:set(self.vertex1.pos);
-	self.vertex1.pos:set(x,y);
-	return self;
+	return CAGSide:new():init(self.vertex1, self.vertex0);
 end
 
 function CAGSide:direction()
-    return self.vertex1.pos - self.vertex0.pos;
+    return self.vertex1.pos:minus(self.vertex0.pos);
 end
 
 function CAGSide:lengthSquared()
@@ -117,8 +111,8 @@ function CAGSide:length()
 end
 
 function CAGSide:transform(matrix4x4)
-    self.vertex0.pos:transform(matrix4x4);
-    self.vertex1.pos:transform(matrix4x4);
-    return self;
+    local newp1 = self.vertex0.pos:transform(matrix4x4);
+    local newp2 = self.vertex1.pos:transform(matrix4x4);
+    return CAGSide:new():init(CAGVertex:new():init(newp1), CAGVertex:new():init(newp2));
 end
 

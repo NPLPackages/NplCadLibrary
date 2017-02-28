@@ -8,3 +8,5 @@ function mathext.round(decimal)
     end
 	return decimal;
 end
+
+mathext.pi = 3.1415926;

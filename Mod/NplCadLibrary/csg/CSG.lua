@@ -13,36 +13,29 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
 local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
 -------------------------------------------------------
 --]]
-NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
-
-NPL.load("(gl)script/ide/math/bit.lua");
 NPL.load("(gl)script/ide/math/vector.lua");
-NPL.load("(gl)script/ide/math/Plane.lua");
-NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
-
+NPL.load("(gl)script/ide/math/bit.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPlane.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGBSPNode.lua");
 
 local vector3d = commonlib.gettable("mathlib.vector3d");
-local Plane = commonlib.gettable("mathlib.Plane");
-local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
-local CSGPolygon = commonlib.inherit_ex(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon"));
-
+local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
+local CSGPlane = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPlane");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSGBSPNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode");
 local CSG = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSG"));
-
 function CSG:ctor()
-	self.polygons = self.polygons or {};
-	tableext.clear(self.polygons);
+	self.polygons = {};
 end
 
 --Construct a CSG solid from an array of Polygons
 function CSG.fromPolygons(polygons)
 	local csg = CSG:new();
-	tableext.copy(csg.polygons,polygons,nil);
+	csg.polygons = polygons;
 	return csg;
 end
 
@@ -254,7 +247,7 @@ function CSG.saveAsSTL(csg,output_file_name)
 				local v2 = vertices[indices[k-1]];  
 				local v3 = vertices[indices[k]];  
 				if(v1 and v2 and v3)then
-					write_face(file,vector3d:new(v1),vector3d:new(v2),vector3d:new(v3));
+					write_face(file,vector3d:new(v1[1],v1[2],v1[3]),vector3d:new(v2[1],v2[2],v2[3]),vector3d:new(v3[1],v3[2],v3[3]));
 				end
 			end
 		end
