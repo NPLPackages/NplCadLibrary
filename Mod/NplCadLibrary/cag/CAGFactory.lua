@@ -9,17 +9,16 @@ local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 -------------------------------------------------------
 --]]
 
-
+NPL.load("(gl)script/ide/math/vector2d.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGSide.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPath2D.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAG.lua");
 
+local vector2d = commonlib.gettable("mathlib.vector2d");
 local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
-local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
 local CAGSide = commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide");
 local CSGPath2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPath2D");
@@ -44,7 +43,7 @@ function CAGFactory.circle(options)
 	local i;
 	for i=0,resolution do
         local radians = 2 * math.pi * i / resolution;
-		local point = CSGVector2D.fromAngleRadians(radians):times(radius):plus(center);
+		local point = vector2d.fromAngleRadians(radians):MulByFloat(radius):add(center);
 		local vertex = CAGVertex:new():init(point);
         if (i > 0) then
 			local side = CAGSide:new():init(prevvertex, vertex);
@@ -70,7 +69,7 @@ function CAGFactory.ellipse(options)
     local res = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution2D);
 
     local e2 = CSGPath2D:new():init({{c[1],c[2] + r[2]}});
-    e2 = e2:appendArc({c[1],c[2] - r[2]}, {
+	e2 = e2:appendArc({c[1],c[2] - r[2]}, {
         xradius = r[1],
         yradius =  r[2],
         xaxisrotation =  0,
@@ -105,16 +104,16 @@ function CAGFactory.rectangle(options)
         end
         corner1 = CSGFactory.parseOptionAs2DVector(options, "corner1", {0, 0});
         corner2 = CSGFactory.parseOptionAs2DVector(options, "corner2", {1, 1});
-        c = corner1:plus(corner2):times(0.5);
-        r = corner2:minus(corner1):times(0.5);
+        c = corner1:add(corner2):MulByFloat(0.5);
+        r = corner2:sub(corner1):MulByFloat(0.5);
 	else
         c = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
         r = CSGFactory.parseOptionAs2DVector(options, "radius", {1, 1});
     end
     r = r:abs(); -- negative radii make no sense
-    local rswap = CSGVector2D:new():init(r[1], -r[2]);
+    local rswap = vector2d:new(r[1], -r[2]);
     local points = {
-        c:plus(r), c:plus(rswap), c:minus(r), c:minus(rswap)
+        c:clone():add(r), c:clone():add(rswap), c:clone():sub(r), c:clone():sub(rswap)
     };
     return CAG.fromPoints(points);
 end
@@ -135,20 +134,20 @@ function CAGFactory.roundedRectangle(options)
         end
         corner1 = CSGFactory.parseOptionAs2DVector(options, "corner1", {0, 0});
         corner2 = CSGFactory.parseOptionAs2DVector(options, "corner2", {1, 1});
-        center = corner1:plus(corner2):times(0.5);
-        radius = corner2:minus(corner1):times(0.5);
+        center = corner1:clone():add(corner2):MulByFloat(0.5);
+        radius = corner2:clone():sub(corner1):MulByFloat(0.5);
 	else
         center = CSGFactory.parseOptionAs2DVector(options, "center", {0, 0});
         radius = CSGFactory.parseOptionAs2DVector(options, "radius", {1, 1});
     end
-    radius = radius:abs(); -- negative radii make no sense
+    radius = radius:clone():abs(); -- negative radii make no sense
     local roundradius = CSGFactory.parseOptionAsFloat(options, "roundradius", 0.2);
     local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution2D);
     local maxroundradius = math.min(radius[1], radius[2]);
     maxroundradius = maxroundradius - 0.1;
     roundradius = math.min(roundradius, maxroundradius);
     roundradius = math.max(0, roundradius);
-    radius = CSGVector2D:new():init(radius[1] - roundradius, radius[2] - roundradius);
+    radius = vector2d:new(radius[1] - roundradius, radius[2] - roundradius);
     local rect = CAGFactory.rectangle({
         center = center,
         radius = radius

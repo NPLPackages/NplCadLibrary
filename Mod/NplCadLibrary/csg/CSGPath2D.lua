@@ -10,7 +10,8 @@ local CSGPath2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPath2D");
 -------------------------------------------------------
 --]]   
 
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector2D.lua");
+NPL.load("(gl)script/ide/math/vector2d.lua");
+
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGSide.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAG.lua");
@@ -18,16 +19,16 @@ NPL.load("(gl)Mod/NplCadLibrary/utils/mathext.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
 
-local CSGPath2D = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPath2D"));
+local vector2d = commonlib.gettable("mathlib.vector2d");
 
 local CAG = commonlib.gettable("Mod.NplCadLibrary.cag.CAG");
-local CSGVector2D = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector2D");
 local CAGVertex = commonlib.gettable("Mod.NplCadLibrary.cag.CAGVertex");
 local CAGSide = commonlib.gettable("Mod.NplCadLibrary.cag.CAGSide");
 local mathext = commonlib.gettable("Mod.NplCadLibrary.utils.mathext");
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 
+local CSGPath2D = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPath2D"));
 
 ------------------------------------------
 -- CSG Path2D
@@ -41,25 +42,25 @@ end
 function CSGPath2D:init(points, closed)
     closed = closed or false;
     points = points or {};
-    -- re-parse the points into CSGVector2D
+    -- re-parse the points into vector2d
     -- and remove any duplicate points
 	local prevpoint = nil;
     if (closed and (#points > 0)) then
-        prevpoint = CSGVector2D:new():init(points[#points]);
+        prevpoint = vector2d:new(points[#points]);
     end
     local newpoints = {};
 
 	for k,v in ipairs(points) do
-		local vector2d = CSGVector2D:new():init(v);
+		local v2d = vector2d:new(v);
 		local skip = false;
         if prevpoint ~= nil then
-            local distance = vector2d:distanceTo(prevpoint);
+            local distance = v2d:dist(prevpoint);
             skip = distance < tonumber("1e-5");
         end
         if not skip then
-			table.insert(newpoints,vector2d);
+			table.insert(newpoints,v2d);
 		end
-        prevpoint = vector2d;
+        prevpoint = v2d;
 	end
     self.points = newpoints;
     self.closed = closed;
@@ -68,7 +69,7 @@ end
  
 --[[
 Construct a (part of a) circle. Parameters:
-    options.center: the center point of the arc (CSGVector2D or array [x,y])
+    options.center: the center point of the arc (vector2d or array [x,y])
     options.radius: the circle radius (float)
     options.startangle: the starting angle of the arc, in degrees
     0 degrees corresponds to [1,0]
@@ -100,8 +101,8 @@ function CSGPath2D.arc(options)
         point;
     local absangledif = math.abs(endangle - startangle);
     if (absangledif < tonumber("1e-5")) then
-        point = CSGVector2D.fromAngle(startangle / 180.0 * mathext.pi):times(radius);
-        points.push(point:plus(center));
+        point = vector2d.fromAngle(startangle / 180.0 * math.pi):MulByFloat(radius);
+        points.push(point:add(center));
     else 
         local numsteps = math.floor(resolution * absangledif / 360) + 1;
         local edgestepsize = numsteps * 0.5 / absangledif; -- step size for half a degree
@@ -128,8 +129,8 @@ function CSGPath2D.arc(options)
 				end
             end
             local angle = startangle + step * (endangle - startangle) / numsteps;
-            point = CSGVector2D.fromAngle(angle / 180.0 * mathext.pi):times(radius);
-			table.insert(points,point:plus(center));
+            point = vector2d.fromAngle(angle / 180.0 * math.pi):MulByFloat(radius);
+			table.insert(points,point:add(center));
         end
     end
     return CSGPath2D:new():init(points, false);
@@ -154,7 +155,7 @@ function CSGPath2D:appendPoint(point)
 		table.insert(newpoints,v);
 	end
 
-    local vector2d = CSGVector2D:new():init(point); -- cast to Vector2D
+    local vector2d = vector2d:new(point); -- cast to Vector2D
 	table.insert(newpoints,vector2d);
     return CSGPath2D:new():init(newpoints);
 end
@@ -169,7 +170,7 @@ function CSGPath2D:appendPoints(points)
 		table.insert(newpoints,v);
 	end
 	for i,v in pairs(points) do
-		table.insert(newpoints,CSGVector2D:new():init(v));
+		table.insert(newpoints,vector2d:new(v));
 	end
     return CSGPath2D:new():init(newpoints);
 end
@@ -230,9 +231,9 @@ function CSGPath2D:appendBezier(controlpoints, options)
                 lastBezierControlPoint = self.points[#self.points - 1];
             end
             -- mirror the last bezier control point:
-            p = self.points[#self.points]:times(2):minus(lastBezierControlPoint);
+            p = (self.points[#self.points] * 2) - (lastBezierControlPoint);
         else
-            p = CSGVector2D:new():init(p); -- cast to Vector2D
+            p = vector2d:new(p); -- cast to Vector2D
         end
         table.insert(controlpoints_parsed,p);
     end
@@ -261,7 +262,7 @@ function CSGPath2D:appendBezier(controlpoints, options)
 		if (t ~= 1) then
 			inv_1_minus_t = (1 / (1 - t));
 		end
-        local point = CSGVector2D:new():init(0, 0);
+        local point = vector2d:new(0, 0);
 		local k;
 		
 		-- bezier_order+1 index out of range
@@ -270,7 +271,7 @@ function CSGPath2D:appendBezier(controlpoints, options)
 				one_minus_t_n_minus_k = 1;
 			end
             local bernstein_coefficient = binomials[k] * t_k * one_minus_t_n_minus_k;
-            point = point:plus(controlpoints_parsed[k]:times(bernstein_coefficient));
+            point = point:add(controlpoints_parsed[k]:clone():MulByFloat(bernstein_coefficient));
             t_k = t_k * t;
             one_minus_t_n_minus_k = one_minus_t_n_minus_k * inv_1_minus_t;
         end
@@ -288,11 +289,11 @@ function CSGPath2D:appendBezier(controlpoints, options)
     end
     -- subdivide each segment until the angle at each vertex becomes small enough:
     local subdivide_base = 2;
-    local maxangle = mathext.pi * 2 / resolution; -- segments may have differ no more in angle than this
+    local maxangle = math.pi * 2 / resolution; -- segments may have differ no more in angle than this
     local maxsinangle = math.sin(maxangle);
     while (subdivide_base < #newpoints) do
-        local dir1 = newpoints[subdivide_base]:minus(newpoints[subdivide_base - 1]):unit();
-        local dir2 = newpoints[subdivide_base + 1]:minus(newpoints[subdivide_base]):unit();
+        local dir1 = (newpoints[subdivide_base] - newpoints[subdivide_base - 1]):normalize();
+        local dir2 = (newpoints[subdivide_base + 1] - newpoints[subdivide_base]):normalize();
         local sinangle = dir1:cross(dir2); -- this is the sine of the angle
         if (math.abs(sinangle) > maxsinangle) then
             -- angle is too big, we need to subdivide
@@ -372,11 +373,11 @@ function CSGPath2D:appendArc(endpoint, options)
     local clockwise = CSGFactory.parseOptionAsBool(options, "clockwise", false);
     local largearc = CSGFactory.parseOptionAsBool(options, "large", false);
     local startpoint = self.points[#self.points];
-    endpoint = CSGVector2D:new():init(endpoint);
+    endpoint = vector2d:new(endpoint);
     -- round to precision in order to have determinate calculations
     xradius = mathext.round(xradius*decimals)/decimals;
     yradius = mathext.round(yradius*decimals)/decimals;
-    endpoint = CSGVector2D:new():init(mathext.round(endpoint[1]*decimals)/decimals,mathext.round(endpoint[2]*decimals)/decimals);
+    endpoint = vector2d:new(mathext.round(endpoint[1]*decimals)/decimals,mathext.round(endpoint[2]*decimals)/decimals);
 
 
     local sweep_flag = not clockwise;
@@ -390,15 +391,15 @@ function CSGPath2D:appendArc(endpoint, options)
         yradius = math.abs(yradius);
 
         -- see http:--www.w3.org/TR/SVG/implnote.html#ArcImplementationNotes :
-        local phi = xaxisrotation * mathext.pi / 180.0;
+        local phi = xaxisrotation * math.pi / 180.0;
         local cosphi = math.cos(phi);
         local sinphi = math.sin(phi);
-        local minushalfdistance = startpoint:minus(endpoint):times(0.5);
+        local minushalfdistance = (startpoint - endpoint):MulByFloat(0.5);
         -- F.6.5.1:
         -- round to precision in order to have determinate calculations
         local x = mathext.round((cosphi * minushalfdistance[1] + sinphi * minushalfdistance[2])*decimals)/decimals;
         local y = mathext.round((-sinphi * minushalfdistance[1] + cosphi * minushalfdistance[2])*decimals)/decimals;
-        local start_translated = CSGVector2D:new():init(x,y);
+        local start_translated = vector2d:new(x,y);
         -- F.6.6.2:
         local biglambda = (start_translated[1] * start_translated[1]) / (xradius * xradius) + (start_translated[2] * start_translated[2]) / (yradius * yradius);
 
@@ -416,24 +417,24 @@ function CSGPath2D:appendArc(endpoint, options)
         if (sweep_flag == largearc) then 
 			multiplier1 = -multiplier1;
 		end
-        local center_translated = CSGVector2D:new():init(xradius * start_translated[2] / yradius, -yradius * start_translated[1] / xradius):times(multiplier1);
+        local center_translated = vector2d:new(xradius * start_translated[2] / yradius, -yradius * start_translated[1] / xradius):MulByFloat(multiplier1);
         -- F.6.5.3:
-        local center = CSGVector2D:new():init(cosphi * center_translated[1] - sinphi * center_translated[2], sinphi * center_translated[1] + cosphi * center_translated[2]):plus((startpoint:plus(endpoint)):times(0.5));
+        local center = vector2d:new(cosphi * center_translated[1] - sinphi * center_translated[2], sinphi * center_translated[1] + cosphi * center_translated[2]):add((startpoint+endpoint):MulByFloat(0.5));
         -- F.6.5.5:
-        local vec1 = CSGVector2D:new():init((start_translated[1] - center_translated[1]) / xradius, (start_translated[2] - center_translated[2]) / yradius);
-        local vec2 = CSGVector2D:new():init((-start_translated[1] - center_translated[1]) / xradius, (-start_translated[2] - center_translated[2]) / yradius);
+        local vec1 = vector2d:new((start_translated[1] - center_translated[1]) / xradius, (start_translated[2] - center_translated[2]) / yradius);
+        local vec2 = vector2d:new((-start_translated[1] - center_translated[1]) / xradius, (-start_translated[2] - center_translated[2]) / yradius);
         local theta1 = vec1:angleRadians();
         local theta2 = vec2:angleRadians();
         local deltatheta = theta2 - theta1;
-        deltatheta = deltatheta % (2 * mathext.pi);
+        deltatheta = deltatheta % (2 * math.pi);
         if ((not sweep_flag) and (deltatheta > 0)) then
-            deltatheta = deltatheta - 2 * mathext.pi;
+            deltatheta = deltatheta - 2 * math.pi;
         elseif ((sweep_flag) and (deltatheta < 0)) then
-            deltatheta = deltatheta + 2 * mathext.pi;
+            deltatheta = deltatheta + 2 * math.pi;
         end
 
         -- Ok, we have the center point and angle range (from theta1, deltatheta radians) so we can create the ellipse
-        local numsteps = math.ceil(math.abs(deltatheta) / (2 * mathext.pi) * resolution) + 1;
+        local numsteps = math.ceil(math.abs(deltatheta) / (2 * math.pi) * resolution) + 1;
         if (numsteps < 1) then 
 			numsteps = 1;
 		end
@@ -443,7 +444,7 @@ function CSGPath2D:appendArc(endpoint, options)
             local costheta = math.cos(theta);
             local sintheta = math.sin(theta);
             -- F.6.3.1:
-            local point = CSGVector2D:new():init(cosphi * xradius * costheta - sinphi * yradius * sintheta, sinphi * xradius * costheta + cosphi * yradius * sintheta):plus(center);
+            local point = vector2d:new(cosphi * xradius * costheta - sinphi * yradius * sintheta, sinphi * xradius * costheta + cosphi * yradius * sintheta):add(center);
             table.insert(newpoints,point);
         end
 	end
@@ -503,7 +504,7 @@ end
 function CSGPath2D:transform(matrix4x4)
     local newpoints = {};
 	for k,point in ipairs(self.points) do
-        table.insert(newpoints, point:multiply4x4(matrix4x4));
+        table.insert(newpoints, point * matrix4x4);
     end
     return CSGPath2D:new():init(newpoints, self.closed);
 end

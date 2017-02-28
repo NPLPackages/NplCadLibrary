@@ -98,7 +98,7 @@ function Drawable:csgToMesh(csg)
 	
 	for __,polygon in ipairs(csg.polygons) do
 		local start_index = #vertices+1;
-		local normal = polygon:GetPlane().normal;
+		local normal = polygon:GetPlane():GetNormal();
 		for __,vertex in ipairs(polygon.vertices) do
 			vertices[#vertices+1] = vertex.pos;
 			normals[#normals+1] = normal;

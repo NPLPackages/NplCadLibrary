@@ -15,8 +15,12 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGBSPNode.lua");
 local CSGBSPNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode");
 -------------------------------------------------------
 ]]
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPlane.lua");
+NPL.load("(gl)script/ide/math/Plane.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
 
+local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
+local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSGBSPNode = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode"));
 
 -- move polygons from source to result, if result is nil, a new table is created. 
@@ -85,7 +89,7 @@ function CSGBSPNode:invert(bInplace)
 		end
 	end
 	if(self.plane)then
-		self.plane = self.plane:clone():flip();
+		self.plane = self.plane:clone():inverse();
 	end
 	if(self.front)then
 		self.front:invert(bInplace);
@@ -106,7 +110,7 @@ function CSGBSPNode:clipPolygons(polygons)
 	end
 	local front, back;
 	for k,p in ipairs(polygons) do
-		local front1, back1, coplanarFront, coplanarBack = self.plane:splitPolygon(p,front, back, front, back);
+		local front1, back1, coplanarFront, coplanarBack = self:splitPolygon(p,front, back, front, back);
 		if(not front) then
 			front = front1 or coplanarFront;
 		end
@@ -174,11 +178,11 @@ function CSGBSPNode:build(polygons)
 		self.polygons[#self.polygons+1] = polygons[1];
 
 		for i = 2, #polygons do
-			front, back, self.polygons = self.plane:splitPolygon(polygons[i], self.polygons, self.polygons, front, back);
+			front, back, self.polygons = self:splitPolygon(polygons[i], self.polygons, self.polygons, front, back);
 		end	
 	else
 		for i = 1, #polygons do
-			front, back, self.polygons = self.plane:splitPolygon(polygons[i], self.polygons, self.polygons, front, back);
+			front, back, self.polygons = self:splitPolygon(polygons[i], self.polygons, self.polygons, front, back);
 		end	
 	end
 	
@@ -205,4 +209,105 @@ function CSGBSPNode:getVertexCnt()
 		end
 	end
 	return cnt;
+end
+
+local types = {};
+local dots = {};
+
+local COPLANAR = 0;
+local FRONT = 1;
+local BACK = 2;
+local SPANNING = 3;
+local EPSILON = 0.00001;
+local bor = mathlib.bit.bor;
+
+-- Split `polygon` by self plane if needed, then put the polygon or polygon
+-- fragments in the appropriate lists. Coplanar polygons go into either
+-- `coplanarFront` or `coplanarBack` depending on their orientation with
+-- respect to self plane. Polygons in front or in back of self plane go into
+-- either `front` or `back`.
+-- @param front: inout parameter.  if nil, it will be created and returned.
+-- @param back: inout parameter.  if nil, it will be created and returned.
+-- @return front, back, coplanarFront, coplanarBack
+function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, back)
+    local plane_normal,plane_w = self.plane:GetNormal(), self.plane[4];
+	
+	--Classify each point as well as the entire polygon into one of the above four classes.
+    local polygonType = 0;
+    
+	-- tableext.clear(types);
+	local vertices = polygon.vertices;
+	for i = 1, #vertices do
+		local v = vertices[i];
+		local t = plane_normal:dot(v.pos) - plane_w;
+		local type;
+		if(t < -EPSILON)then
+			type = BACK;
+		elseif(t > EPSILON)then
+			type = FRONT;
+		else
+			type = COPLANAR;
+		end
+		polygonType = bor(polygonType, type);
+		types[i] = type;
+		dots[i] = t;
+	end
+
+	if(polygonType == COPLANAR)then
+		if(plane_normal:dot(polygon:GetPlane():GetNormal()) > 0)then
+			coplanarFront = coplanarFront or {};
+			coplanarFront[#coplanarFront+1] = polygon;
+		else
+			coplanarBack = coplanarBack or {};
+			coplanarBack[#coplanarBack+1] = polygon;
+		end
+	elseif(polygonType == FRONT)then
+		front = front or {};
+		front[#front+1] = polygon;
+	elseif(polygonType == BACK)then
+		back = back or {};
+		back[#back+1] = polygon;
+	elseif(polygonType == SPANNING)then
+		local backCount, frontCount = 0, 0;
+		local f = {};
+		local b = {};
+		local size = #vertices;
+		for i = 1, size do
+			local j = (i % size) + 1;
+			local ti = types[i];
+			local tj = types[j];
+			local vi = vertices[i];
+			local vj = vertices[j];
+			if(ti ~= BACK)then
+				frontCount = frontCount + 1;
+				f[frontCount] = vi;
+			end
+			if(ti ~= FRONT)then
+				if(ti ~= BACK)then
+					backCount = backCount + 1;
+					b[backCount] = vi;
+				else
+					backCount = backCount + 1;
+					b[backCount] = vi;
+				end
+			end
+			if(bor(ti, tj) == SPANNING)then
+				local t = (-dots[i]) / (dots[j]-dots[i]);
+				local v = vi:clone():interpolate(vj, t);
+				frontCount = frontCount + 1;
+				f[frontCount] = v;
+				backCount = backCount + 1;
+				b[backCount] = v;
+			end
+		end
+		if(frontCount >= 3)then
+			front = front or {};
+			front[#front+1] = CSGPolygon:new():init(f,polygon.shared,polygon.plane);
+		end
+		if(backCount >= 3)then
+			back = back or {};
+			back[#back+1] = CSGPolygon:new():init(b,polygon.shared,polygon.plane);
+		end
+	end
+	return front, back, coplanarFront, coplanarBack;
 end

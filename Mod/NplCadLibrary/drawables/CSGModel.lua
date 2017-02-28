@@ -12,7 +12,6 @@ local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 ]]
 NPL.load("(gl)Mod/NplCadLibrary/core/Drawable.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
@@ -21,7 +20,6 @@ NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)script/ide/math/Matrix4.lua");
 
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
-local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
@@ -66,7 +64,7 @@ function CSGModel:applyMeshTransform(matrix)
 				NormalMultiplyMatrix(vertex.normal,vertex.normal,matrix);
 			end
 		end
-		polygon.plane = nil;
+		polygon.plane:transform(matrix);
 	end
 end
 function CSGModel:applyColor(color)

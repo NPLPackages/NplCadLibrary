@@ -17,41 +17,36 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 -------------------------------------------------------
 ]]
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVector.lua");
-local CSGVector = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVector");
 
-local CSGVertex = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex"));
+NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
+NPL.load("(gl)script/ide/math/vector.lua");
 
+local vector3d = commonlib.gettable("mathlib.vector3d");
+local CSGVertex = commonlib.inherit_ex(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex"));
 
 function CSGVertex:ctor()
-	--self.pos = s_zeroVector;
-	--self.normal = s_zeroVector; -- normal is optional
-end
-
-function CSGVertex:init(pos, normal)
-	self.pos = pos or self.pos;
-	self.normal = normal or self.normal;
-	return self;
-end
-
--- copy on write policy
--- @param bDeepCopy: if true, we will perform deep copy, otherwise it is a shallow copy on write clone
-function CSGVertex:clone(bDeepCopy)
-	local v = CSGVertex:new();
-	v.pos, v.normal = self.pos, self.normal;
-	if(bDeepCopy) then
-		v:detach();
+	if(commonlib.use_object_pool) then
+		self.pos = self.pos or vector3d:new_from_pool(0,0,0);
+		self._normal=  self._normal or vector3d:new_from_pool(0,0,0);
+	else
+		self.pos = self.pos or vector3d:new();
+		self._normal= self._normal or vector3d:new();
 	end
-	return v;
+	self.normal= nil;
 end
 
--- performs a deep copy of all its internal data. 
--- used whenever data is about to be modified for implicit copy-on-write object.
-function CSGVertex:detach()
-	self.pos = self.pos:clone();
-	self.normal = self.normal and self.normal:clone();
+function CSGVertex:init(pos,normal)
+	self.pos:set(pos);
+	if(normal~= nil) then
+		self.normal= self._normal:set(normal);
+	end	
 	return self;
 end
+
+function CSGVertex:clone()
+	return  CSGVertex:new():init(self.pos,self.normal);
+end
+
 
 --Invert all orientation-specific data (e.g. vertex normal). Called when the orientation of a polygon is flipped.
 function CSGVertex:flip()
@@ -63,8 +58,21 @@ end
 --interpolating all properties using a parameter of `t`. Subclasses should
 --override this to interpolate additional properties.
 function CSGVertex:interpolate(other, t)
-	return CSGVertex:new():init(
-		self.pos:lerp(other.pos,t),
-		self.normal and self.normal:lerp(other.normal,t)
-	);
+	self.pos = self.pos:interpolate(other.pos,t);
+	self.normal = self.normal and self.normal:interpolate(other.normal,t);
+	return self;
+end
+
+function CSGVertex:equals(v,epsilon)
+	epsilon = epsilon or 0;
+	return self.pos:equals(v.pos,epsilon)
+			and ((self.normal == nil and v.normal == nil) or 
+				 (self.normal and v.normal and self.normal:equals(v.normal,epsilon))
+			);
+end
+
+function CSGVertex:transform(m)
+	self.pos = self.pos:transform(m);
+	self.normal = self.normal and self.normal:transform_normal(m);
+	return self;
 end
