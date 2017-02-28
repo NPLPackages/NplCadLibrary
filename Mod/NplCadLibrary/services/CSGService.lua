@@ -11,7 +11,7 @@ local output = CSGService.buildPageContent("cube();")
 commonlib.echo(output);
 ------------------------------------------------------------
 ]]
-
+--NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
 NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/NplCadEnvironment.lua");
@@ -25,6 +25,7 @@ local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadE
 function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable_action,operation_node)
 	local bResult = false;
 	if(pre_drawable_node and cur_drawable_node)then
+		local fromTime = ParaGlobal.timeGetTime();
 
 		-- 2d shape and 3d model are mixed 
 		local cur_transform,cur_world = cur_drawable_node:getMeshTransform(operation_node);
@@ -51,6 +52,9 @@ function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable
 		end
 		cur_drawable_node:applyTransform(cur_transform,cur_world);
 		pre_drawable_node:applyTransform(pre_transform,pre_world);
+
+		CSGService.scene:log("1.finished applyTransform in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
+		fromTime = ParaGlobal.timeGetTime();
 		
 		-- do action
 		if(drawable_action == "union")then
@@ -67,6 +71,9 @@ function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable
 			--cur_drawable_node = pre_drawable_node:union(cur_drawable_node);
 		end
 
+		CSGService.scene:log("2.finished boolOperation in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
+
+		fromTime = ParaGlobal.timeGetTime();
 		if bResult then
 			-- result_drawable is build from other drawables,it's node hasn't apply yet.then apply it before be pushed. 
 			cur_drawable_node:setNode(operation_node);
@@ -74,6 +81,7 @@ function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable
 				cur_drawable_node:applyTransform(nil,new_transform);
 			end
 		end
+		CSGService.scene:log("3.finished applyTransform for new node in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
 	end
 	return cur_drawable_node,bResult;
 end
@@ -122,6 +130,8 @@ end
 	}
 --]]
 function CSGService.buildPageContent(code)
+	--commonlib.use_object_pool = true;
+
 	code = CSGService.appendLoadXmlFunction(code)
 	if(not code or code == "") then
 		return;

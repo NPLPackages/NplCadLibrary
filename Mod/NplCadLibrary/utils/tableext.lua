@@ -5,7 +5,12 @@ function tableext.copy(t1,t2,each_fun)
 		if each_fun ~= nil then
 			v = each_fun(v);
 		end
-		table.insert(t1,v);
+		t1[#t1 + 1] = v;
+	end
+end
+function tableext.copy_fn(t1,t2,each_fun)
+	for k,v in ipairs(t2) do
+		t1[#t1 + 1] = each_fun(v);
 	end
 end
 function tableext.concat(t1,t2)

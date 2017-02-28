@@ -212,6 +212,7 @@ function CSGBSPNode:getVertexCnt()
 end
 
 local types = {};
+local dots = {};
 
 local COPLANAR = 0;
 local FRONT = 1;
@@ -234,7 +235,7 @@ function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, ba
 	--Classify each point as well as the entire polygon into one of the above four classes.
     local polygonType = 0;
     
-	tableext.clear(types);
+	-- tableext.clear(types);
 	local vertices = polygon.vertices;
 	for i = 1, #vertices do
 		local v = vertices[i];
@@ -249,6 +250,7 @@ function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, ba
 		end
 		polygonType = bor(polygonType, type);
 		types[i] = type;
+		dots[i] = t;
 	end
 
 	if(polygonType == COPLANAR)then
@@ -278,33 +280,33 @@ function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, ba
 			local vj = vertices[j];
 			if(ti ~= BACK)then
 				frontCount = frontCount + 1;
-				f[frontCount] = vi:clone();
+				f[frontCount] = vi;
 			end
 			if(ti ~= FRONT)then
 				if(ti ~= BACK)then
 					backCount = backCount + 1;
-					b[backCount] = vi:clone();
+					b[backCount] = vi;
 				else
 					backCount = backCount + 1;
-					b[backCount] = vi:clone();
+					b[backCount] = vi;
 				end
 			end
 			if(bor(ti, tj) == SPANNING)then
-				local t = (plane_w - plane_normal:dot(vi.pos)) / plane_normal:dot(vj.pos:clone_from_pool():sub(vi.pos));
+				local t = (-dots[i]) / (dots[j]-dots[i]);
 				local v = vi:clone():interpolate(vj, t);
 				frontCount = frontCount + 1;
 				f[frontCount] = v;
 				backCount = backCount + 1;
-				b[backCount] = v:clone();
+				b[backCount] = v;
 			end
 		end
 		if(frontCount >= 3)then
 			front = front or {};
-			front[#front+1] = CSGPolygon:new():init(f,polygon.shared);
+			front[#front+1] = CSGPolygon:new():init(f,polygon.shared,polygon.plane);
 		end
 		if(backCount >= 3)then
 			back = back or {};
-			back[#back+1] = CSGPolygon:new():init(b,polygon.shared);
+			back[#back+1] = CSGPolygon:new():init(b,polygon.shared,polygon.plane);
 		end
 	end
 	return front, back, coplanarFront, coplanarBack;

@@ -38,16 +38,19 @@ function CSGPolygon:ctor()
 	tableext.clear(self.vertices);
 end
 
-function CSGPolygon:init(vertices, shared)
+function CSGPolygon:init(vertices, shared, plane)
 	vertices = vertices or {};
-	--[[
 	local function clone(v)
 		return v:clone();
 	end
-	--]]
-	tableext.copy(self.vertices,vertices,nil);
+	tableext.copy_fn(self.vertices,vertices,clone);
 	self.shared = shared;
-	self.plane:set(Plane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos));	
+	
+	if(plane == nil) then 
+		self.plane:set(Plane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos));
+	else
+		self.plane:set(	plane);
+	end
 	return self;
 end
 

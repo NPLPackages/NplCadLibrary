@@ -21,6 +21,7 @@ NPL.load("(gl)Mod/NplCadLibrary/services/CSGService.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/Color.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
