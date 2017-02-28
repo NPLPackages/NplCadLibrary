@@ -94,7 +94,10 @@ end
 
 local types = {};
 <<<<<<< HEAD
+<<<<<<< HEAD
 local dots = {};
+=======
+>>>>>>> parent of 55ec7d1... Merge pull request #8 from lighter-cd/pool_and_inplace
 =======
 >>>>>>> parent of 55ec7d1... Merge pull request #8 from lighter-cd/pool_and_inplace
 
@@ -131,7 +134,10 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 		polygonType = bor(polygonType, type);
 		types[i] = type;
 <<<<<<< HEAD
+<<<<<<< HEAD
 		dots[i] = t;
+=======
+>>>>>>> parent of 55ec7d1... Merge pull request #8 from lighter-cd/pool_and_inplace
 =======
 >>>>>>> parent of 55ec7d1... Merge pull request #8 from lighter-cd/pool_and_inplace
 	end
@@ -175,7 +181,11 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 			end
 			if(bor(ti, tj) == SPANNING)then
 <<<<<<< HEAD
+<<<<<<< HEAD
 				local t = (-dots[i]) / (dots[j] - dots[i]);
+=======
+				local t = (self.w - self.normal:dot(vi.pos)) / self.normal:dot(vj.pos:clone_from_pool():minusInplace(vi.pos));
+>>>>>>> parent of 55ec7d1... Merge pull request #8 from lighter-cd/pool_and_inplace
 =======
 				local t = (self.w - self.normal:dot(vi.pos)) / self.normal:dot(vj.pos:clone_from_pool():minusInplace(vi.pos));
 >>>>>>> parent of 55ec7d1... Merge pull request #8 from lighter-cd/pool_and_inplace
@@ -189,17 +199,23 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 		if(frontCount >= 3)then
 			front = front or {};
 <<<<<<< HEAD
+<<<<<<< HEAD
 			front[#front+1] = CSGPolygon:new():init(f,polygon.shared,polygon.plane);
 		end
 		if(backCount >= 3)then
 			back = back or {};
 			back[#back+1] = CSGPolygon:new():init(b,polygon.shared,polygon.plane);
 =======
+=======
+>>>>>>> parent of 55ec7d1... Merge pull request #8 from lighter-cd/pool_and_inplace
 			front[#front+1] = CSGPolygon:new():init(f,polygon.shared);
 		end
 		if(backCount >= 3)then
 			back = back or {};
 			back[#back+1] = CSGPolygon:new():init(b,polygon.shared);
+<<<<<<< HEAD
+>>>>>>> parent of 55ec7d1... Merge pull request #8 from lighter-cd/pool_and_inplace
+=======
 >>>>>>> parent of 55ec7d1... Merge pull request #8 from lighter-cd/pool_and_inplace
 		end
 	end

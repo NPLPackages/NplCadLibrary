@@ -30,6 +30,7 @@ function CSGPolygon:ctor()
 end
 
 <<<<<<< HEAD
+<<<<<<< HEAD
 function CSGPolygon:init(vertices, shared,plane)
 	self.vertices = vertices or {};
 	self.shared = shared;
@@ -38,6 +39,12 @@ function CSGPolygon:init(vertices, shared,plane)
 	else
 		self.plane = plane:clone();
 	end
+=======
+function CSGPolygon:init(vertices, shared)
+	self.vertices = vertices or {};
+	self.shared = shared;
+	self.plane = CSGPlane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos);	
+>>>>>>> parent of 55ec7d1... Merge pull request #8 from lighter-cd/pool_and_inplace
 =======
 function CSGPolygon:init(vertices, shared)
 	self.vertices = vertices or {};
