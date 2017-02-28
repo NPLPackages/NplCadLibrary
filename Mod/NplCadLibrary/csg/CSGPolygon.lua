@@ -29,10 +29,14 @@ local CSGPolygon = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.
 function CSGPolygon:ctor()
 end
 
-function CSGPolygon:init(vertices, shared)
+function CSGPolygon:init(vertices, shared,plane)
 	self.vertices = vertices or {};
 	self.shared = shared;
-	self.plane = CSGPlane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos);	
+	if ( plane == nil ) then
+		self.plane = CSGPlane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos);	
+	else
+		self.plane = plane:clone();
+	end
 	return self;
 end
 

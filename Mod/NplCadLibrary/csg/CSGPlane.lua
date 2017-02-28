@@ -93,6 +93,7 @@ function CSGPlane:flip()
 end
 
 local types = {};
+local dots = {};
 
 local COPLANAR = 0;
 local FRONT = 1;
@@ -126,6 +127,7 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 		end
 		polygonType = bor(polygonType, type);
 		types[i] = type;
+		dots[i] = t;
 	end
 	if(polygonType == COPLANAR)then
 		if(self.normal:dot(polygon:GetPlane().normal) > 0)then
@@ -166,7 +168,7 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 				end
 			end
 			if(bor(ti, tj) == SPANNING)then
-				local t = (self.w - self.normal:dot(vi.pos)) / self.normal:dot(vj.pos:clone_from_pool():minusInplace(vi.pos));
+				local t = (-dots[i]) / (dots[j] - dots[i]);
 				local v = vi:interpolate(vj, t);
 				frontCount = frontCount + 1;
 				f[frontCount] = v;
@@ -176,11 +178,11 @@ function CSGPlane:splitPolygon(polygon, coplanarFront, coplanarBack, front, back
 		end
 		if(frontCount >= 3)then
 			front = front or {};
-			front[#front+1] = CSGPolygon:new():init(f,polygon.shared);
+			front[#front+1] = CSGPolygon:new():init(f,polygon.shared,polygon.plane);
 		end
 		if(backCount >= 3)then
 			back = back or {};
-			back[#back+1] = CSGPolygon:new():init(b,polygon.shared);
+			back[#back+1] = CSGPolygon:new():init(b,polygon.shared,polygon.plane);
 		end
 	end
 	return front, back, coplanarFront, coplanarBack;
