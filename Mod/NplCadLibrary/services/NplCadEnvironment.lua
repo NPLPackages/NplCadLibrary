@@ -148,12 +148,14 @@ function NplCadEnvironment.current()
 	return node;
 end
 
--- 'scene' new belong to NplCadEnvironment.
+-- NplCadEnvironment.log() belongs to NplCadEnvironment, Use NplCadEnvironment:internalLog() to debug code.
 function NplCadEnvironment.log(...)
 	local self = getfenv(2);
+	self:internalLog(...);
+end
+function NplCadEnvironment:internalLog(...)
 	self.root_scene_node:log(...);
 end
-
 --include----------------------------------------------------------------------------------------------------
 function NplCadEnvironment.include(filepath)
 	local self = getfenv(2);
@@ -550,7 +552,7 @@ function NplCadEnvironment:translate__(p1,p2,p3,p4)
 			y = 0;
 			z = options[2];
 		else
-			NplCadEnvironment.log("translate should have 2 or 3 coords");
+			self:internalLog("translate should have 2 or 3 coords");
 			return;
 		end
 		obj = p2;
@@ -566,10 +568,10 @@ function NplCadEnvironment:translate__(p1,p2,p3,p4)
 			z = tonumber(p2);
 			obj = p3;	
 		else 
-			NplCadEnvironment.log("translate should have 2 or 3 coords");	
+			self:internalLog("translate should have 2 or 3 coords");	
 		end
 	else
-		NplCadEnvironment.log("translate should have a coords array");
+		self:internalLog("translate should have a coords array");
 		return;		
 	end
 	if(not obj)then
@@ -645,11 +647,11 @@ function NplCadEnvironment:scale__(options,obj)
 			y = 1;
 			z = options[2] or 1;
 		else
-			NplCadEnvironment.log("scale should have 2 or 3 coords");
+			self:internalLog("scale should have 2 or 3 coords");
 			return;
 		end
 	else
-		NplCadEnvironment.log("scale should have a coords array");
+		self:internalLog("scale should have a coords array");
 		return;		
 	end
 	if(not obj)then
@@ -1258,7 +1260,6 @@ function NplCadEnvironment.read_polyhedron(options)
 	if(o ~= nil) then
 		node:setDrawable(o);
 	end
-	NplCadEnvironment.log("read_polyhedron end");
 	return node;
 end
 

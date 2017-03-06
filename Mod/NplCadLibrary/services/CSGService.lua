@@ -153,8 +153,11 @@ function CSGService.build(filepathOrText,isFile)
 		local logs = "";
 		local log_table = log_table or {};
 		local len = #log_table;
-		while( len >0) do
-			logs = logs .. log_table[len] .. "\n";
+		while( len > 0) do
+			local n = log_table[len];
+			if(n)then
+				logs = logs .. n .. "\n";
+			end
 			len = len - 1;
 		end
 		return logs;
