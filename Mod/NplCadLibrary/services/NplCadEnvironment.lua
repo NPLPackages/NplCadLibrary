@@ -22,6 +22,7 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/Color.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
+NPL.load("(gl)Mod/NplCadLibrary/services/CSGBuildContext.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
@@ -34,6 +35,7 @@ local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 local Color = commonlib.gettable("Mod.NplCadLibrary.utils.Color");
+local CSGBuildContext = commonlib.gettable("Mod.NplCadLibrary.services.CSGBuildContext");
 local math_pi = 3.1415926;
 local function is_string(input)
 	if(input and type(input) == "string")then
@@ -79,12 +81,12 @@ NplCadEnvironment.pi = NplCadEnvironment.PI;
 function NplCadEnvironment:new(params)
 	params = params or {}
 	local o = {
-		filepath = params.filepath,
 		root_scene_node = params.root_scene_node or Node.create(""),
 		nodes_stack = {},
 		math = math,
 		string = string,
 		specified_indexs = {},
+
 	};
 	-- also expose the _G for explaining npl only. 
 	o._G = o; 
@@ -164,11 +166,9 @@ function NplCadEnvironment.include(filepath)
 end
 function NplCadEnvironment:include__(node,filepath)
 	if(not filepath)then return end
-	local index = string.find(self.filepath, "/[^/]*$")
-	local cur_dir = string.sub(self.filepath,1,index);
-	local full_filepath = cur_dir .. filepath;
+	local full_filepath = CSGBuildContext.input.root .. filepath;
 	--create a new env node
-	local env_node = NplCadEnvironment:new({ filepath = filepath, });
+	local env_node = NplCadEnvironment:new();
 	env_node:buildFile(node,full_filepath);
 end
 function NplCadEnvironment:loadFileContent(filepath)
@@ -198,18 +198,18 @@ function NplCadEnvironment:build(parent_scene_node,code)
 				parent_scene_node:addChild(self.root_scene_node);
 			end
 		end
-		CSGService.output.successful = ok;
-		CSGService.output.compile_error = result;
-		CSGService.output.log = CSGService.output.log or {};
+		CSGBuildContext.output.successful = ok;
+		CSGBuildContext.output.compile_error = result;
 
+		CSGBuildContext.output.log = CSGBuildContext.output.log or {};
 		local log = table.concat(self.root_scene_node:GetAllLogs() or {}, "\n");
 
-		CSGService.output.log[#(CSGService.output.log)+1] = log;
+		CSGBuildContext.output.log[#(CSGBuildContext.output.log)+1] = log;
 
 	else
-		CSGService.output.successful = false;
-		CSGService.output.compile_error =  errormsg;
-		CSGService.output.log = errormsg;
+		CSGBuildContext.output.successful = false;
+		CSGBuildContext.output.compile_error =  errormsg;
+		CSGBuildContext.output.log = errormsg;
 	end
 end
 --end include----------------------------------------------------------------------------------------------------

@@ -17,12 +17,14 @@ NPL.load("(gl)script/ide/math/math3d.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/NplCadEnvironment.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/matrix_decomp.lua");
 NPL.load("(gl)Mod/NplCadLibrary/core/Scene.lua");
+NPL.load("(gl)Mod/NplCadLibrary/services/CSGBuildContext.lua");
 
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local math3d = commonlib.gettable("mathlib.math3d");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 local Scene = commonlib.gettable("Mod.NplCadLibrary.core.Scene");
+local CSGBuildContext = commonlib.gettable("Mod.NplCadLibrary.services.CSGBuildContext");
 
 function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable_action,operation_node)
 	local bResult = false;
@@ -126,16 +128,18 @@ function CSGService.build(filepathOrText,isFile)
 	if(not filepathOrText)then
 		return
 	end
-	CSGService.clearOutPut();
+	CSGBuildContext.clear();
 	local fromTime = ParaGlobal.timeGetTime();
 	LOG.std(nil, "info", "CSG", "\n------------------------------\nbegin render scene\n");
 	-- 1. create a env node
-	local env_node = NplCadEnvironment:new({filepath = filepathOrText});
+	local env_node = NplCadEnvironment:new();
 	-- 2. create a scene for renderering
 	local scene = Scene.create("nplcad_scene");
 	CSGService.scene = scene;
 	-- 3. building and get the result
 	if(isFile)then
+		-- the root location
+		CSGBuildContext.input.root = CSGBuildContext.getFileRoot(filepathOrText);
 		env_node:buildFile(scene,filepathOrText);
 	else
 		env_node:build(scene,filepathOrText);
@@ -149,22 +153,9 @@ function CSGService.build(filepathOrText,isFile)
 	LOG.std(nil, "info", "CSG", "\n\nfinished render scene in %.3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
 
 
-	local function write_logs(log_table)
-		local logs = "";
-		local log_table = log_table or {};
-		local len = #log_table;
-		while( len > 0) do
-			local n = log_table[len];
-			if(n)then
-				logs = logs .. n .. "\n";
-			end
-			len = len - 1;
-		end
-		return logs;
-	end
-	CSGService.output.log = write_logs(CSGService.output.log);
-	CSGService.output.csg_node_values = render_list;
-	return CSGService.output;
+	CSGBuildContext.output.log = CSGBuildContext.getLogs();
+	CSGBuildContext.output.csg_node_values = render_list;
+	return CSGBuildContext.output;
 end
 --load xml to build csg
 function CSGService.appendLoadXmlFunction(code)
