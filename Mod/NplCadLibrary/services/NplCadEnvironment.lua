@@ -23,6 +23,7 @@ NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/Color.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGBuildContext.lua");
+NPL.load("(gl)script/ide/STL.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
@@ -36,6 +37,7 @@ local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 local Color = commonlib.gettable("Mod.NplCadLibrary.utils.Color");
 local CSGBuildContext = commonlib.gettable("Mod.NplCadLibrary.services.CSGBuildContext");
+local ArrayMap = commonlib.gettable("commonlib.ArrayMap");
 local math_pi = 3.1415926;
 local function is_string(input)
 	if(input and type(input) == "string")then
@@ -158,6 +160,29 @@ end
 function NplCadEnvironment:internalLog(...)
 	self.root_scene_node:log(...);
 end
+--defineProperty--------------------------------------------------------------------------------------------
+function NplCadEnvironment.defineProperty(property_list)
+	local self = getfenv(2);
+	CSGBuildContext.defineProperty(property_list)
+end
+function NplCadEnvironment.get(name)
+	local self = getfenv(2);
+	return CSGBuildContext.getPropertyValue(name);
+end
+function NplCadEnvironment.set(name,value)
+	local self = getfenv(2);
+	CSGBuildContext.setPropertyValue(name,vlaue);
+end
+function NplCadEnvironment.findPropertyFromFile(filepath)
+	local code = NplCadEnvironment.loadFileContent__(filepath);
+	return NplCadEnvironment.findPropertyFromText(code);
+end
+function NplCadEnvironment.findPropertyFromText(text)
+	if(not text)then return end
+	local s = string.match(text,"^defineProperty%s*%((.-)%)");
+	return s;
+end
+--end defineProperty--------------------------------------------------------------------------------------------
 --include----------------------------------------------------------------------------------------------------
 function NplCadEnvironment.include(filepath)
 	local self = getfenv(2);
@@ -171,7 +196,7 @@ function NplCadEnvironment:include__(node,filepath)
 	local env_node = NplCadEnvironment:new();
 	env_node:buildFile(node,full_filepath);
 end
-function NplCadEnvironment:loadFileContent(filepath)
+function NplCadEnvironment.loadFileContent__(filepath)
 	if(not filepath)then
 		return
 	end
@@ -184,7 +209,7 @@ function NplCadEnvironment:loadFileContent(filepath)
 	end
 end
 function NplCadEnvironment:buildFile(parent_scene_node,filepath)
-	local code = self:loadFileContent(filepath);
+	local code = NplCadEnvironment.loadFileContent__(filepath);
 	self.root_scene_node:log("start to build file:%s",filepath);
 	self:build(parent_scene_node,code);
 end

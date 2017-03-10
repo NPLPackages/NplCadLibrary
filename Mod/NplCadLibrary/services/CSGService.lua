@@ -124,11 +124,12 @@ end
 		log = string, 
 	}
 --]]
-function CSGService.build(filepathOrText,isFile)
+function CSGService.build(filepathOrText,isFile,property_values_map)
 	if(not filepathOrText)then
 		return
 	end
 	CSGBuildContext.clear();
+	CSGBuildContext.setPropertyValueFromMap(property_values_map)
 	local fromTime = ParaGlobal.timeGetTime();
 	LOG.std(nil, "info", "CSG", "\n------------------------------\nbegin render scene\n");
 	-- 1. create a env node
@@ -153,6 +154,7 @@ function CSGService.build(filepathOrText,isFile)
 	LOG.std(nil, "info", "CSG", "\n\nfinished render scene in %.3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
 
 
+	CSGBuildContext.output.property_list = CSGBuildContext.getPropertyList()
 	CSGBuildContext.output.log = CSGBuildContext.getLogs();
 	CSGBuildContext.output.csg_node_values = render_list;
 	return CSGBuildContext.output;
