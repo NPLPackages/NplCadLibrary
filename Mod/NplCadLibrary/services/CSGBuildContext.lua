@@ -56,14 +56,18 @@ function CSGBuildContext.getLogs()
 	return write_logs(CSGBuildContext.output.log);
 end
 --[[
-  { name: 'balloon', type: 'group', caption: 'Balloons' }, 
-    { name: 'checkbox', type: 'checkbox', checked: true, initial: '20', caption: 'Big?' }, 
-    { name: 'color', type: 'color', initial: '#FFB431', caption: 'Color?' }, 
-    { name: 'count', type: 'slider', initial: 3, min: 2, max: 10, step: 1, caption: 'How many?' }, 
-    { name: 'friend', type: 'group', caption: 'Friend' }, 
-    { name: 'name', type: 'text', initial: '', size: 20, maxLength: 20, caption: 'Name?', placeholder: '20 characters' }, 
-    { name: 'date',  type: 'date', initial: '', min: '1915-01-01', max: '2015-12-31', caption: 'Birthday?', placeholder: 'YYYY-MM-DD' }, 
-    { name: 'age', type: 'int', initial: 20, min: 1, max: 100, step: 1, caption: 'Age?' }, 
+	{ type: "text", control: "text", required: ["index", "type", "name"], initial: "" },
+	{ type: "int", control: "number", required: ["index", "type", "name"], initial: 0 },
+	{ type: "float", control: "number", required: ["index", "type", "name"], initial: 0.0 },
+	{ type: "number", control: "number", required: ["index", "type", "name"], initial: 0.0 },
+	{ type: "checkbox", control: "checkbox", required: ["index", "type", "name", "checked"], initial: "" },
+	{ type: "radio", control: "radio", required: ["index", "type", "name", "checked"], initial: "" },
+	{ type: "color", control: "color", required: ["index", "type", "name"], initial: "#000000" },
+	{ type: "date", control: "date", required: ["index", "type", "name"], initial: "" },
+	{ type: "email", control: "email", required: ["index", "type", "name"], initial: "" },
+	{ type: "password", control: "password", required: ["index", "type", "name"], initial: "" },
+	{ type: "url", control: "url", required: ["index", "type", "name"], initial: "" },
+	{ type: "slider", control: "range", required: ["index", "type", "name", "min", "max"], initial: 0, label: true },
 --]]
 --Only be defined once.
 --@param property_list:a property table.
@@ -107,9 +111,11 @@ function CSGBuildContext.setPropertyValueFromMap(values)
 end
 function CSGBuildContext.getPropertyList()
 	local result = {};
-	for key, value in CSGBuildContext.property_fields:pairs() do
+	for key, p in CSGBuildContext.property_fields:pairs() do
 		if(key ~= "free_index")then
-			table.insert(result,value);
+			p = commonlib.deepcopy(p);
+			p.initial = CSGBuildContext.getPropertyValue(key);
+			table.insert(result,p);
 		end
 	end
 	return result;
