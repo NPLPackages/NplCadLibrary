@@ -31,6 +31,9 @@
     <Filter Include="Mod\NplCadLibrary\testcase">
       <UniqueIdentifier>{be3bb96f-db48-43e8-9cb1-6a60b1adf98e}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mod\NplCadLibrary\test">
+      <UniqueIdentifier>{14fb6716-67b6-4b3e-8eb6-67fd9fa108db}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Mod\NplCadLibrary\core\Drawable.lua">
@@ -171,5 +174,33 @@
     <None Include="Mod\NplCadLibrary\services\CSGBuildContext.lua">
       <Filter>Mod\NplCadLibrary\services</Filter>
     </None>
+    <None Include="Mod\NplCadLibrary\test\test_2dboolean.lua">
+      <Filter>Mod\NplCadLibrary\test</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\test\test_boolean2dand3d.lua">
+      <Filter>Mod\NplCadLibrary\test</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\test\test_boolean2donly.lua">
+      <Filter>Mod\NplCadLibrary\test</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\test\test_boolean2dwith3dtransform.lua">
+      <Filter>Mod\NplCadLibrary\test</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\test\test_boolean3donly.lua">
+      <Filter>Mod\NplCadLibrary\test</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\test\test_Extrude.lua">
+      <Filter>Mod\NplCadLibrary\test</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\test\test_Path.lua">
+      <Filter>Mod\NplCadLibrary\test</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\test\test_polyhedron.lua">
+      <Filter>Mod\NplCadLibrary\test</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\test\test_shapes.lua">
+      <Filter>Mod\NplCadLibrary\test</Filter>
+    </None>
+    <None Include="README.md" />
   </ItemGroup>
 </Project>

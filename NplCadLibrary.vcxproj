@@ -59,12 +59,22 @@
     <None Include="Mod\NplCadLibrary\testcase\TestTableExt.lua" />
     <None Include="Mod\NplCadLibrary\testcase\TestVector3d.lua" />
     <None Include="Mod\NplCadLibrary\testcase\TestVertex.lua" />
+    <None Include="Mod\NplCadLibrary\test\test_2dboolean.lua" />
+    <None Include="Mod\NplCadLibrary\test\test_boolean2dand3d.lua" />
+    <None Include="Mod\NplCadLibrary\test\test_boolean2donly.lua" />
+    <None Include="Mod\NplCadLibrary\test\test_boolean2dwith3dtransform.lua" />
+    <None Include="Mod\NplCadLibrary\test\test_boolean3donly.lua" />
+    <None Include="Mod\NplCadLibrary\test\test_Extrude.lua" />
+    <None Include="Mod\NplCadLibrary\test\test_Path.lua" />
+    <None Include="Mod\NplCadLibrary\test\test_polyhedron.lua" />
+    <None Include="Mod\NplCadLibrary\test\test_shapes.lua" />
     <None Include="Mod\NplCadLibrary\utils\Color.lua" />
     <None Include="Mod\NplCadLibrary\utils\commonlib_ext.lua" />
     <None Include="Mod\NplCadLibrary\utils\mathext.lua" />
     <None Include="Mod\NplCadLibrary\utils\matrix_decomp.lua" />
     <None Include="Mod\NplCadLibrary\utils\ObjectPool.lua" />
     <None Include="Mod\NplCadLibrary\utils\tableext.lua" />
+    <None Include="README.md" />
   </ItemGroup>
   <PropertyGroup Label="Globals">
     <ProjectGuid>{AF211159-FD04-4C43-A272-FFF915D5B24D}</ProjectGuid>
