@@ -25,8 +25,8 @@
     * [Polygon](#polygon)
  - [Transformations 2D](#transformations-2d)
  - [Paths 2D](#paths-2d)
- - **Todo:**[Hull](#hull)
- - **Todo:**[Chain Hull](#chain-hull)
+ - **Todo:** [Hull](#hull)
+ - **Todo:** [Chain Hull](#chain-hull)
  - [Extruding / Extrusion](#extruding-extrusion)
    * [Linear Extrude](#linear-extrude)
    * [Rectangular Extrude](#rectangular-extrude)
@@ -36,6 +36,7 @@
  - [Mathematical Functions](#mathematical-functions)
  - [Including Files](#including-files)
  - [Interactive Parametric Models](#interactive-parametric-models)
+ - [Scene Node Tags](#scene-node-tags)
 ## Primitives 3D
 ### Cube
 ```lua
@@ -285,3 +286,8 @@ defineProperty({
     { name =  'key_slider',		type =  'slider',		initial =  3, min =  1, max =  10, step =  1, caption =  'Slider' }, 
 });
 ```
+## Scene Node Tags
+|Name|Value|Desc|
+|:----:|:----:|:----:|
+|csg_action|union/intersection/difference
+|color|{r,g,b}|
