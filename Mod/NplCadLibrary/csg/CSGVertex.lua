@@ -39,6 +39,8 @@ function CSGVertex:init(pos,normal)
 	self.pos:set(pos);
 	if(normal~= nil) then
 		self.normal= self._normal:set(normal);
+    else
+		self.normal= vector3d:new_from_pool(0,0,0);
 	end	
 	return self;
 end

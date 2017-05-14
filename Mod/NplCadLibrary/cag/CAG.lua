@@ -338,7 +338,7 @@ function CAG:intersect(cag)
 end
 
 function CAG:transform(matrix4x4)
-    local ismirror = matrix4x4.isMirroring();
+    local ismirror = matrix4x4:isMirroring();
     local newsides = {};
 	for k,side in ipairs(self.sides) do
         table.insert(newsides, side:transform(matrix4x4));
@@ -534,8 +534,8 @@ function CAG:extrudeInOrthonormalBasis(orthonormalbasis, depth)
 		LOG.std(nil, "error", "CAG:extrudeInOrthonormalBasis", "the first parameter should be a CSG.OrthoNormalBasis");
 		return nil;
     end
-    local extruded = self.extrude({offset = {0, 0, depth}});
-    local matrix = orthonormalbasis.getInverseProjectionMatrix();
+    local extruded = self:extrude({offset = {0, depth, 0}});
+    local matrix = orthonormalbasis:getInverseProjectionMatrix();
     extruded = extruded:transform(matrix);
     return extruded;
 end
@@ -545,7 +545,7 @@ end
 -- The 2d x axis will map to the first given 3D axis, the 2d y axis will map to the second.
 -- See CSG.OrthoNormalBasis.GetCartesian for details.
 function CAG:extrudeInPlane(axis1, axis2, depth)
-    return self.extrudeInOrthonormalBasis(CSG.OrthoNormalBasis.GetCartesian(axis1, axis2), depth);
+    return self:extrudeInOrthonormalBasis(CSGOrthoNormalBasis.GetCartesian(axis1, axis2), depth);
 end
 
 function CAG:toCSG(height)
@@ -679,6 +679,17 @@ function CAG:check()
 		return false;
     end
 	return true;
+end
+-- see http://local.wasp.uwa.edu.au/~pbourke/geometry/polyarea/ :
+-- Area of the polygon. For a counter clockwise rotating polygon the area is positive, otherwise negative
+-- Note(bebbi): this looks wrong. See polygon getArea()
+function CAG:area()
+    local polygonArea = 0;
+	for k,side in ipairs(self.sides) do
+        polygonArea = polygonArea + side.vertex0.pos:cross(side.vertex1.pos);
+    end
+    polygonArea = polygonArea * 0.5;
+    return polygonArea;
 end
 --[[
 function CAG:getOutlinePaths()

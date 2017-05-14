@@ -314,22 +314,20 @@ function CSGFactory.roundedCube(options)
 			return
         end
         local res = CSGFactory.sphere({radius = 1, resolution = resolution});
-        --res = res:scale(roundradius);
-        --innerradius[1] > EPS && (res = res.stretchAtPlane([1, 0, 0], [0, 0, 0], 2*innerradius[1]));
-        --innerradius[2] > EPS && (res = res.stretchAtPlane([0, 1, 0], [0, 0, 0], 2*innerradius[2]));
-        --innerradius[3] > EPS && (res = res.stretchAtPlane([0, 0, 1], [0, 0, 0], 2*innerradius[3]));
-        --res = res.translate([-innerradius[1]+center[1], -innerradius[2]+center[2], -innerradius[3]+center[3]]);
+        res = res:scale(roundradius);
+        commonlib.echo("========roundradius");
+        commonlib.echo(roundradius);
+        if (innerradius[1] > EPS) then
+            res = res:stretchAtPlane(vector3d:new({1, 0, 0}), vector3d:new({0, 0, 0}), 2*innerradius[1])
+        end
+        if (innerradius[2] > EPS) then
+            --res = res:stretchAtPlane(vector3d:new({0, 1, 0}), vector3d:new({0, 0, 0}), 2*innerradius[2]);
+        end
+        if (innerradius[3] > EPS) then
+            --res = res:stretchAtPlane(vector3d:new({0, 0, 1}), vector3d:new({0, 0, 0}), 2*innerradius[3]);
+        end
+        --res = res:translate(vector3d:new({-innerradius[1]+center[1], -innerradius[2]+center[2], -innerradius[3]+center[3]}));
         --res = res.reTesselated();
-        --res.properties.roundedCube = new CSG.Properties();
-        --res.properties.roundedCube.center = new CSG.Vertex(center);
-        --res.properties.roundedCube.facecenters = [
-            --new CSG.Connector(new CSG.Vector3D([cuberadius[1], 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([-cuberadius[1], 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([0, cuberadius[2], 0]).plus(center), [0, 1, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([0, -cuberadius[2], 0]).plus(center), [0, -1, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([0, 0, cuberadius[3]]).plus(center), [0, 0, 1], [1, 0, 0]),
-            --new CSG.Connector(new CSG.Vector3D([0, 0, -cuberadius[3]]).plus(center), [0, 0, -1], [1, 0, 0])
-        --];
         return res;
 
 end
@@ -416,7 +414,12 @@ end
 -- Parse an option and force into a CSG.Vector3D. If a scalar is passed it is converted into a vector with equal x,y,z
 function CSGFactory.parseOptionAs3DVector(options, optionname, defaultvalue)
 	local result = CSGFactory.parseOption(options, optionname, defaultvalue);
-    result = vector3d:new(result);
+    local _type = type(result);
+    if(_type == "number")then
+        result = vector3d:new(result,result,result);
+    else
+        result = vector3d:new(result);
+    end
     return result;
 end
 function CSGFactory.parseOptionAsFloat(options, optionname, defaultvalue)

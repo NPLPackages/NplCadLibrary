@@ -319,8 +319,8 @@ function NplCadEnvironment.read_cube(p)
 	local o;
 	if(round)then
 		--NOTE:Unimplemented
-		--o = CSGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedCube");
-		o = CSGModel:new():init(CSGFactory.cube({radius = {x/2,y/2,z/2}}),"cube");
+		o = CSGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedCube");
+		--o = CSGModel:new():init(CSGFactory.cube({radius = {x/2,y/2,z/2}}),"cube");
 	else
 		o = CSGModel:new():init(CSGFactory.cube({radius = {x/2,y/2,z/2}}),"cube");
 	end

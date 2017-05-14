@@ -47,9 +47,19 @@ end
 
 function CSGOrthoNormalBasis:init(plane, rightvector)
     local plane_normal = plane:GetNormal();
+    commonlib.echo("===========plane_normal");
+    commonlib.echo(plane_normal);
 	if (rightvector == nil) then
         -- choose an arbitrary right hand vector, making sure it is somewhat orthogonal to the plane normal:
         rightvector = plane_normal:randomPerpendicularVector();
+
+--        local temp = rightvector:clone();
+--
+--        rightvector[1] = temp[2]
+--        rightvector[2] = temp[1]
+--        rightvector[3] = temp[3]
+--        commonlib.echo("===========rightvector");
+--        commonlib.echo(rightvector);
     end
     self.v:set((plane_normal * rightvector):normalize());
     self.u:set(self.v * plane_normal);

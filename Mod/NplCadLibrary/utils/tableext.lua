@@ -70,12 +70,12 @@ function tableext.reverse(tab,each_fun)
     return tab;
 end  
 function tableext.is_array(input)
-	if(input and type(input) == "table" and (#input) > 0)then
+	if(input and type(input) == "table" and (#input) >= 0)then
 		return true;
 	end
 end
 function tableext.clear(input)
-	if(input and type(input) == "table" and (#input) > 0) then
+	if(input and type(input) == "table" and (#input) >= 0) then
 		count = #input
 		for i=0, count do 
 			input[i]=nil 
