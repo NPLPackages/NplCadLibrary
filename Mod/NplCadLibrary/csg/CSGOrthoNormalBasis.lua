@@ -47,24 +47,16 @@ end
 
 function CSGOrthoNormalBasis:init(plane, rightvector)
     local plane_normal = plane:GetNormal();
-    commonlib.echo("===========plane_normal");
-    commonlib.echo(plane_normal);
 	if (rightvector == nil) then
         -- choose an arbitrary right hand vector, making sure it is somewhat orthogonal to the plane normal:
         rightvector = plane_normal:randomPerpendicularVector();
-
---        local temp = rightvector:clone();
---
---        rightvector[1] = temp[2]
---        rightvector[2] = temp[1]
---        rightvector[3] = temp[3]
---        commonlib.echo("===========rightvector");
---        commonlib.echo(rightvector);
     end
-    self.v:set((plane_normal * rightvector):normalize());
-    self.u:set(self.v * plane_normal);
+    self.v:set((rightvector * plane_normal):normalize());
+
+    self.u:set(plane_normal * self.v);
     self.plane:set(plane);
     self.planeorigin:set(plane_normal:MulByFloat(plane[4]));
+
 	return self;
 end
 
@@ -205,7 +197,27 @@ function CSGOrthoNormalBasis.Z0Plane()
     return CSGOrthoNormalBasis:new():init(plane, vector3d.unit_x);
 end
 
+function CSGOrthoNormalBasis:getRotationMatrix()
+    local EPS = tonumber("1e-5");
 
+    local p = self.plane:GetNormal();
+    p = p:normalize();
+    local up = vector3d:new(0,1,0);
+    local rotate_axis = p:clone():cross(up);
+    rotate_axis = rotate_axis:normalize();
+    local x = rotate_axis[1] * -90;
+    local z = rotate_axis[3] * -90;
+    if(math.abs(x) > EPS)then
+        return Matrix4.rotationX(x);
+    end
+    if(up:compare(p))then
+        return Matrix4.rotationY(180);
+    end
+    if(math.abs(z) > EPS)then
+        return Matrix4.rotationZ(z);
+    end
+    
+end
 function CSGOrthoNormalBasis:getProjectionMatrix()
     return Matrix4:new({
         self.u[1], self.v[1], self.plane[1], 0,
@@ -214,6 +226,7 @@ function CSGOrthoNormalBasis:getProjectionMatrix()
         0, 0, -self.plane[4], 1
     });
 end
+
 
 function CSGOrthoNormalBasis:getInverseProjectionMatrix()
     local p = self.plane:GetNormal();

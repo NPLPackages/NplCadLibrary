@@ -315,13 +315,11 @@ function CSGFactory.roundedCube(options)
         end
         local res = CSGFactory.sphere({radius = 1, resolution = resolution});
         res = res:scale(roundradius);
-        commonlib.echo("========roundradius");
-        commonlib.echo(roundradius);
         if (innerradius[1] > EPS) then
             res = res:stretchAtPlane(vector3d:new({1, 0, 0}), vector3d:new({0, 0, 0}), 2*innerradius[1])
         end
         if (innerradius[2] > EPS) then
-            --res = res:stretchAtPlane(vector3d:new({0, 1, 0}), vector3d:new({0, 0, 0}), 2*innerradius[2]);
+            res = res:stretchAtPlane(vector3d:new({0, 1, 0}), vector3d:new({0, 0, 0}), 2*innerradius[2]);
         end
         if (innerradius[3] > EPS) then
             --res = res:stretchAtPlane(vector3d:new({0, 0, 1}), vector3d:new({0, 0, 0}), 2*innerradius[3]);
@@ -404,7 +402,7 @@ end
 -- If the option is not present, return the default value
 function CSGFactory.parseOption(options, optionname, defaultvalue)
 	local result = defaultvalue;
-    if (options) then
+    if (options and type(options) == "table") then
         if (options[optionname]) then
             result = options[optionname];
         end

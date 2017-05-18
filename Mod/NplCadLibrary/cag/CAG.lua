@@ -535,7 +535,8 @@ function CAG:extrudeInOrthonormalBasis(orthonormalbasis, depth)
 		return nil;
     end
     local extruded = self:extrude({offset = {0, depth, 0}});
-    local matrix = orthonormalbasis:getInverseProjectionMatrix();
+    local matrix = orthonormalbasis:getRotationMatrix();
+    --local matrix = orthonormalbasis:getInverseProjectionMatrix();
     extruded = extruded:transform(matrix);
     return extruded;
 end

@@ -199,6 +199,9 @@ function CSG:inverse()
 	return csg;
 end
 function CSG:transform(matrix4x4)
+    if(not matrix4x4)then
+        return self;
+    end
 	for __,polygon in ipairs(self.polygons) do
         polygon:transform(matrix4x4);
     end
@@ -213,18 +216,16 @@ end
 -- cut the solid at a plane, and stretch the cross-section found along plane normal
 function CSG:stretchAtPlane(normal, point, length)
     local plane = Plane.fromNormalAndPoint(normal, point);
+
+    local piece1 = self:cutByPlane(plane:clone());
+    local piece2 = self:cutByPlane(plane:clone():inverse());
+
+
     local onb = CSGOrthoNormalBasis:new()
     onb:init(plane);
-    commonlib.echo("===========plane:GetNormal()");
-    commonlib.echo(plane:GetNormal());
     local crosssect = self:sectionCut(onb);
-    commonlib.echo("======crosssect");
-    commonlib.echo(crosssect);
     local midpiece = crosssect:extrudeInOrthonormalBasis(onb, length);
-    --local piece1 = self:cutByPlane(plane:clone());
-    --local piece2 = self:cutByPlane(plane:clone():inverse());
-    --local result = piece1:union(midpiece):union(piece2:translate(plane:GetNormal():MulByFloat(length)));
-    result = midpiece;
+    local result = piece1:union(midpiece):union(piece2:translate(plane:GetNormal():MulByFloat(length)));
     return result;
 end
 function CSG:sectionCut(orthobasis)
@@ -322,7 +323,7 @@ function CSG.toMesh(csg,r,g,b)
 	end
 	return vertices,indices,normals,colors;
 end
-function CSG.saveAsSTL(csg,output_file_name)
+function CSG.saveAsSTL(csg,output_file_name,isYUp)
 	if(not csg)then return end
 	ParaIO.CreateDirectory(output_file_name);
 	local function write_face(file,vertex_1,vertex_2,vertex_3)
@@ -385,60 +386,3 @@ function CSG.solve2Linear(a, b, c, d, u, v)
     return {x, y};
 end
 
---[[
-function CSG.addTransformationMethodsToPrototype(prot) 
-    prot.mirrored = function(plane) 
-        return this.transform(CSG.Matrix4x4.mirroring(plane));
-    end
-
-    prot.mirroredX = function() {
-        var plane = new CSG.Plane(CSG.Vector3D.Create(1, 0, 0), 0);
-        return this.mirrored(plane);
-    };
-
-    prot.mirroredY = function() {
-        var plane = new CSG.Plane(CSG.Vector3D.Create(0, 1, 0), 0);
-        return this.mirrored(plane);
-    };
-
-    prot.mirroredZ = function() {
-        var plane = new CSG.Plane(CSG.Vector3D.Create(0, 0, 1), 0);
-        return this.mirrored(plane);
-    };
-
-    prot.translate = function(v) {
-        return this.transform(CSG.Matrix4x4.translation(v));
-    };
-
-    prot.scale = function(f) {
-        return this.transform(CSG.Matrix4x4.scaling(f));
-    };
-
-    prot.rotateX = function(deg) {
-        return this.transform(CSG.Matrix4x4.rotationX(deg));
-    };
-
-    prot.rotateY = function(deg) {
-        return this.transform(CSG.Matrix4x4.rotationY(deg));
-    };
-
-    prot.rotateZ = function(deg) {
-        return this.transform(CSG.Matrix4x4.rotationZ(deg));
-    };
-
-    prot.rotate = function(rotationCenter, rotationAxis, degrees) {
-        return this.transform(CSG.Matrix4x4.rotation(rotationCenter, rotationAxis, degrees));
-    };
-
-    prot.rotateEulerAngles = function(alpha, beta, gamma, position) {
-        position = position || [0,0,0];
-
-        var Rz1 = CSG.Matrix4x4.rotationZ(alpha);
-        var Rx  = CSG.Matrix4x4.rotationX(beta);
-        var Rz2 = CSG.Matrix4x4.rotationZ(gamma);
-        var T   = CSG.Matrix4x4.translation(new CSG.Vector3D(position));
-
-        return this.transform(Rz2.multiply(Rx).multiply(Rz1).multiply(T));
-    };
-end
---]]
