@@ -94,7 +94,7 @@ function CSGConnector:getTransformationTo(other, mirror, normalrotation)
     local us = self:clone():normalize();
     other = other:clone():normalize();
     -- shift to the origin:
-    local transformation = Matrix4.translation(self.point);
+    local transformation = Matrix4.translation(self.point:clone():negated());
     -- construct the plane crossing through the origin and the two axes:
     local axesplane = Plane.anyPlaneFromVector3Ds(
         vector3d.zero, us.axisvector, other.axisvector, tonumber("1e-5"));

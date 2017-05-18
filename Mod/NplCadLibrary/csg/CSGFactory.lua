@@ -281,7 +281,6 @@ function CSGFactory.roundedCube(options)
 		local EPS = tonumber("1e-5");
         local minRR = tonumber("1e-2"); --minroundradius 1e-3 gives rounding errors already
         local center, cuberadius;
-
         options = options or {};
 		if(options["corner1"] or options["corner2"])then
 			if(options["center"] or options["radius"])then
@@ -308,6 +307,7 @@ function CSGFactory.roundedCube(options)
         local roundradius = CSGFactory.parseOptionAs3DVector(options, "roundradius", {0.2, 0.2, 0.2});
         -- slight hack for now - total radius stays ok
         roundradius = vector3d:new(math_max(roundradius[1], minRR), math_max(roundradius[2], minRR), math_max(roundradius[3], minRR));
+
         local innerradius = cuberadius:sub(roundradius);
         if (innerradius[1] < 0 or innerradius[2] < 0 or innerradius[3] < 0)then
 			LOG.std(nil, "error", "CSGFactory.roundedCube", "roundradius <= radius!");
@@ -322,9 +322,9 @@ function CSGFactory.roundedCube(options)
             res = res:stretchAtPlane(vector3d:new({0, 1, 0}), vector3d:new({0, 0, 0}), 2*innerradius[2]);
         end
         if (innerradius[3] > EPS) then
-            --res = res:stretchAtPlane(vector3d:new({0, 0, 1}), vector3d:new({0, 0, 0}), 2*innerradius[3]);
+            res = res:stretchAtPlane(vector3d:new({0, 0, 1}), vector3d:new({0, 0, 0}), 2*innerradius[3]);
         end
-        --res = res:translate(vector3d:new({-innerradius[1]+center[1], -innerradius[2]+center[2], -innerradius[3]+center[3]}));
+        res = res:translate(vector3d:new({-innerradius[1]+center[1], -innerradius[2]+center[2], -innerradius[3]+center[3]}));
         --res = res.reTesselated();
         return res;
 

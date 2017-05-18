@@ -45,15 +45,19 @@ function CSGOrthoNormalBasis:ctor()
 	end
 end
 
+-- we use right hand coordinate
 function CSGOrthoNormalBasis:init(plane, rightvector)
     local plane_normal = plane:GetNormal();
 	if (rightvector == nil) then
         -- choose an arbitrary right hand vector, making sure it is somewhat orthogonal to the plane normal:
         rightvector = plane_normal:randomPerpendicularVector();
     end
-    self.v:set((rightvector * plane_normal):normalize());
+    --self.v:set((plane_normal * rightvector):normalize());
+    --self.u:set(self.v * plane_normal);
 
+    self.v:set((rightvector * plane_normal):normalize());
     self.u:set(plane_normal * self.v);
+
     self.plane:set(plane);
     self.planeorigin:set(plane_normal:MulByFloat(plane[4]));
 

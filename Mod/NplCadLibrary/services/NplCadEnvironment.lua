@@ -24,6 +24,7 @@ NPL.load("(gl)Mod/NplCadLibrary/utils/Color.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGBuildContext.lua");
 NPL.load("(gl)script/ide/STL.lua");
+NPL.load("(gl)script/ide/math/vector.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
@@ -38,6 +39,7 @@ local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadE
 local Color = commonlib.gettable("Mod.NplCadLibrary.utils.Color");
 local CSGBuildContext = commonlib.gettable("Mod.NplCadLibrary.services.CSGBuildContext");
 local ArrayMap = commonlib.gettable("commonlib.ArrayMap");
+local vector3d = commonlib.gettable("mathlib.vector3d");
 local math_pi = 3.1415926;
 local function is_string(input)
 	if(input and type(input) == "string")then
@@ -318,9 +320,7 @@ function NplCadEnvironment.read_cube(p)
 	off = {x/2,y/2,z/2}; -- center: false default
 	local o;
 	if(round)then
-		--NOTE:Unimplemented
 		o = CSGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedCube");
-		--o = CSGModel:new():init(CSGFactory.cube({radius = {x/2,y/2,z/2}}),"cube");
 	else
 		o = CSGModel:new():init(CSGFactory.cube({radius = {x/2,y/2,z/2}}),"cube");
 	end
@@ -487,6 +487,10 @@ function NplCadEnvironment.read_cylinder(p,...)
 		round = true;
 	end
 	local o;
+
+    -- y axis is up
+    node:setRotation2(vector3d:new(1,0,0),-90*math_pi/180);
+
 	if(is_table(p) and (p.from and p.to)) then
 		if(round)then
 			--NOTE:Unimplemented
@@ -499,9 +503,9 @@ function NplCadEnvironment.read_cylinder(p,...)
 		if(round)then
 			--NOTE:Unimplemented
 			--o = CSGModel:new():init(CSGFactory.roundedCylinder({from = {0,0,0}, to = {0,0,h},radiusStart = r1, radiusEnd = r2, resolution = fn}),"roundedCylinder");
-			o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,h,0}, radiusStart = r1, radiusEnd = r2, resolution = fn}),"cylinder");
+			o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,0,h}, radiusStart = r1, radiusEnd = r2, resolution = fn}),"cylinder");
 		else
-			o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,h,0}, radiusStart = r1, radiusEnd = r2, resolution = fn}),"cylinder");
+			o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,0,h}, radiusStart = r1, radiusEnd = r2, resolution = fn}),"cylinder");
 		end
 		local r;
 		if(r1>r2)then
@@ -516,22 +520,22 @@ function NplCadEnvironment.read_cylinder(p,...)
 			else
 				off[1] = r;
 			end
-			if(p.center[2])then
-				off[2] = -h/2;
-			else
+            if(p.center[2])then
 				off[2] = 0;
+			else
+				off[2] = r;
 			end
 			if(p.center[3])then
-				off[3] = 0;
+				off[3] = -h/2;
 			else
-				off[3] = r;
+				off[3] = 0;
 			end
+			
 		elseif(is_table(p) and p.center==true) then 
-			off = {0,-h/2,0};
+			off = {0,0,-h/2};
 		elseif(is_table(p) and p.center==false) then
-			off = {r,0,r};
+			off = {0,0,0};
 		end
-		--if(off[0]||off[1]||off[2]) o = o.translate(off);
 		if(off[1] ~= 0 or off[2] ~= 0 or off[3] ~= 0)then
 			node:translate(off[1],off[2],off[3]);
 		end

@@ -21,7 +21,6 @@ Drawable.worldMatrix= nil;
 Drawable.color= Drawable.default_color;
 
 function Drawable:ctor()
-	echo("Drawable:ctor()");
 	self.node = nil;
 	self.model_type = nil;
 	self.worldMatrix= nil;

@@ -18,13 +18,14 @@ NPL.load("(gl)Mod/NplCadLibrary/services/NplCadEnvironment.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/matrix_decomp.lua");
 NPL.load("(gl)Mod/NplCadLibrary/core/Scene.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGBuildContext.lua");
-
+NPL.load("(gl)script/ide/math/vector.lua");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 local CSGService = commonlib.gettable("Mod.NplCadLibrary.services.CSGService");
 local math3d = commonlib.gettable("mathlib.math3d");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 local Scene = commonlib.gettable("Mod.NplCadLibrary.core.Scene");
 local CSGBuildContext = commonlib.gettable("Mod.NplCadLibrary.services.CSGBuildContext");
+local vector3d = commonlib.gettable("mathlib.vector3d");
 
 function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable_action,operation_node)
 	local bResult = false;
@@ -317,5 +318,72 @@ function CSGService.saveFile(filepath,content)
 
 			return true;
 		end
+	end
+end
+function CSGService.saveAsSTL(scene,output_file_name,isYUp)
+    if(not scene or not output_file_name)then return end
+    local render_list = CSGService.getRenderList(scene)
+    ParaIO.CreateDirectory(output_file_name);
+	local function write_face(file,vertex_1,vertex_2,vertex_3)
+		local a = vertex_3 - vertex_1;
+		local b = vertex_3 - vertex_2;
+		local normal = a*b;
+		normal:normalize();
+		if(isYUp) then
+			file:WriteString(string.format(" facet normal %f %f %f\n", normal[1], normal[2], normal[3]));
+			file:WriteString(string.format("  outer loop\n"));
+			file:WriteString(string.format("  vertex %f %f %f\n", vertex_1[1], vertex_1[2], vertex_1[3]));
+			file:WriteString(string.format("  vertex %f %f %f\n", vertex_2[1], vertex_2[2], vertex_2[3]));
+			file:WriteString(string.format("  vertex %f %f %f\n", vertex_3[1], vertex_3[2], vertex_3[3]));
+		else
+			-- invert y,z and change the triangle winding
+			file:WriteString(string.format(" facet normal %f %f %f\n", normal[1], normal[3], normal[2]));
+			file:WriteString(string.format("  outer loop\n"));
+			file:WriteString(string.format("  vertex %f %f %f\n", vertex_1[1], vertex_1[3], vertex_1[2]));
+			file:WriteString(string.format("  vertex %f %f %f\n", vertex_3[1], vertex_3[3], vertex_3[2]));
+			file:WriteString(string.format("  vertex %f %f %f\n", vertex_2[1], vertex_2[3], vertex_2[2]));
+		end
+		file:WriteString(string.format("  endloop\n"));
+		file:WriteString(string.format(" endfacet\n"));
+	end
+	local file = ParaIO.open(output_file_name, "w");
+	if(file:IsValid()) then
+		local name = "ParaEngine";
+		file:WriteString(string.format("solid %s\n",name));
+
+        for __,v in ipairs(render_list) do
+            local world_matrix = v.world_matrix;
+            local vertices = v.vertices;
+            local indices = v.indices;
+            local normals = v.normals;
+            local colors = v.colors;
+            if(world_matrix)then
+                for i,vertex in ipairs(vertices) do
+                    local vertex = vector3d:new(vertex);
+                    vertex:transform(world_matrix);
+
+                    vertices[i] = vertex;
+                end
+            end
+		    local size = #indices;
+		    local k;
+		    for k = 1,size do
+			    local t = math.mod(k,3);
+			    if(t == 0)then
+				    local v1 = vertices[indices[k-2]];    
+				    local v2 = vertices[indices[k-1]];  
+				    local v3 = vertices[indices[k]];  
+				    if(v1 and v2 and v3)then
+                    
+                        local a = vector3d:new(v1);
+                        local b = vector3d:new(v2);
+                        local c = vector3d:new(v3);
+					    write_face(file,a,b,c);
+				    end
+			    end
+		    end
+        end
+		file:WriteString(string.format("endsolid %s\n",name));
+		file:close();
 	end
 end

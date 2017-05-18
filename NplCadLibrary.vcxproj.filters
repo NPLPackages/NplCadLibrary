@@ -205,8 +205,5 @@
     <None Include="Mod\NplCadLibrary\testcase\TestCSG.lua">
       <Filter>Mod\NplCadLibrary\testcase</Filter>
     </None>
-    <None Include="Mod\NplCadLibrary\testcase\TestCAG.lua">
-      <Filter>Mod\NplCadLibrary\testcase</Filter>
-    </None>
   </ItemGroup>
 </Project>

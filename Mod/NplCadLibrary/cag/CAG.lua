@@ -165,10 +165,10 @@ function CAG.linesIntersect(p0start, p0end, p1start, p1end)
     return false;
 end
 
-function CAG:_toCSGWall(y0, y1) 
+function CAG:_toCSGWall(z0, z1) 
 	local polygons = {};
 	for k,side in ipairs(self.sides) do
-		table.insert(polygons,side:toPolygon3D(y0,y1));
+		table.insert(polygons,side:toPolygon3D(z0,z1));
 	end
     return CSG.fromPolygons(polygons);
 end
@@ -200,8 +200,8 @@ function CAG:_toPlanePolygons(options)
     local flipped = options.flipped or false;
 	-- reference connector for transformation
     local origin = {0, 0, 0}; 
-	local defaultAxis = {0, 1, 0};
-	local defaultNormal = {0, 0, -1};
+	local defaultAxis = {0, 0, 1};
+	local defaultNormal = {0, 1, 0};
     local thisConnector = CSGConnector:new():init(origin, defaultAxis, defaultNormal);
 
     -- translated connector per options
@@ -220,10 +220,10 @@ function CAG:_toPlanePolygons(options)
     bounds[2] = bounds[2] + vector2d:new(1, 1);
     local csgshell = self:_toCSGWall(-1, 1);
     local csgplane = CSG.fromPolygons({CSGPolygon:new():init({
-        CSGVertex:new():init(vector3d:new(bounds[1][1], 0, bounds[1][2])),
-        CSGVertex:new():init(vector3d:new(bounds[1][1], 0, bounds[2][2])),
-        CSGVertex:new():init(vector3d:new(bounds[2][1], 0, bounds[2][2])),
-		CSGVertex:new():init(vector3d:new(bounds[2][1], 0, bounds[1][2]))
+        CSGVertex:new():init(vector3d:new(bounds[1][1], bounds[1][2], 0)),
+        CSGVertex:new():init(vector3d:new(bounds[2][1], bounds[1][2], 0)),
+        CSGVertex:new():init(vector3d:new(bounds[2][1], bounds[2][2], 0)),
+		CSGVertex:new():init(vector3d:new(bounds[1][1], bounds[2][2], 0))
     })});
 
     -- intersectSub -> prevent premature retesselate/canonicalize
@@ -233,7 +233,7 @@ function CAG:_toPlanePolygons(options)
     local polys = {};
 	for k,polygon in ipairs(csgplane.polygons) do
 		local normal = polygon:GetPlane():GetNormal();
-		if(math.abs(normal[2]) > 0.99) then
+		if(math.abs(normal[3]) > 0.99) then
 		    if (flipped) then
 				polygon = polygon:clone():flip();
 			end
@@ -259,8 +259,8 @@ function CAG:_toWallPolygons(options)
     --     walls go from toConnector1 to toConnector2
     --     optionally, target cag to point to - cag needs to have same number of sides as self!
     local origin = {0, 0, 0}; 
-	local defaultAxis = {0, 1, 0};
-	local defaultNormal = {0, 0, -1};
+	local defaultAxis = {0, 0, 1};
+	local defaultNormal = {0, 1, 0};
     local thisConnector = CSGConnector:new():init(origin, defaultAxis, defaultNormal);
     -- arguments:
     local toConnector1 = options.toConnector1;
@@ -286,8 +286,8 @@ function CAG:_toWallPolygons(options)
 
     local polygons = {};
 	for k,v in ipairs(vps1) do
-		table.insert(polygons,CSGPolygon:new():init({CSGVertex:new():init(vps2[k][1]:clone()), CSGVertex:new():init(vps2[k][2]:clone()), CSGVertex:new():init(v[1]:clone())}));
-        table.insert(polygons,CSGPolygon:new():init({CSGVertex:new():init(v[1]:clone()), CSGVertex:new():init(vps2[k][2]:clone()), CSGVertex:new():init(v[2]:clone())}));
+		table.insert(polygons,CSGPolygon:new():init({CSGVertex:new():init(vps2[k][2]:clone()), CSGVertex:new():init(vps2[k][1]:clone()), CSGVertex:new():init(v[1]:clone())}));
+        table.insert(polygons,CSGPolygon:new():init({CSGVertex:new():init(vps2[k][2]:clone()), CSGVertex:new():init(v[1]:clone()), CSGVertex:new():init(v[2]:clone())}));
 	end
     return polygons;
 end
@@ -534,9 +534,8 @@ function CAG:extrudeInOrthonormalBasis(orthonormalbasis, depth)
 		LOG.std(nil, "error", "CAG:extrudeInOrthonormalBasis", "the first parameter should be a CSG.OrthoNormalBasis");
 		return nil;
     end
-    local extruded = self:extrude({offset = {0, depth, 0}});
-    local matrix = orthonormalbasis:getRotationMatrix();
-    --local matrix = orthonormalbasis:getInverseProjectionMatrix();
+    local extruded = self:extrude({offset = {0, 0, depth}});
+    local matrix = orthonormalbasis:getInverseProjectionMatrix();
     extruded = extruded:transform(matrix);
     return extruded;
 end
@@ -554,11 +553,11 @@ function CAG:toCSG(height)
         -- empty!
         return CSG:new();
     end
-    local normalVector = vector3d:new(0, 0, -1);
+    local normalVector = vector3d:new(0, 1, 0);
     local polygons = {};
     -- bottom and top
 	polygons = tableext.concat(polygons,self:_toPlanePolygons({translation= {0, 0, 0},normalVector= normalVector, flipped = true}));
-    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = {0, height, 0},normalVector = normalVector, flipped = false}));
+    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = {0, 0, height},normalVector = normalVector, flipped = false}));
 	for k,side in ipairs(self.sides) do
 		table.insert(polygons,side:toPolygon3D(0,height));
 	end
@@ -576,29 +575,29 @@ function CAG:extrude(options)
         -- empty!
         return CSG:new();
     end
-    local offsetVector = CSGFactory.parseOptionAs3DVector(options, "offset", {0, 1, 0});
+    local offsetVector = CSGFactory.parseOptionAs3DVector(options, "offset", {0, 0, 1});
     local twistangle = CSGFactory.parseOptionAsFloat(options, "twistangle", 0);
     local twiststeps = CSGFactory.parseOptionAsInt(options, "twiststeps", CSGFactory.defaultResolution3D);
-    if (offsetVector[2] == 0) then
-		LOG.std(nil, "error", "CAG:extrude", "offset cannot be orthogonal to Y axis");
+    if (offsetVector[3] == 0) then
+		LOG.std(nil, "error", "CAG:extrude", "offset cannot be orthogonal to Z axis");
 		return nil;
     end
     if (twistangle == 0 or twiststeps < 1) then
         twiststeps = 1;
     end
-    local normalVector = vector3d:new(0, 0, -1);
+    local normalVector = vector3d:new(0, 1, 0);
 
     local polygons = {};
     -- bottom and top
-	polygons = tableext.concat(polygons,self:_toPlanePolygons({translation= {0, 0, 0},normalVector= normalVector, flipped = not (offsetVector[2] < 0)}));
-    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = offsetVector,normalVector = normalVector * Matrix4.rotationY(twistangle + 180), flipped = (offsetVector[2] < 0)}));
+	polygons = tableext.concat(polygons,self:_toPlanePolygons({translation= {0, 0, 0},normalVector= normalVector, flipped = not (offsetVector[3] < 0)}));
+    polygons = tableext.concat(polygons,self:_toPlanePolygons({translation = offsetVector,normalVector = normalVector * Matrix4.rotationZ(twistangle), flipped = (offsetVector[3] < 0)}));
     -- walls
 	local i;
     for i = 0, twiststeps-1 ,1 do
-        local c1 = CSGConnector:new():init(offsetVector:clone():MulByFloat(i / twiststeps), {0, offsetVector[2], 0},
-            normalVector * Matrix4.rotationY(i * twistangle/twiststeps + 180));
-        local c2 = CSGConnector:new():init(offsetVector:clone():MulByFloat((i + 1) / twiststeps), {0, offsetVector[2], 0},
-            normalVector * Matrix4.rotationY((i + 1) * twistangle/twiststeps + 180));
+        local c1 = CSGConnector:new():init(offsetVector:clone():MulByFloat(i / twiststeps), {0, 0, offsetVector[3]},
+            normalVector * Matrix4.rotationZ(i * twistangle/twiststeps));
+        local c2 = CSGConnector:new():init(offsetVector:clone():MulByFloat((i + 1) / twiststeps), {0, 0, offsetVector[3]},
+            normalVector * Matrix4.rotationZ((i + 1) * twistangle/twiststeps));
 		polygons = tableext.concat(polygons,self:_toWallPolygons({toConnector1 = c1, toConnector2 = c2}));
     end
     return CSG.fromPolygons(polygons);
@@ -617,15 +616,15 @@ function CAG:rotateExtrude(options)
 		alpha = alpha % 360;
 	end
     local origin = {0, 0, 0};
-    local axisV = vector3d:new(0, 0, -1);
-    local normalV = {0, 1, 0};
+    local axisV = vector3d:new(0, 1, 0);
+    local normalV = {0, 0, 1};
     local polygons = {};
     -- planes only needed if alpha > 0
     local connS = CSGConnector:new():init(origin, axisV, normalV);
     if (alpha > 0 and alpha < 360) then
         -- we need to rotate negative to satisfy wall function condition of
         -- building in the direction of axis vector
-        local connE = CSGConnector:new():init(origin, axisV * Matrix4.rotationY(-alpha), normalV);
+        local connE = CSGConnector:new():init(origin, axisV * Matrix4.rotationZ(-alpha), normalV);
         polygons = tableext.concat(polygons,
             self:_toPlanePolygons({toConnector = connS, flipped = true}));
         polygons = tableext.concat(polygons,
@@ -636,7 +635,7 @@ function CAG:rotateExtrude(options)
     local step = alpha/resolution;
 	local a;
     for a = step, alpha + EPS ,step do
-        connT2 = CSGConnector:new():init(origin, axisV * Matrix4.rotationY(-a), normalV);
+        connT2 = CSGConnector:new():init(origin, axisV * Matrix4.rotationZ(-a), normalV);
         polygons = tableext.concat(polygons,self:_toWallPolygons(
             {toConnector1 = connT1, toConnector2 = connT2}));
         connT1 = connT2;

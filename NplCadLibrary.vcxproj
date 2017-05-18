@@ -49,7 +49,6 @@
     <None Include="Mod\NplCadLibrary\services\CSGBuildContext.lua" />
     <None Include="Mod\NplCadLibrary\services\CSGService.lua" />
     <None Include="Mod\NplCadLibrary\services\NplCadEnvironment.lua" />
-    <None Include="Mod\NplCadLibrary\testcase\TestCAG.lua" />
     <None Include="Mod\NplCadLibrary\testcase\TestConnector.lua" />
     <None Include="Mod\NplCadLibrary\testcase\TestCSG.lua" />
     <None Include="Mod\NplCadLibrary\testcase\TestFrame.lua" />
