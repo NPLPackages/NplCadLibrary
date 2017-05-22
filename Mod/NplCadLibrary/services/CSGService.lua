@@ -320,7 +320,8 @@ function CSGService.saveFile(filepath,content)
 		end
 	end
 end
-function CSGService.saveAsSTL(scene,output_file_name,isYUp)
+-- right hand and z up
+function CSGService.saveAsSTL(scene,output_file_name)
     if(not scene or not output_file_name)then return end
     local render_list = CSGService.getRenderList(scene)
     ParaIO.CreateDirectory(output_file_name);
@@ -329,20 +330,13 @@ function CSGService.saveAsSTL(scene,output_file_name,isYUp)
 		local b = vertex_3 - vertex_2;
 		local normal = a*b;
 		normal:normalize();
-		if(isYUp) then
-			file:WriteString(string.format(" facet normal %f %f %f\n", normal[1], normal[2], normal[3]));
-			file:WriteString(string.format("  outer loop\n"));
-			file:WriteString(string.format("  vertex %f %f %f\n", vertex_1[1], vertex_1[2], vertex_1[3]));
-			file:WriteString(string.format("  vertex %f %f %f\n", vertex_2[1], vertex_2[2], vertex_2[3]));
-			file:WriteString(string.format("  vertex %f %f %f\n", vertex_3[1], vertex_3[2], vertex_3[3]));
-		else
-			-- invert y,z and change the triangle winding
-			file:WriteString(string.format(" facet normal %f %f %f\n", normal[1], normal[3], normal[2]));
-			file:WriteString(string.format("  outer loop\n"));
-			file:WriteString(string.format("  vertex %f %f %f\n", vertex_1[1], vertex_1[3], vertex_1[2]));
-			file:WriteString(string.format("  vertex %f %f %f\n", vertex_3[1], vertex_3[3], vertex_3[2]));
-			file:WriteString(string.format("  vertex %f %f %f\n", vertex_2[1], vertex_2[3], vertex_2[2]));
-		end
+
+		file:WriteString(string.format(" facet normal %f %f %f\n", normal[1], normal[2], normal[3]));
+		file:WriteString(string.format("  outer loop\n"));
+		file:WriteString(string.format("  vertex %f %f %f\n", vertex_1[1], vertex_1[2], vertex_1[3]));
+		file:WriteString(string.format("  vertex %f %f %f\n", vertex_2[1], vertex_2[2], vertex_2[3]));
+		file:WriteString(string.format("  vertex %f %f %f\n", vertex_3[1], vertex_3[2], vertex_3[3]));
+		
 		file:WriteString(string.format("  endloop\n"));
 		file:WriteString(string.format(" endfacet\n"));
 	end

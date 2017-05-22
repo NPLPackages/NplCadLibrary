@@ -872,34 +872,34 @@ function NplCadEnvironment.read_square(p)
 	end
 
 	local x = s;
-	local z = s; 
+	local y = s; 
 	if(v and is_array(v))then
 		x = v[1];
-		z = v[2]; 
+		y = v[2]; 
 	end
    
-	off = {x/2,z/2}; -- center: false default
+	off = {x/2,y/2}; -- center: false default
 	local o;
 	if(round)then
 		--NOTE:Unimplemented
 		--o = CAGModel:new():init(CSGFactory.roundedCube({radius = {x/2,y/2,z/2}, roundradius = r, resolution = fn}),"roundedSquare");
-		o = CAGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square");
+		o = CAGModel:new():init(CAGFactory.rectangle({radius = {x/2,y/2}}),"square");
 	else
-		o = CAGModel:new():init(CAGFactory.rectangle({radius = {x/2,z/2}}),"square");
+		o = CAGModel:new():init(CAGFactory.rectangle({radius = {x/2,y/2}}),"square");
 	end
 	if(is_table(p) and p.center and is_array(p.center))then
 		if(p.center[1])then off[1] = 0; else off[1] = x/2;end
-		if(p.center[2])then off[2] = 0; else off[2] = z/2;end
+		if(p.center[2])then off[2] = 0; else off[2] = y/2;end
 	elseif(is_table(p) and p.center == true)then
 		off = {0,0};
 	elseif(is_table(p) and p.center == false)then
-		off = {x/2,z/2};
+		off = {x/2,y/2};
 	end
 	node:setDrawable(o);
 	node:setTag("shape","square");
 
 	if(off[1] ~= 0 or off[2] ~= 0)then
-		node:translate(off[1],0,off[2]);
+		node:translate(off[1],off[2],0);
 	end
 	return node;
 end

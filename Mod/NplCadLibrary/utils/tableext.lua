@@ -1,3 +1,7 @@
+--[[
+NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
+local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
+--]]
 local tableext = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.utils.tableext"));
 
 function tableext.copy(t1,t2,each_fun)
