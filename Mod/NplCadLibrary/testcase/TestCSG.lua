@@ -108,12 +108,12 @@ function TestCSG.test_stretchAtPlane()
     local scene = Scene:new();
     local csg = CSGFactory.sphere({radius = 1, resolution = 8});
     local roundradius = {1,2,3};
-    --csg = csg:scale(roundradius);
+    csg = csg:scale(roundradius);
 
     local innerradius = {3,4,5};
     csg = csg:stretchAtPlane(vector3d:new({1, 0, 0}), vector3d:new({0, 0, 0}), 2*innerradius[1]);
-    csg = csg:stretchAtPlane(vector3d:new({0, 1, 0}), vector3d:new({0, 0, 0}), 2*innerradius[2]);
-    csg = csg:stretchAtPlane(vector3d:new({0, 0, 1}), vector3d:new({0, 0, 0}), 2*innerradius[3]);
+--    csg = csg:stretchAtPlane(vector3d:new({0, 1, 0}), vector3d:new({0, 0, 0}), 2*innerradius[2]);
+--    csg = csg:stretchAtPlane(vector3d:new({0, 0, 1}), vector3d:new({0, 0, 0}), 2*innerradius[3]);
 
 	local node = Node.create("");
     local o = CSGModel:new():init(csg);

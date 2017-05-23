@@ -25,6 +25,7 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGBSPNode.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGOrthoNormalBasis.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAG.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGTree.lua");
 local vector2d = commonlib.gettable("mathlib.vector2d");
 local vector3d = commonlib.gettable("mathlib.vector3d");
 local Plane = commonlib.gettable("mathlib.Plane");
@@ -38,7 +39,7 @@ local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSGBSPNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode");
 local CSGOrthoNormalBasis = commonlib.gettable("Mod.NplCadLibrary.csg.CSGOrthoNormalBasis");
 local CAG = commonlib.gettable("Mod.NplCadLibrary.cag.CAG");
-
+local CSGTree = commonlib.gettable("Mod.NplCadLibrary.csg.CSGTree");
 local CSG = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSG"));
 
 function CSG:ctor()
@@ -107,6 +108,21 @@ end
 --          +-------+            +-------+
 -- 
 function CSG:union(csg)
+	LOG.std(nil, "info", "CSG:union");
+	local aa = self:clone();
+	local bb = csg:clone();
+	local a = CSGTree:new():init(aa.polygons);
+	local b = CSGTree:new():init(bb.polygons);
+	a:clipTo(b);
+	b:clipTo(a);
+    b:invert();
+    b:clipTo(a);
+    b:invert();
+
+    local newpolygons = tableext.concat(a:allPolygons(),b:allPolygons());
+	return CSG.fromPolygons(newpolygons);
+end
+function CSG:union2(csg)
 	LOG.std(nil, "info", "CSG:union", "==============");
 	LOG.std(nil, "info", "CSG:union", "vertex length of self:%d,csg:%d", self:getVertexCnt(), csg:getVertexCnt());
 	local aa = self:clone();
@@ -138,6 +154,19 @@ end
 --          +-------+
 -- 
 function CSG:subtract(csg)
+	LOG.std(nil, "info", "CSG:subtract");
+	local aa = self:clone();
+	local bb = csg:clone();
+	local a = CSGTree:new():init(aa.polygons);
+	local b = CSGTree:new():init(bb.polygons);
+	a:invert();
+    a:clipTo(b);
+    b:clipTo(a,true);
+    a:addPolygons(b:allPolygons());
+    a:invert();
+    return CSG.fromPolygons(a:allPolygons());
+end
+function CSG:subtract2(csg)
 	LOG.std(nil, "info", "CSG:subtract", "==============");
 	LOG.std(nil, "info", "CSG:subtract", "vertex length of self:%d,csg:%d", self:getVertexCnt(), csg:getVertexCnt());
 	local aa = self:clone();
@@ -171,6 +200,21 @@ end
 --          +-------+
 -- 
 function CSG:intersect(csg)
+	LOG.std(nil, "info", "CSG:intersect");
+	local aa = self:clone();
+	local bb = csg:clone();
+	local a = CSGTree:new():init(aa.polygons);
+	local b = CSGTree:new():init(bb.polygons);
+	a:invert();
+    b:clipTo(a);
+    b:invert();
+    a:clipTo(b);
+    b:clipTo(a);
+    a:addPolygons(b:allPolygons());
+    a:invert();
+    return CSG.fromPolygons(a:allPolygons());
+end
+function CSG:intersect2(csg)
 	LOG.std(nil, "info", "CSG:intersect", "==============");
 	LOG.std(nil, "info", "CSG:intersect", "vertex length of self:%d,csg:%d", self:getVertexCnt(), csg:getVertexCnt());
 	local aa = self:clone();
@@ -225,7 +269,9 @@ function CSG:stretchAtPlane(normal, point, length)
     onb:init(plane);
     local crosssect = self:sectionCut(onb);
     local midpiece = crosssect:extrudeInOrthonormalBasis(onb, length);
-    local result = piece1:union(midpiece):union(piece2:translate(plane:GetNormal():MulByFloat(length)));
+    --local result = piece1:union(midpiece):union(piece2:translate(plane:GetNormal():MulByFloat(length)));
+    --local result = piece1:union(piece2:translate(plane:GetNormal():MulByFloat(length)));
+    local result = piece1;
     return result;
 end
 function CSG:sectionCut(orthobasis)

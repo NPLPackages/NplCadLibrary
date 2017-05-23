@@ -205,5 +205,14 @@
     <None Include="Mod\NplCadLibrary\testcase\TestCSG.lua">
       <Filter>Mod\NplCadLibrary\testcase</Filter>
     </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGNode.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGPolygonTreeNode.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\csg\CSGTree.lua">
+      <Filter>Mod\NplCadLibrary\csg</Filter>
+    </None>
   </ItemGroup>
 </Project>

@@ -97,7 +97,9 @@ function CSGBSPNode:invert(bInplace)
 	if(self.back)then
 		self.back:invert(bInplace);
 	end
-	self.front, self.back = self.back, self.front;
+	local temp = self.front;
+	self.front = self.back;
+    self.back = temp;
 end
 
 --Recursively remove all polygons in `polygons` that are inside this BSP tree.

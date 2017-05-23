@@ -179,3 +179,36 @@ function CSGPolygon.createFromPoints(points, shared, plane)
     local polygon = CSGPolygon:new():init(vertices, shared, plane);
     return polygon;
 end
+-- returns an array with a CSG.Vector3D (center point) and a radius
+function CSGPolygon:boundingSphere()
+    if (not self.cachedBoundingSphere) then
+        local box = self:boundingBox();
+        local middle = box[1]:add(box[2]):MulByFloat(0.5);
+        local radius3 = box[2]:sub(middle);
+        local radius = radius3:length();
+        self.cachedBoundingSphere = {middle, radius};
+    end
+    return self.cachedBoundingSphere;
+end
+-- returns an array of two CSG.Vector3Ds (minimum coordinates and maximum coordinates)
+function CSGPolygon:boundingBox()
+    if (not self.cachedBoundingBox) then
+        local minpoint = vector3d:new(0,0,0);
+        local maxpoint = vector3d:new(0,0,0);
+        local vertices = self.vertices;
+        local numvertices = #vertices;
+        if (numvertices == 0) then
+            minpoint:set(0,0,0);
+        else
+            minpoint:set(vertices[1].pos);
+        end
+        maxpoint = minpoint;
+        for i = 1,numvertices do
+            local point = vertices[i].pos;
+            minpoint = minpoint:min(point);
+            maxpoint = maxpoint:max(point);
+        end
+        self.cachedBoundingBox = {minpoint, maxpoint};
+    end
+    return self.cachedBoundingBox;
+end
