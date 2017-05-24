@@ -183,8 +183,8 @@ end
 function CSGPolygon:boundingSphere()
     if (not self.cachedBoundingSphere) then
         local box = self:boundingBox();
-        local middle = box[1]:add(box[2]):MulByFloat(0.5);
-        local radius3 = box[2]:sub(middle);
+        local middle = (box[1] + box[2]):MulByFloat(0.5);
+        local radius3 = box[2] - middle;
         local radius = radius3:length();
         self.cachedBoundingSphere = {middle, radius};
     end
@@ -202,8 +202,8 @@ function CSGPolygon:boundingBox()
         else
             minpoint:set(vertices[1].pos);
         end
-        maxpoint = minpoint;
-        for i = 1,numvertices do
+        maxpoint:set(minpoint);
+        for i = 2,numvertices do
             local point = vertices[i].pos;
             minpoint = minpoint:min(point);
             maxpoint = maxpoint:max(point);

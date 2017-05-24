@@ -42,6 +42,7 @@ local CAG = commonlib.gettable("Mod.NplCadLibrary.cag.CAG");
 local CSGTree = commonlib.gettable("Mod.NplCadLibrary.csg.CSGTree");
 local CSG = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSG"));
 
+CSG.EPSILON = tonumber("1e-5");
 function CSG:ctor()
 	self.polygons = self.polygons or {};
 	tableext.clear(self.polygons);

@@ -19,8 +19,14 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygonTreeNode.lua");
 local CSGPolygonTreeNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygonTreeNode");
 -------------------------------------------------------
 ]]
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
+local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
+local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
+local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSGPolygonTreeNode = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygonTreeNode"));
 
 local function indexOf(list,child)
@@ -81,68 +87,61 @@ function CSGPolygonTreeNode:invert()
          self:invertSub();
     end
 end
+function CSGPolygonTreeNode:invertSub()
+    self:visit(function(node)
+        if (node.polygon) then
+            node.polygon = node.polygon:flip();
+        end    
+    end)
+end
 function CSGPolygonTreeNode:getPolygon()
     return self.polygon;
 end
-function CSGPolygonTreeNode:getPolygons(result)
-    local children = {self};
-    local queue = {children};
-    local i, j, l, node;
-    -- queue size can change in loop, don't cache length
-    for i = 1,table.getn(queue) do
-        children = queue[i];
-        for j = 1,table.getn(children) do
-            node = children[j];
-            if (node.polygon) then
-                -- the polygon hasn't been broken yet. We can ignore the children and return our polygon:
-                table.insert(result,node.polygon);
-            else
-                -- our polygon has been split up and broken, so gather all subpolygons from the children
-                table.insert(queue,node.children);
-            end
-        end
+function CSGPolygonTreeNode:visit(func)
+    if(not func)then return end
+    func(self);
+    local k,v;
+    for k,v in ipairs (self.children) do
+        v:visit(func(v));
     end
+end
+function CSGPolygonTreeNode:getPolygons(result)
+    self:visit(function(node)
+        if (node.polygon) then
+            table.insert(result,node.polygon);
+        end    
+    end)
 end
 -- split the node by a plane; add the resulting nodes to the frontnodes and backnodes array
 -- If the plane doesn't intersect the polygon, the 'this' object is added to one of the arrays
 -- If the plane does intersect the polygon, two new child nodes are created for the front and back fragments,
 --  and added to both arrays.
 function CSGPolygonTreeNode:splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes)
-    if(#self.children > 0)then
-         local queue = {self.children};
-         local i, j, l, node, nodes;
-         -- queue.length can increase, do not cache
-         for i = 1,table.getn(queue) do
-            nodes = queue[i];
-            for j = 1,table.getn(nodes) do
-                node = nodes[j];
-                if (table.getn(node.children) > 0) then
-                    table.insert(queue,node.children);
-                else
-                    -- no children. Split the polygon:
-                    node:_splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes);
-                end
-            end
-         end
-    else
-        self:_splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes);
-    end
+    self:visit(function(node)
+        node:_splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes);
+    end)
 end
 -- only to be called for nodes with no children
 function CSGPolygonTreeNode:_splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes)
     local polygon = self.polygon;
     if (polygon) then
+        -- ignore self.polygon split itself
+        local polygon_plane = polygon:GetPlane();
+        if(polygon_plane:equals(plane))then
+            return
+        end
         local bound = polygon:boundingSphere();
         local sphereradius = bound[2] + tonumber("1e-4");
         local planenormal = plane:GetNormal();
         local spherecenter = bound[1];
         local d = planenormal:dot(spherecenter) - plane[4];
+
         if (d > sphereradius) then
             table.insert(frontnodes,self);
         elseif(d < -sphereradius) then
             table.insert(backnodes,self);
         else
-            local splitresult = plane:splitPolygon(polygon);
+            local splitresult = CSGPolygonTreeNode.splitPolygon(plane,polygon);
             if(splitresult.type == 0)then
                 -- coplanar front:
                 table.insert(coplanarfrontnodes,self);
@@ -169,6 +168,148 @@ function CSGPolygonTreeNode:_splitByPlane(plane, coplanarfrontnodes, coplanarbac
         end
     end
 end
+-- Returns object:
+-- .type:
+--   0: coplanar-front
+--   1: coplanar-back
+--   2: front
+--   3: back
+--   4: spanning
+-- In case the polygon is spanning, returns:
+-- .front: a CSG.Polygon of the front part
+-- .back: a CSG.Polygon of the back part
+function CSGPolygonTreeNode.splitPolygon(plane,polygon)
+    local result = {
+        type = nil,
+        front = nil,
+        back = nil
+    };
+    if(not plane or not polygon)then
+        return result;
+    end
+    local this_plane = plane;
+    local planenormal = plane:GetNormal();
+    local vertices = polygon.vertices;
+    local numvertices = #vertices;
+    local polygon_plane = polygon:GetPlane();
+    if (polygon_plane:equals(this_plane)) then
+        result.type = 0;
+    else 
+        local EPS = CSG.EPSILON;
+        local thisw = this_plane[4];
+        local hasfront = false;
+        local hasback = false;
+        local vertexIsBack = {};
+        local MINEPS = -EPS;
+        for i = 1,numvertices do
+            local t = planenormal:clone():dot(vertices[i].pos) - thisw;
+            local isback;
+            if(t < 0)then
+                isback = "true";
+            else
+                isback = "false";
+            end
+            table.insert(vertexIsBack,isback);
+            if (t > EPS) then hasfront = true; end
+            if (t < MINEPS) then hasback = true; end
+
+        end
+        if ((not hasfront) and (not hasback)) then
+            -- all points coplanar
+            local t = planenormal:clone():dot(polygon_plane:GetNormal());
+            if(t >= 0)then
+                result.type = 0;
+            else
+                result.type = 1;
+            end
+        elseif (not hasback) then
+            result.type = 2;
+        elseif (not hasfront) then
+            result.type = 3;
+        else
+            -- spanning
+            result.type = 4;
+            local frontvertices = {};
+            local backvertices = {};
+            local isback = vertexIsBack[1];
+            local vertexindex;
+            for vertexindex = 1,numvertices do
+                local vertex = vertices[vertexindex];
+                local nextvertexindex = vertexindex + 1;
+                if (nextvertexindex >= numvertices) then nextvertexindex = 1; end
+                local nextisback = vertexIsBack[nextvertexindex];
+                if (isback == nextisback) then
+                    -- line segment is on one side of the plane:
+                    if (isback == "true") then
+                        table.insert(backvertices,vertex);
+                    else
+                        table.insert(frontvertices,vertex);
+                    end
+                else
+                    -- line segment intersects plane:
+                    local point = vertex.pos;
+                    local nextpoint = vertices[nextvertexindex].pos;
+                    local intersectionpoint = CSGPolygonTreeNode.splitLineBetweenPoints(this_plane, point, nextpoint);
+                    local intersectionvertex = CSGVertex:new():init(intersectionpoint);
+                    if (isback) then
+                        table.insert(backvertices,vertex);
+                        table.insert(backvertices,intersectionvertex);
+                        table.insert(frontvertices,intersectionvertex);
+                    else
+                        table.insert(frontvertices,vertex);
+                        table.insert(frontvertices,intersectionvertex);
+                        table.insert(backvertices,intersectionvertex);
+                    end
+                end
+                isback = nextisback;
+            end -- for vertexindex
+            -- remove duplicate vertices:
+            local EPS_SQUARED = CSG.EPSILON * CSG.EPSILON;
+            if (#backvertices >= 3) then
+                local prevvertex = backvertices[#backvertices - 1];
+                for vertexindex = 1, #backvertices do
+                    local vertex = backvertices[vertexindex];
+                    if (vertex and vertex.pos:dist2(prevvertex.pos) < EPS_SQUARED) then
+                        tableext.splice(backvertices,vertexindex, 1);
+                        vertexindex = vertexindex - 1;
+                    end
+                    prevvertex = vertex;
+                end
+            end
+       
+            if (#frontvertices >= 3) then
+                local prevvertex = frontvertices[#frontvertices - 1];
+                for vertexindex = 1, #frontvertices do
+                    local vertex = frontvertices[vertexindex];
+                    if (vertex and vertex.pos:dist2(prevvertex.pos) < EPS_SQUARED) then
+                        tableext.splice(frontvertices,vertexindex, 1);
+                        vertexindex = vertexindex - 1;
+                    end
+                    prevvertex = vertex;
+                end
+            end
+            if (#frontvertices >= 3) then
+                result.front = CSGPolygon:new():init(frontvertices, polygon.shared, polygon_plane);
+            end
+            if (#backvertices >= 3) then
+                result.back = CSGPolygon:new():init(backvertices, polygon.shared, polygon_plane);
+            end
+        end
+    end
+    return result;
+end
+function CSGPolygonTreeNode.splitLineBetweenPoints(plane,p1,p2)
+    local direction = p2 - p1;
+    local w = plane[4];
+    local normal = plane:GetNormal();
+    local labda = (w - normal:clone():dot(p1)) / normal:clone():dot(direction);
+    if (not labda) then labda = 0; end
+    if (labda > 1) then labda = 1; end
+    if (labda < 0) then labda = 0; end
+    local result = p1 + (direction:MulByFloat(labda));
+    return result;
+
+end
 -- PRIVATE methods from here:
 -- add child to a node
 -- this should be called whenever the polygon is split
@@ -181,21 +322,7 @@ function CSGPolygonTreeNode:addChild(polygon)
     table.insert(self.children,newchild);
     return newchild;
 end
-function CSGPolygonTreeNode:invertSub()
-    local children = {self};
-    local queue = {children};
-    local i, j, l, node;
-    for i = 1,#queue do
-        children = queue[i];
-        for j = 1,#children do
-            node = children[j];
-            if (node.polygon) then
-                node.polygon = node.polygon:flip();
-            end
-            table.insert(queue,node.children);
-        end
-    end
-end
+
 function CSGPolygonTreeNode:recursivelyInvalidatePolygon()
     local node = self;
     while (node.polygon) do

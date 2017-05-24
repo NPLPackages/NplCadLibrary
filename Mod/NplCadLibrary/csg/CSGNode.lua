@@ -26,12 +26,13 @@ local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSGNode = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGNode"));
 
 function CSGNode:ctor()
-end
-function CSGNode:init(parent)
     self.plane = nil;
     self.front = nil;
     self.back = nil;
     self.polygontreenodes = {};
+    self.parent = nil;
+end
+function CSGNode:init(parent)
     self.parent = parent;
     return self;
 end
@@ -121,17 +122,18 @@ function CSGNode:addPolygonTreeNodes(polygontreenodes)
     while(args) do
         node = args.node;
         polygontreenodes = args.polygontreenodes;
+
         local continue = true
         if(#polygontreenodes == 0)then
             args = stack:pop();
             continue = false;
         end
         if(continue)then
-            local _this = node;
             if(not node.plane)then
                 local bestplane = polygontreenodes[1]:getPolygon():GetPlane();
                 node.plane = bestplane;
             end
+            local _this = node;
             local frontnodes = {};
             local backnodes = {};
             for i = 1,#polygontreenodes do
