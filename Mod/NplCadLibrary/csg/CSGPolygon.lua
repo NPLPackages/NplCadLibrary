@@ -64,7 +64,7 @@ end
 function CSGPolygon:GetPlane()
 	if(not self.plane) then
 		local vertices = self.vertices;
-		self.plane:set(Plane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos));	
+		self.plane = Plane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos);
 	end
 	return self.plane;
 end

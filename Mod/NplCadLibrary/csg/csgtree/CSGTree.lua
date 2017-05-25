@@ -4,12 +4,12 @@ Author(s): leio
 Date: 2017/5/23
 Desc: 
 -------------------------------------------------------
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGTree.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/csgtree/CSGTree.lua");
 local CSGTree = commonlib.gettable("Mod.NplCadLibrary.csg.CSGTree");
 -------------------------------------------------------
 ]]
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygonTreeNode.lua");
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGNode.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/csgtree/CSGPolygonTreeNode.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/csgtree/CSGNode.lua");
 local CSGPolygonTreeNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygonTreeNode");
 local CSGNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGNode");
 

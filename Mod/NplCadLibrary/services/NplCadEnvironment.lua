@@ -488,22 +488,15 @@ function NplCadEnvironment.read_cylinder(p,...)
 	end
 	local o;
 
-    -- y axis is up
-    node:setRotation2(vector3d:new(1,0,0),-90*math_pi/180);
-
 	if(is_table(p) and (p.from and p.to)) then
 		if(round)then
-			--NOTE:Unimplemented
-			--o = CSGModel:new():init(CSGFactory.roundedCylinder({from = p.from, to = p.to, radiusStart = r1,radiusEnd = r2, resolution = fn}),"roundedCylinder");
-			o = CSGModel:new():init(CSGFactory.cylinder({from = p.from,to = p.to,radiusStart = r1,radiusEnd = r2,resolution = fn}),"cylinder");
+			o = CSGModel:new():init(CSGFactory.roundedCylinder({from = p.from, to = p.to, radius = r1, resolution = fn}),"roundedCylinder");
 		else
 			o = CSGModel:new():init(CSGFactory.cylinder({from = p.from,to = p.to,radiusStart = r1,radiusEnd = r2,resolution = fn}),"cylinder");
 		end
 	else
 		if(round)then
-			--NOTE:Unimplemented
-			--o = CSGModel:new():init(CSGFactory.roundedCylinder({from = {0,0,0}, to = {0,0,h},radiusStart = r1, radiusEnd = r2, resolution = fn}),"roundedCylinder");
-			o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,0,h}, radiusStart = r1, radiusEnd = r2, resolution = fn}),"cylinder");
+			o = CSGModel:new():init(CSGFactory.roundedCylinder({from = {0,0,0}, to = {0,0,h}, radius = r1, resolution = fn}),"roundedCylinder");
 		else
 			o = CSGModel:new():init(CSGFactory.cylinder({from = {0,0,0}, to = {0,0,h}, radiusStart = r1, radiusEnd = r2, resolution = fn}),"cylinder");
 		end

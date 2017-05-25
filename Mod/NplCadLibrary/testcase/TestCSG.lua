@@ -7,7 +7,11 @@ Desc:
 NPL.load("(gl)Mod/NplCadLibrary/testcase/TestCSG.lua");
 local TestCSG = commonlib.gettable("Mod.NplCadLibrary.testcase.TestCSG");
 TestCSG.test_read_cube();
+TestCSG.test_stretchAtPlane();
+TestCSG.test_read_sphere();
+TestCSG.test_read_cylinder();
 TestCSG.test_read_square();
+TestCSG.test_rectangle_extrude();
 -------------------------------------------------------
 --]]
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
@@ -89,21 +93,22 @@ function TestCSG.create(type, options, scene, index, last_x, last_y, last_z, str
     scene:addChild(node);
     return next_x,next_y,next_z;
 end
+--passed
 function TestCSG.test_read_cube()
     local options = {
---        {},
---        1,
---        {size = 1},
---        {size = { 1, 2, 3 } },
---        {size = 1, center = true, },
---        {size = 1, center = { false, false, false}, },
-        {size = { 1, 2, 3 }, radius = {0.1,0.5,0.1}, round = true, },
---        { center = { 0, 0, 0}, radius = 0.2, fn = 8, },
---        { corner1 = { 0, 0, 0}, corner2 = { 5, 4, 2 }, },
-
+        {},
+        1,
+        {size = 1},
+        {size = { 1, 2, 3 } },
+        {size = 1, center = true, },
+        {size = 1, center = { false, false, false}, },
+        {size = { 1, 2, 3 }, radius = {0.1,0.2,0.3}, round = true, },
+        {size = { 4, 4, 4 }, radius = {1,1,1}, round = true, },
+        {center = { 0, 0, 0}, radius = 0.2, fn = 8, },
     }
     TestCSG.create_objects("cube",options,"test/test_read_cube.stl");
 end
+--passed
 function TestCSG.test_stretchAtPlane()
     local scene = Scene:new();
     local csg = CSGFactory.sphere({radius = 1, resolution = 8});
@@ -112,8 +117,8 @@ function TestCSG.test_stretchAtPlane()
 
     local innerradius = {3,4,5};
     csg = csg:stretchAtPlane(vector3d:new({1, 0, 0}), vector3d:new({0, 0, 0}), 2*innerradius[1]);
---    csg = csg:stretchAtPlane(vector3d:new({0, 1, 0}), vector3d:new({0, 0, 0}), 2*innerradius[2]);
---    csg = csg:stretchAtPlane(vector3d:new({0, 0, 1}), vector3d:new({0, 0, 0}), 2*innerradius[3]);
+    csg = csg:stretchAtPlane(vector3d:new({0, 1, 0}), vector3d:new({0, 0, 0}), 2*innerradius[2]);
+    csg = csg:stretchAtPlane(vector3d:new({0, 0, 1}), vector3d:new({0, 0, 0}), 2*innerradius[3]);
 
 	local node = Node.create("");
     local o = CSGModel:new():init(csg);
@@ -123,19 +128,28 @@ function TestCSG.test_stretchAtPlane()
 
     CSGService.saveAsSTL(scene,"test/test_stretchAtPlane.stl");
 end
+--passed
 function TestCSG.test_read_sphere()
-    local scene = Scene:new();
-    
-    local node_1 = NplCadEnvironment.read_sphere({});
-    scene:addChild(node_1);
-    CSGService.saveAsSTL(scene,"test/test_read_sphere.stl",true);
+    local options = {
+        {},
+        1, -- center = true is default
+        {r = 2, fn = 100, center = false},
+    }
+    TestCSG.create_objects("sphere",options,"test/test_read_sphere.stl");
 end
-
+--passed
 function TestCSG.test_read_cylinder()
-    local scene = Scene:new();
-    local node = NplCadEnvironment.read_cylinder({ r1 = 3, r2 = 0, h = 10});
-    scene:addChild(node);
-    CSGService.saveAsSTL(scene,"test/test_read_cylinder.stl",true);
+    local options = {
+        {},
+        { r = 1, h = 10, },
+        { r = 1, h = 10, center = true, }, --center = false is default
+        { r = 1, h = 10, center = {true,true,false}, }, 
+        { r = 5, h = 10, round = true, }, 
+        { r1 = 3, r2 = 0, h = 10, },
+        { d1 = 1, d2 = 0.5, h = 10, },
+        { from = {0,0,0}, to = {0,0,10}, r1 = 1, r2 = 2, fn = 50, },
+    }
+    TestCSG.create_objects("cylinder",options,"test/test_read_cylinder.stl");
 end
 --passed
 function TestCSG.test_read_square()

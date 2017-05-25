@@ -15,7 +15,7 @@ Desc:
     // remove() removes a polygon from the tree. Once a polygon is removed, the parent polygons are invalidated
     // since they are no longer intact.
 -------------------------------------------------------
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygonTreeNode.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/csgtree/CSGPolygonTreeNode.lua");
 local CSGPolygonTreeNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygonTreeNode");
 -------------------------------------------------------
 ]]
@@ -100,9 +100,11 @@ end
 function CSGPolygonTreeNode:visit(func)
     if(not func)then return end
     func(self);
-    local k,v;
-    for k,v in ipairs (self.children) do
-        v:visit(func(v));
+    local children = self.children;
+    local len = #children;
+    for k = 1, len do
+        local child = self.children[k];
+        child:visit(func);
     end
 end
 function CSGPolygonTreeNode:getPolygons(result)
@@ -117,9 +119,9 @@ end
 -- If the plane does intersect the polygon, two new child nodes are created for the front and back fragments,
 --  and added to both arrays.
 function CSGPolygonTreeNode:splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes)
-    self:visit(function(node)
-        node:_splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes);
-    end)
+    --self:visit(function(node)
+        self:_splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes);
+    --end)
 end
 -- only to be called for nodes with no children
 function CSGPolygonTreeNode:_splitByPlane(plane, coplanarfrontnodes, coplanarbacknodes, frontnodes, backnodes)
@@ -202,7 +204,7 @@ function CSGPolygonTreeNode.splitPolygon(plane,polygon)
         local vertexIsBack = {};
         local MINEPS = -EPS;
         for i = 1,numvertices do
-            local t = planenormal:clone():dot(vertices[i].pos) - thisw;
+            local t = planenormal:dot(vertices[i].pos) - thisw;
             local isback;
             if(t < 0)then
                 isback = "true";
@@ -216,7 +218,7 @@ function CSGPolygonTreeNode.splitPolygon(plane,polygon)
         end
         if ((not hasfront) and (not hasback)) then
             -- all points coplanar
-            local t = planenormal:clone():dot(polygon_plane:GetNormal());
+            local t = planenormal:dot(polygon_plane:GetNormal());
             if(t >= 0)then
                 result.type = 0;
             else
@@ -302,7 +304,7 @@ function CSGPolygonTreeNode.splitLineBetweenPoints(plane,p1,p2)
     local direction = p2 - p1;
     local w = plane[4];
     local normal = plane:GetNormal();
-    local labda = (w - normal:clone():dot(p1)) / normal:clone():dot(direction);
+    local labda = (w - normal:dot(p1)) / normal:dot(direction);
     if (not labda) then labda = 0; end
     if (labda > 1) then labda = 1; end
     if (labda < 0) then labda = 0; end

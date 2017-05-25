@@ -13,7 +13,7 @@ Desc:
 
 This class uses copy on write policy
 -------------------------------------------------------
-NPL.load("(gl)Mod/NplCadLibrary/csg/CSGNode.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/csgtree/CSGNode.lua");
 local CSGNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGNode");
 -------------------------------------------------------
 ]]
@@ -36,8 +36,23 @@ function CSGNode:init(parent)
     self.parent = parent;
     return self;
 end
--- Convert solid space to empty space and empty space to solid space.
 function CSGNode:invert()
+    local plane = self.plane;
+    if(plane)then
+        self.plane = self.plane:clone():inverse();
+    end
+    if(self.front)then
+        self.front:invert__();
+    end
+    if(self.back)then
+        self.back:invert__();
+    end
+    local temp = self.front;
+    self.front = self.back;
+    self.back = temp;
+end
+-- Convert solid space to empty space and empty space to solid space.
+function CSGNode:invert__()
     local queue = {self};
     local i,node;
     for i = 1, #queue do
