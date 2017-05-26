@@ -10,8 +10,16 @@ TestCSG.test_read_cube();
 TestCSG.test_stretchAtPlane();
 TestCSG.test_read_sphere();
 TestCSG.test_read_cylinder();
+TestCSG.test_read_polyhedron();
+TestCSG.test_read_circle()
 TestCSG.test_read_square();
+TestCSG.test_read_rectangle()
+TestCSG.test_read_roundedRectangle()
 TestCSG.test_rectangle_extrude();
+TestCSG.test_read_polygon();
+TestCSG.test_read_path2d();
+
+TestCSG.test_read_linear_extrude();
 -------------------------------------------------------
 --]]
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
@@ -72,8 +80,31 @@ function TestCSG.create(type, options, scene, index, last_x, last_y, last_z, str
         node = NplCadEnvironment.read_sphere(options);
     elseif(type == "cylinder")then
         node = NplCadEnvironment.read_cylinder(options);
+    elseif(type == "polyhedron")then
+        node = NplCadEnvironment.read_polyhedron(options)
+    elseif(type == "circle")then
+        node = NplCadEnvironment.read_circle(options);
     elseif(type == "square")then
         node = NplCadEnvironment.read_square(options);
+    elseif(type == "rectangle")then
+        node = NplCadEnvironment.read_rectangle(options);
+    elseif(type == "roundedRectangle")then
+        node = NplCadEnvironment.read_roundedRectangle(options);
+    elseif(type == "polygon")then
+        node = NplCadEnvironment.read_polygon(options);
+    elseif(type == "path2d")then
+        local path = NplCadEnvironment.path2d(options);
+        node = NplCadEnvironment.read_expandToCAG(path)
+    elseif(type == "linear_extrude")then
+        local shape = options.shape;
+        local options = options.options;
+        node = NplCadEnvironment.read_linear_extrude(shape,options)    
+    elseif(type == "rotate_extrude")then
+        local shape = options.shape;
+        local options = options.options;
+        local trans = options.translation or {0,0,0};
+        shape:setTranslation(trans[1],trans[2],trans[3]);
+        node = NplCadEnvironment.read_rotate_extrude(shape,options)    
     end
     local next_x;
     if(index ~= 0)then
@@ -152,12 +183,65 @@ function TestCSG.test_read_cylinder()
     TestCSG.create_objects("cylinder",options,"test/test_read_cylinder.stl");
 end
 --passed
+function TestCSG.test_read_polyhedron()
+    local options = {
+        {
+        points = { { 10,10,0 }, { 10,-10,0 }, { -10,-10,0 }, { -10,10,0 }, -- the four points at base
+                   { 0,0,10 } },                                           -- the apex point 
+        triangles = { { 0,1,4 }, { 1,2,4 }, { 2,3,4 }, { 3,0,4 },          -- each triangle side
+               { 1,0,3 },{ 2,1,3 } }                                       -- two triangles for square base
+        },
+        { 
+         points = {
+               {0, -10, 60}, {0, 10, 60}, {0, 10, 0}, {0, -10, 0}, {60, -10, 60}, {60, 10, 60}, 
+               {10, -10, 50}, {10, 10, 50}, {10, 10, 30}, {10, -10, 30}, {30, -10, 50}, {30, 10, 50}
+               }, 
+         triangles = {
+                  {0,3,2},  {0,2,1},  {4,0,5},  {5,0,1},  {5,2,4},  {4,2,3},
+                  {6,8,9},  {6,7,8},  {6,10,11},{6,11,7}, {10,8,11},
+                  {10,9,8}, {3,0,9},  {9,0,6},  {10,6, 0},{0,4,10},
+                  {3,9,10}, {3,10,4}, {1,7,11}, {1,11,5}, {1,8,7},  
+                  {2,8,1},  {8,2,11}, {5,11,2}
+                  }
+        },
+    }
+    TestCSG.create_objects("polyhedron",options,"test/test_read_polyhedron.stl");
+end
+--passed
+function TestCSG.test_read_circle()
+    local options = {
+        2,
+        {2},
+        { r = 2, fn = 5, },
+        { r = 3, center = true, } -- center = false is default
+    }
+    TestCSG.create_objects("circle",options,"test/test_read_circle.stl");
+end
+--passed
 function TestCSG.test_read_square()
     local options = {
-    {},
-    {1,2}
+        {},
+        2,
+        {2,3},
+        { size = { 2, 2 }, center = true, }
     }
     TestCSG.create_objects("square",options,"test/test_read_square.stl");
+end
+--passed
+function TestCSG.test_read_rectangle()
+
+    local options = {
+        { center = {0,0}, radius = {1,2}, },
+    }
+    TestCSG.create_objects("rectangle",options,"test/test_read_rectangle.stl");
+
+end
+--passed
+function TestCSG.test_read_roundedRectangle()
+    local options = {
+        { center = {0,0}, radius = {1,2}, roundradius = 1, resolution = 16, },
+    }
+    TestCSG.create_objects("roundedRectangle",options,"test/test_read_roundedRectangle.stl");
 end
 --passed
 function TestCSG.test_rectangle_extrude()
@@ -173,5 +257,53 @@ function TestCSG.test_rectangle_extrude()
 
     CSGService.saveAsSTL(scene,"test/test_rectangle_extrude.stl");
 end
-
+--passed
+function TestCSG.test_read_polygon()
+    local options = {
+        { {0,0},{3,0},{3,3} },
+        { points = { {0,0},{3,0},{3,3} } },
+        { points = { {0,0},{3,0},{3,3},{0,6} }, paths = { {1,2,3},{2,3,4} } }, -- note: start index is 1 in lua table
+    }
+    TestCSG.create_objects("polygon",options,"test/test_read_polygon.stl");
+end
+--passed
+function TestCSG.test_read_path2d()
+    local options = {
+        --{ {0,0},{3,0},{3,3} },
+		--{ points = { {0,0},{3,0},{3,3},{0,6} } },
+		{ arc = {center={0,0,0},radius=1,startangle=0,endangle= 360,resolution=32,maketangent=false}},
+    }
+    TestCSG.create_objects("path2d",options,"test/test_read_path2d.stl");
+end
+--passed
+function TestCSG.test_read_linear_extrude()
+    local options = {
+        {
+            shape = NplCadEnvironment.read_square( { size = { 3, 3 }, center = true, }),
+            options = { offset = { 0, 0, 10 }, twistangle = 360, twiststeps = 100, },
+        },
+        {
+            shape = NplCadEnvironment.read_rectangle( { center = {0,0}, radius = {3,3}, }),
+            options = { offset = { 0, 0, 10 }, twistangle = 360, twiststeps = 100, },
+        },
+        {
+            shape = NplCadEnvironment.read_roundedRectangle( { center = {0,0}, radius = {3,3}, }),
+            options = { offset = { 0, 0, 10 }, twistangle = 360, twiststeps = 100, },
+        },
+        {
+            shape = NplCadEnvironment.read_circle({ r = 3, center = true, }),
+            options = { offset = { 0, 0, 10 }, twistangle = 360, twiststeps = 100, },
+        },
+    }
+    TestCSG.create_objects("linear_extrude",options,"test/test_read_linear_extrude.stl");
+end
+function TestCSG.test_read_rotate_extrude()
+    local options = {
+        {
+            shape = NplCadEnvironment.read_square( { size = { 3, 3 }, center = true, }),
+            options = { translation = {4,0,0}, fn = 16, },
+        },
+    }
+    TestCSG.create_objects("rotate_extrude",options,"test/test_read_rotate_extrude.stl");
+end
 

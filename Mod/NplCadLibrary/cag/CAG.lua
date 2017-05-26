@@ -291,11 +291,10 @@ function CAG:_toWallPolygons(options)
 	end
     return polygons;
 end
-
-
-function CAG:union(cag)
+--if is_array = true, cag include multi cag node
+function CAG:union(cag,is_array)
     local cags;
-    if (tableext.is_array(cag)) then
+    if (is_array) then
         cags = cag;
     else
         cags = {cag};
@@ -307,9 +306,10 @@ function CAG:union(cag)
     return CAG.fromFakeCSG(r);
 end
 
-function CAG:subtract(cag)
+--if is_array = true, cag include multi cag node
+function CAG:subtract(cag,is_array)
     local cags;
-    if (tableext.is_array(cag)) then
+    if (is_array) then
         cags = cag;
     else
         cags = {cag};
@@ -322,9 +322,10 @@ function CAG:subtract(cag)
     return r;
 end
 
+--if is_array = true, cag include multi cag node
 function CAG:intersect(cag)
     local cags;
-    if (tableext.is_array(cag)) then
+    if (is_array) then
         cags = cag;
     else
         cags = {cag};
@@ -507,7 +508,7 @@ function CAG:expandedShell(radius, resolution)
         end
     end
     local result = CAG:new();
-    result = result:union(cags);
+    result = result:union(cags,true);
     return result;
 end
 

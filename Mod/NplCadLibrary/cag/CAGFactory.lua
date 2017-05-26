@@ -148,6 +148,7 @@ function CAGFactory.roundedRectangle(options)
     roundradius = math.min(roundradius, maxroundradius);
     roundradius = math.max(0, roundradius);
     radius = vector2d:new(radius[1] - roundradius, radius[2] - roundradius);
+
     local rect = CAGFactory.rectangle({
         center = center,
         radius = radius

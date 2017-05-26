@@ -25,6 +25,11 @@ NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/CSGBuildContext.lua");
 NPL.load("(gl)script/ide/STL.lua");
 NPL.load("(gl)script/ide/math/vector.lua");
+NPL.load("(gl)script/ide/math/math3d.lua");
+NPL.load("(gl)script/ide/math/Matrix4.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
@@ -40,6 +45,12 @@ local Color = commonlib.gettable("Mod.NplCadLibrary.utils.Color");
 local CSGBuildContext = commonlib.gettable("Mod.NplCadLibrary.services.CSGBuildContext");
 local ArrayMap = commonlib.gettable("commonlib.ArrayMap");
 local vector3d = commonlib.gettable("mathlib.vector3d");
+local math3d = commonlib.gettable("mathlib.math3d");
+local Matrix4 = commonlib.gettable("mathlib.Matrix4");
+local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
+local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
+local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
+
 local math_pi = 3.1415926;
 local function is_string(input)
 	if(input and type(input) == "string")then
@@ -67,7 +78,7 @@ local function is_node(input)
 		return true;
 	end
 end
-local function is_sharp(input)
+local function is_shape(input)
 	if(is_node(input) and input.hasTag and input:hasTag("shape")) then
 		return true;
 	end
@@ -729,12 +740,35 @@ end
 --[[
 		circle
 --]]
-function NplCadEnvironment.circle(options,...)
+function NplCadEnvironment.circle(options)
 	local self = getfenv(2);
 	return self:circle__(options);
 end
 
-function NplCadEnvironment.read_circle(p,...)
+function NplCadEnvironment.read_circle(p)
+	local node = Node.create("");
+    local r = 1;
+    local off;
+    local fn = CSGFactory.defaultResolution2D;
+    if(is_table(p) and p.r)then
+        r = p.r;
+    end
+    if(is_table(p) and p.fn)then
+        fn = p.fn;
+    end
+    if(is_number(p))then
+        r = p;
+    end
+    off = { r, r};
+    if(is_table(p) and p.center == true)then
+        off = { 0, 0 };
+    end
+	local o = CAGModel:new():init(CAGFactory.circle({ center = off, radius = r, resolution = fn}),"circle");
+    node:setDrawable(o);
+	node:setTag("shape","circle");
+	return node;
+end
+function NplCadEnvironment.read_circle2(p,...)
 	local node = Node.create("");
 	local r = 1;
 	local fn = CSGFactory.defaultResolution2D;
@@ -805,10 +839,10 @@ end
 	circle({r: 3, center = true});    -- center: false (default)
 	circle({r: 3, center = {true, true}});    -- individual x,z center flags
 ]]
-function NplCadEnvironment:circle__(options,...)
+function NplCadEnvironment:circle__(options)
 	options = options or {};
 	local parent = self:getNode__();
-	local node = NplCadEnvironment.read_circle(options,...)
+	local node = NplCadEnvironment.read_circle(options)
 	parent:addChild(node);
 	return node;
 end
@@ -822,6 +856,28 @@ function NplCadEnvironment.square(options)
 end
 
 function NplCadEnvironment.read_square(p)
+	local node = Node.create("");
+    local v = { 1, 1 };
+    local off;
+    if(is_number(p))then
+        v = { p, p };
+    end
+    if(is_array(p))then
+        v = p;
+    end
+    if(is_table(p) and p.size)then
+        v = p.size
+    end
+    off = { v[1] /2, v[2] /2, }
+    if(is_table(p) and p.center == true)then
+        off = { 0, 0 };
+    end
+	local o = CAGModel:new():init(CAGFactory.rectangle({ center = off, radius = { v[1] / 2, v[2] / 2 } }),"square");
+    node:setDrawable(o);
+	node:setTag("shape","square");
+	return node;
+end
+function NplCadEnvironment.read_square2(p)
 	local node = Node.create("");
 	local s = 1;
 	local v = nil;
@@ -912,8 +968,6 @@ function NplCadEnvironment:square__(options)
 	parent:addChild(node);
 	return node;
 end
-
-
 --[[
 		polygon
 --]]
@@ -935,6 +989,31 @@ function NplCadEnvironment:polygon__(options)
 end
 
 function NplCadEnvironment.read_polygon(p)
+	local node = Node.create("");
+	local points = {};
+    if(p.paths and is_array(p.paths) and is_array(p.paths[1]))then  -- pa(th): [[0,1,2],[2,3,1]] (two paths)
+        for j = 1, #(p.paths) do
+            for i = 1, #(p.paths[j]) do
+                points[i] = p.points[p.paths[j][i]];
+            end
+        end
+    elseif(p.paths and is_array(p.paths))then  -- pa(th): [0,1,2,3,4] (single path)
+        for i = 1, #(p.paths) do
+            points[i] = p.points[p.paths[i]];
+        end
+    else
+        if(is_array(p))then
+            points = p;
+        else
+            points = p.points;
+        end
+    end
+	local o = CAGModel:new():init(CAGFactory.polygon(points),"polygon");
+    node:setDrawable(o);
+	node:setTag("shape","polygon");
+	return node;
+end
+function NplCadEnvironment.read_polygon2(p)
 	local node = Node.create("");
 	local points = {};
 	local off = {0,0};
@@ -1162,8 +1241,8 @@ function NplCadEnvironment.read_linear_extrude(shape,options)
 	local o;
 	local twistangle = 0;
 	local twiststeps = 32
-	local x,y,z = 0,1,0;
-	if(is_sharp(shape)) then
+	local x,y,z = 0,0,1;
+	if(is_shape(shape)) then
 		node = shape;
 		obj = node:getDrawable().cag_node;
 		if(obj.extrude) then
@@ -1227,13 +1306,57 @@ function NplCadEnvironment:rotate_extrude__(shape,options)
 	parent:addChild(node);
 	return node;
 end
-function NplCadEnvironment.read_rotate_extrude(shape,options)
+function NplCadEnvironment.read_rotate_extrude(o,p)
+	local node = Node.create("");
+
+    local fn = p.fn or CSGFactory.defaultResolution2D;
+    if(fn<3) then
+        fn = 3;
+    end
+    o = o:getDrawable().cag_node;
+   local ps = {};
+   for i = 1, fn do
+      -- o.{x,y} -> rotate([0,0,i:0..360], obj->{o.x,0,o.y})
+      for j = 1, #(o.sides) do
+         -- has o.sides[j].vertex{0,1}.pos (only x,y)
+         local p = {};
+         local m;
+
+         m = Matrix4.rotationZ(i/fn*360);
+         p[1] = vector3d:new(o.sides[j].vertex0.pos[1],0,o.sides[j].vertex0.pos[2]);
+         p[1] = math3d.MatrixMultiplyVector(nil, m, p[1])
+         
+         p[2] = vector3d:new(o.sides[j].vertex1.pos[1],0,o.sides[j].vertex1.pos[2]);
+         p[2] = math3d.MatrixMultiplyVector(nil, m, p[2])
+         
+         m = Matrix4.rotationZ((i+1)/fn*360);
+         p[3] = vector3d:new(o.sides[j].vertex1.pos[1],0,o.sides[j].vertex1.pos[2]);
+         p[3] = math3d.MatrixMultiplyVector(nil, m, p[3])
+         
+         p[4] = vector3d:new(o.sides[j].vertex0.pos[1],0,o.sides[j].vertex0.pos[2]);
+         p[4] = math3d.MatrixMultiplyVector(nil, m, p[4])
+
+         local p1 = CSGPolygon:new():init({
+            CSGVertex:new():init(p[1]),
+            CSGVertex:new():init(p[2]),
+            CSGVertex:new():init(p[3]),
+            CSGVertex:new():init(p[4]),      -- we make a square polygon (instead of 2 triangles)
+         });
+        table.insert(ps,p1);  
+      end
+   end
+    local o = CSGModel:new():init(CSG.fromPolygons(ps));
+	node:setDrawable(o);
+
+   return node;
+end
+function NplCadEnvironment.read_rotate_extrude2(shape,options)
 	local node = nil;
 	local obj = nil;
 	local o;
 	local angle = 360;
 	local fn = CSGFactory.defaultResolution2D;
-	if(is_sharp(shape)) then
+	if(is_shape(shape)) then
 		node = shape;
 		obj = node:getDrawable().cag_node;
 		if(obj.rotateExtrude) then
@@ -1323,11 +1446,11 @@ function NplCadEnvironment.read_rectangle(p)
 		end
 		if(p.radius)then
 			if(is_array(p.radius))then
-				radius[1] = p.radius[1]/2;
-				radius[2] = p.radius[2]/2; 
+				radius[1] = p.radius[1];
+				radius[2] = p.radius[2]; 
 			elseif(is_number(p.radius)) then
-				radius[1] = p.radius/2;
-				radius[2] = p.radius/2; 				
+				radius[1] = p.radius;
+				radius[2] = p.radius; 				
 			end			
 		end
 	end 
@@ -1378,11 +1501,11 @@ function NplCadEnvironment.read_roundedRectangle(p)
 		end
 		if(p.radius)then
 			if(is_array(p.radius))then
-				radius[1] = p.radius[1]/2;
-				radius[2] = p.radius[2]/2; 
+				radius[1] = p.radius[1];
+				radius[2] = p.radius[2]; 
 			elseif(is_number(p.radius)) then
-				radius[1] = p.radius/2;
-				radius[2] = p.radius/2; 				
+				radius[1] = p.radius;
+				radius[2] = p.radius; 				
 			end			
 		end
 		if(p.roundradius and is_number(p.roundradius))then
