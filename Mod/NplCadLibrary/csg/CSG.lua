@@ -258,7 +258,7 @@ function CSG:projectToOrthoNormalBasis(orthobasis)
             end
         end
     end
-    local result = CAG:new():union(cags);
+    local result = CAG:new():union(cags,true);
     return result;
 end
 -- Cut the solid by a plane. Returns the solid on the back side of the plane
