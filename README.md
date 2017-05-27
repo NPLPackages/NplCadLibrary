@@ -37,6 +37,7 @@
  - [Including Files](#including-files)
  - [Interactive Parametric Models](#interactive-parametric-models)
  - [Scene Node Tags](#scene-node-tags)
+ - [Screenshot](#screenshot)
 ## Primitives 3D
 ### Cube
 ```lua
@@ -291,3 +292,5 @@ defineProperty({
 |:----:|:----:|:----:|
 |csg_action|union/intersection/difference
 |color|{r,g,b}|
+## Screenshot
+![image](https://cloud.githubusercontent.com/assets/5885941/26521519/cae75e9c-431c-11e7-916d-792a5df72092.png)
