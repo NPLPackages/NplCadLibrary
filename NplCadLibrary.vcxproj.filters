@@ -37,6 +37,9 @@
     <Filter Include="Mod\NplCadLibrary\csg\csgtree">
       <UniqueIdentifier>{aba0be56-05b8-46c6-9f5b-1526b3cc5c9d}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Mod\NplCadLibrary\services\interface">
+      <UniqueIdentifier>{f7443858-5e28-418b-9d08-9d9da18ec619}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <None Include="Mod\NplCadLibrary\core\Drawable.lua">
@@ -216,6 +219,24 @@
     </None>
     <None Include="Mod\NplCadLibrary\csg\csgtree\CSGNode.lua">
       <Filter>Mod\NplCadLibrary\csg\csgtree</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\services\interface\Extrusion.lua">
+      <Filter>Mod\NplCadLibrary\services\interface</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\services\interface\Others.lua">
+      <Filter>Mod\NplCadLibrary\services\interface</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\services\interface\Primitive2d.lua">
+      <Filter>Mod\NplCadLibrary\services\interface</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\services\interface\Primitive3d.lua">
+      <Filter>Mod\NplCadLibrary\services\interface</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\services\interface\Transformation.lua">
+      <Filter>Mod\NplCadLibrary\services\interface</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\services\interface\Boolean.lua">
+      <Filter>Mod\NplCadLibrary\services\interface</Filter>
     </None>
   </ItemGroup>
 </Project>
