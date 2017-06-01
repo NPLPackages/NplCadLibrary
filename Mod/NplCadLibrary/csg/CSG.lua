@@ -213,6 +213,21 @@ end
 function CSG:translate(v)
     return self:transform(Matrix4.translation(v));
 end
+function CSG:mirrored(plane)
+    return self:transform(Matrix4.mirroring(plane));
+end
+function CSG:mirroredX()
+    local plane = Plane:new({1,0,0,0});
+    return self:mirrored(plane);
+end
+function CSG:mirroredY()
+    local plane = Plane:new({0,1,0,0});
+    return self:mirrored(plane);
+end
+function CSG:mirroredZ()
+    local plane = Plane:new({0,0,1,0});
+    return self:mirrored(plane);
+end
 -- cut the solid at a plane, and stretch the cross-section found along plane normal
 function CSG:stretchAtPlane(normal, point, length)
     local plane = Plane.fromNormalAndPoint(normal, point);

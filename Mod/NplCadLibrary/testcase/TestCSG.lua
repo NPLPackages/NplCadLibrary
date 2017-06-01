@@ -21,6 +21,7 @@ TestCSG.test_read_path2d();
 TestCSG.test_read_linear_extrude();
 TestCSG.test_read_rectangular_extrude();
 TestCSG.test_read_rotate_extrude();
+TestCSG.test_read_mirror();
 -------------------------------------------------------
 --]]
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
@@ -110,6 +111,11 @@ function TestCSG.create(type, options, scene, index, last_x, last_y, last_z, str
         local shape = options.shape;
         local options = options.options;
         node = NplCadEnvironment.read_rotate_extrude(options,shape)    
+    elseif(type == "mirror")then
+        local plane = options.plane;
+        local obj = options.obj;
+        NplCadEnvironment.read_mirror(plane,obj);
+        node = obj;
     end
     local next_x;
     if(index ~= 0)then
@@ -190,12 +196,12 @@ end
 --passed
 function TestCSG.test_read_polyhedron()
     local options = {
---        {
---        points = { { 10,10,0 }, { 10,-10,0 }, { -10,-10,0 }, { -10,10,0 }, -- the four points at base
---                   { 0,0,10 } },                                           -- the apex point 
---        triangles = { { 0,1,4 }, { 1,2,4 }, { 2,3,4 }, { 3,0,4 },          -- each triangle side
---               { 1,0,3 },{ 2,1,3 } }                                       -- two triangles for square base
---        },
+        {
+        points = { { 10,10,0 }, { 10,-10,0 }, { -10,-10,0 }, { -10,10,0 }, -- the four points at base
+                   { 0,0,10 } },                                           -- the apex point 
+        triangles = { { 0,1,4 }, { 1,2,4 }, { 2,3,4 }, { 3,0,4 },          -- each triangle side
+               { 1,0,3 },{ 2,1,3 } }                                       -- two triangles for square base
+        },
         { 
          points = {
                {0, -10, 60}, {0, 10, 60}, {0, 10, 0}, {0, -10, 0}, {60, -10, 60}, {60, 10, 60}, 
@@ -340,4 +346,12 @@ function TestCSG.test_read_rotate_extrude()
     }
     TestCSG.create_objects("rotate_extrude",options,"test/test_read_rotate_extrude.stl");
 end
-
+function TestCSG.test_read_mirror()
+    local options = {
+        {
+            obj = NplCadEnvironment.read_cube(1),
+            plane = {1,1,1},
+        }        
+    }
+    TestCSG.create_objects("mirror",options,"test/test_read_mirror.stl");
+end

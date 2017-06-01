@@ -16,11 +16,15 @@ NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/drawables/CAGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
+NPL.load("(gl)script/ide/math/Matrix4.lua");
+NPL.load("(gl)script/ide/math/Plane.lua");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
 local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 local CAGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CAGModel");
+local Matrix4 = commonlib.gettable("mathlib.Matrix4");
+local Plane = commonlib.gettable("mathlib.Plane");
 
 
 local pi = NplCadEnvironment.pi;
@@ -162,4 +166,43 @@ function NplCadEnvironment:scale__(options,obj)
 	if(obj and obj.setScale)then
 		obj:setScale(x,y,z);
 	end
+end
+function NplCadEnvironment.mirror(options,obj)
+	local self = getfenv(2);
+	self:mirror__(options,obj);
+end
+function NplCadEnvironment:mirror__(options,obj)
+    NplCadEnvironment.read_mirror(options,obj);
+end
+function NplCadEnvironment.read_mirror(options,obj)
+    if(not options)then return end
+	local x,y,z;
+	if(is_number(options))then
+		x = options;
+		y = options;
+		z = options;
+	elseif(is_array(options))then
+		if #options == 3 then
+			x = options[1] or 1;
+			y = options[2] or 1;
+			z = options[3] or 1;
+		else
+			self:internalLog("mirror should have 3 coords");
+			return;
+		end
+	else
+		self:internalLog("mirror should have a coords array");
+		return;		
+	end
+	if(not obj)then
+		self:internalLog("mirror need a object");
+        return 
+    end
+    local csg_node = obj:getDrawable().csg_node;
+    if(not csg_node)then
+		self:internalLog("mirror need a csg_node");
+        return
+    end
+    local plane = Plane:new({x,y,z,0});
+    csg_node:mirrored(plane);
 end

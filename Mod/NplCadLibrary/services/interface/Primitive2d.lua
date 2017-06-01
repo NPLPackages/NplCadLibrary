@@ -387,7 +387,7 @@ function NplCadEnvironment.read_ellipse(p)
 end
 function NplCadEnvironment:check_attach_value(options)
     local attach = true;
-    if(options)then
+    if(is_table(options))then
         local v = tostring(options.attach);
         if(v == "false" or v == "false" or v == "False")then
             attach = false;
