@@ -16,12 +16,13 @@ NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/drawables/CAGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
+NPL.load("(gl)Mod/NplCadLibrary/cag/CAG.lua");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
 local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 local CAGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CAGModel");
-
+local CAG = commonlib.gettable("Mod.NplCadLibrary.cag.CAG");
 
 local pi = NplCadEnvironment.pi;
 local is_string = NplCadEnvironment.is_string;
@@ -383,7 +384,53 @@ function NplCadEnvironment.read_ellipse(p)
 	local o = CAGModel:new():init(CAGFactory.ellipse({center = center,  radius = radius}),"ellipse");
 	node:setDrawable(o);
 	node:setTag("shape","ellipse");
+	
+    return node;
+end
+function NplCadEnvironment.group(options,...)
+	local self = getfenv(2);
+	return self:group__(options,...);
+end
+function NplCadEnvironment:group__(options,...)
+	options = options or {};
+	local parent = self:getNode__();
+
+	local node = NplCadEnvironment.read_group(options,...);
+	if(self:check_attach_value(options))then
+	    parent:addChild(node);
+    end
 	return node;
+end
+function NplCadEnvironment.read_group(options,...)
+	local node = Node.create("");
+    local action = options.action;
+	local children = {...};
+    local k,v;
+    local first_cag;
+    for k,v in ipairs(children) do
+	    if(is_shape(v)) then
+		    local cag_node = v:getDrawable().cag_node;
+            cag_node = CAG.fromSides(cag_node.sides);
+            if(not first_cag)then
+                first_cag = cag_node;
+            else
+                if(action == "union")then
+                    first_cag = first_cag:union(cag_node);
+                elseif(action == "difference")then
+                    first_cag = first_cag:subtract(cag_node);
+                elseif(action == "intersection")then
+                    first_cag = first_cag:intersect(cag_node);
+                else
+                    first_cag = first_cag:union(cag_node);
+                end
+            end
+        end
+    end
+    local o = CAGModel:new():init(first_cag,"group");
+	node:setDrawable(o);
+	node:setTag("shape","group");
+	
+    return node;
 end
 function NplCadEnvironment:check_attach_value(options)
     local attach = true;

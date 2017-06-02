@@ -22,6 +22,7 @@ TestCSG.test_read_linear_extrude();
 TestCSG.test_read_rectangular_extrude();
 TestCSG.test_read_rotate_extrude();
 TestCSG.test_read_mirror();
+TestCSG.test_read_group();
 -------------------------------------------------------
 --]]
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
@@ -116,6 +117,10 @@ function TestCSG.create(type, options, scene, index, last_x, last_y, last_z, str
         local obj = options.obj;
         NplCadEnvironment.read_mirror(plane,obj);
         node = obj;
+    elseif(type == "group")then
+        local children = options.children;
+        local options = options.options;
+        node = NplCadEnvironment.read_group(options,unpack(children));
     end
     local next_x;
     if(index ~= 0)then
@@ -138,15 +143,15 @@ end
 --passed
 function TestCSG.test_read_cube()
     local options = {
-        {},
+--        {},
         1,
-        {size = 1},
-        {size = { 1, 2, 3 } },
-        {size = 1, center = true, },
-        {size = 1, center = { false, false, false}, },
-        {size = { 1, 2, 3 }, radius = {0.1,0.2,0.3}, round = true, },
-        {size = { 4, 4, 4 }, radius = {1,1,1}, round = true, },
-        {center = { 0, 0, 0}, radius = 0.2, fn = 8, },
+--        {size = 1},
+--        {size = { 1, 2, 3 } },
+--        {size = 1, center = true, },
+--        {size = 1, center = { false, false, false}, },
+--        {size = { 1, 2, 3 }, radius = {0.1,0.2,0.3}, round = true, },
+--        {size = { 4, 4, 4 }, radius = {1,1,1}, round = true, },
+--        {center = { 0, 0, 0}, radius = 0.2, fn = 8, },
     }
     TestCSG.create_objects("cube",options,"test/test_read_cube.stl");
 end
@@ -196,24 +201,28 @@ end
 --passed
 function TestCSG.test_read_polyhedron()
     local options = {
+--        {
+--        points = { { 10,10,0 }, { 10,-10,0 }, { -10,-10,0 }, { -10,10,0 }, -- the four points at base
+--                   { 0,0,10 } },                                           -- the apex point 
+--        triangles = { { 0,1,4 }, { 1,2,4 }, { 2,3,4 }, { 3,0,4 },          -- each triangle side
+--               { 1,0,3 },{ 2,1,3 } }                                       -- two triangles for square base
+--        },
+--        { 
+--         points = {
+--               {0, -10, 60}, {0, 10, 60}, {0, 10, 0}, {0, -10, 0}, {60, -10, 60}, {60, 10, 60}, 
+--               {10, -10, 50}, {10, 10, 50}, {10, 10, 30}, {10, -10, 30}, {30, -10, 50}, {30, 10, 50}
+--               }, 
+--         triangles = {
+--                  {0,3,2},  {0,2,1},  {4,0,5},  {5,0,1},  {5,2,4},  {4,2,3},
+--                  {6,8,9},  {6,7,8},  {6,10,11},{6,11,7}, {10,8,11},
+--                  {10,9,8}, {3,0,9},  {9,0,6},  {10,6, 0},{0,4,10},
+--                  {3,9,10}, {3,10,4}, {1,7,11}, {1,11,5}, {1,8,7},  
+--                  {2,8,1},  {8,2,11}, {5,11,2}
+--                  }
+--        },
         {
-        points = { { 10,10,0 }, { 10,-10,0 }, { -10,-10,0 }, { -10,10,0 }, -- the four points at base
-                   { 0,0,10 } },                                           -- the apex point 
-        triangles = { { 0,1,4 }, { 1,2,4 }, { 2,3,4 }, { 3,0,4 },          -- each triangle side
-               { 1,0,3 },{ 2,1,3 } }                                       -- two triangles for square base
-        },
-        { 
-         points = {
-               {0, -10, 60}, {0, 10, 60}, {0, 10, 0}, {0, -10, 0}, {60, -10, 60}, {60, 10, 60}, 
-               {10, -10, 50}, {10, 10, 50}, {10, 10, 30}, {10, -10, 30}, {30, -10, 50}, {30, 10, 50}
-               }, 
-         triangles = {
-                  {0,3,2},  {0,2,1},  {4,0,5},  {5,0,1},  {5,2,4},  {4,2,3},
-                  {6,8,9},  {6,7,8},  {6,10,11},{6,11,7}, {10,8,11},
-                  {10,9,8}, {3,0,9},  {9,0,6},  {10,6, 0},{0,4,10},
-                  {3,9,10}, {3,10,4}, {1,7,11}, {1,11,5}, {1,8,7},  
-                  {2,8,1},  {8,2,11}, {5,11,2}
-                  }
+            points = { { 0,0,0 }, { 2,0,0 }, { 2,2,0 } },
+            triangles = { { 0,1,2 } }
         },
     }
     TestCSG.create_objects("polyhedron",options,"test/test_read_polyhedron.stl");
@@ -350,8 +359,32 @@ function TestCSG.test_read_mirror()
     local options = {
         {
             obj = NplCadEnvironment.read_cube(1),
-            plane = {1,1,1},
-        }        
+            plane = {3,0,0},
+        },
+--        {
+--            obj = NplCadEnvironment.read_sphere(1),
+--            plane = {10,0,0},
+--        },
+--        {
+--            obj = NplCadEnvironment.read_polyhedron({
+--                points = { { 0,0,0 }, { 2,0,0 }, { 2,2,0 } },
+--                triangles = { { 0,1,2 } }
+--            }),
+--            plane = {0,0,1},
+--        },        
     }
     TestCSG.create_objects("mirror",options,"test/test_read_mirror.stl");
+end
+--passed
+function TestCSG.test_read_group()
+    local options = {
+        {
+            options = { attach = false, action = "difference", }, -- union/difference/intersection, default is union.
+            children = {
+                NplCadEnvironment.read_square({size = { 1, 4 }, center = true, attach = false,}),             
+                NplCadEnvironment.read_circle({ r = 1, center = true, attach = false, }),             
+            }
+        },
+    }
+    TestCSG.create_objects("group",options,"test/test_read_group.stl");
 end
