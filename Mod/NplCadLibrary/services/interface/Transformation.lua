@@ -18,6 +18,8 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
 NPL.load("(gl)Mod/NplCadLibrary/cag/CAGFactory.lua");
 NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)script/ide/math/Plane.lua");
+NPL.load("(gl)script/ide/math/Quaternion.lua");
+NPL.load("(gl)script/ide/math/vector.lua");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
 local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
@@ -25,7 +27,8 @@ local CAGFactory = commonlib.gettable("Mod.NplCadLibrary.cag.CAGFactory");
 local CAGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CAGModel");
 local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 local Plane = commonlib.gettable("mathlib.Plane");
-
+local Quaternion = commonlib.gettable("mathlib.Quaternion");
+local vector3d = commonlib.gettable("mathlib.vector3d");
 
 local pi = NplCadEnvironment.pi;
 local is_string = NplCadEnvironment.is_string;
@@ -203,6 +206,8 @@ function NplCadEnvironment.read_mirror(options,obj)
 		self:internalLog("mirror need a csg_node");
         return
     end
-    local plane = Plane:new({x,y,z,0});
+    local v = vector3d:new(x,y,z);
+    v = v:normalize();
+    local plane = Plane:new({v[1],v[2],v[3],0});
     csg_node:mirrored(plane);
 end

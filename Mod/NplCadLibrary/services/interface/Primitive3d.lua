@@ -8,16 +8,18 @@ use the lib:
 NPL.load("(gl)Mod/NplCadLibrary/services/interface/Primitive3d.lua");
 ------------------------------------------------------------
 ]]
+
 NPL.load("(gl)Mod/NplCadLibrary/services/NplCadEnvironment.lua");
 local NplCadEnvironment = commonlib.gettable("Mod.NplCadLibrary.services.NplCadEnvironment");
 
 NPL.load("(gl)Mod/NplCadLibrary/core/Node.lua");
 NPL.load("(gl)Mod/NplCadLibrary/drawables/CSGModel.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGFactory.lua");
+NPL.load("(gl)script/ide/math/Matrix4.lua");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
 local CSGModel = commonlib.gettable("Mod.NplCadLibrary.drawables.CSGModel");
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
-
+local Matrix4 = commonlib.gettable("mathlib.Matrix4");
 
 local pi = NplCadEnvironment.pi;
 local is_string = NplCadEnvironment.is_string;
@@ -93,7 +95,8 @@ function NplCadEnvironment.read_cube(p)
 	end
 	node:setDrawable(o);
 	if(off[1] ~= 0 or off[2] ~= 0 or off[3] ~= 0)then
-		node:translate(off[1],off[2],off[3]);
+        local csg = node:getDrawable().csg_node;
+		csg:translate({off[1],off[2],off[3]});
 	end
 	return node;
 end
@@ -172,7 +175,8 @@ function NplCadEnvironment.read_sphere(p)
 	end
 	node:setDrawable(o);
 	if(off[1] ~= 0 or off[2] ~= 0 or off[3] ~= 0)then
-		node:translate(off[1],off[2],off[3]);
+        local csg = node:getDrawable().csg_node;
+		csg:translate({off[1],off[2],off[3]});
 	end
 	return node;
 end
@@ -289,7 +293,8 @@ function NplCadEnvironment.read_cylinder(p,...)
 			off = {0,0,0};
 		end
 		if(off[1] ~= 0 or off[2] ~= 0 or off[3] ~= 0)then
-			node:translate(off[1],off[2],off[3]);
+            local csg = o.csg_node;
+		    csg:translate({off[1],off[2],off[3]});
 		end
 	end
 	node:setDrawable(o);
@@ -336,4 +341,37 @@ function NplCadEnvironment.read_polyhedron(options)
 		node:setDrawable(o);
 	end
 	return node;
+end
+function NplCadEnvironment.torus(options)
+	local self = getfenv(2);
+	return self:torus__(options);
+end
+function NplCadEnvironment:torus__(options)
+	options = options or {};
+	local parent = self:getNode__();
+	local node = NplCadEnvironment.read_torus(options)
+	parent:addChild(node);
+	return node;
+end
+function NplCadEnvironment.read_torus(p)
+    local ri = 1;
+    local ro = 4;
+    local fni = 16;
+    local fno = 32;
+    local roti = 0;
+    if(p)then
+        ri = p.ri or ri;
+        fni = p.fni or fni;
+        roti = p.roti or roti;
+        ro = p.ro or ro;
+        fno = p.fno or fno;
+    end
+    if(fni<3)then fni = 3; end
+    if(fno<3)then fno = 3; end
+    local c = NplCadEnvironment.read_circle({r = ri,fn = fni,center = true});
+    local o = c:getDrawable().cag_node;
+    if(roti > 0)then
+        o:transform(Matrix4.rotationZ(roti));
+    end
+   return NplCadEnvironment.read_rotate_extrude({fn = fno,offset = {ro,0,0}},c);
 end

@@ -10,6 +10,7 @@ TestCSG.test_read_cube();
 TestCSG.test_stretchAtPlane();
 TestCSG.test_read_sphere();
 TestCSG.test_read_cylinder();
+TestCSG.test_read_torus()
 TestCSG.test_read_polyhedron();
 TestCSG.test_read_circle();
 TestCSG.test_read_ellipse();
@@ -83,6 +84,8 @@ function TestCSG.create(type, options, scene, index, last_x, last_y, last_z, str
         node = NplCadEnvironment.read_sphere(options);
     elseif(type == "cylinder")then
         node = NplCadEnvironment.read_cylinder(options);
+    elseif(type == "torus")then
+        node = NplCadEnvironment.read_torus(options);
     elseif(type == "polyhedron")then
         node = NplCadEnvironment.read_polyhedron(options)
     elseif(type == "circle")then
@@ -197,6 +200,19 @@ function TestCSG.test_read_cylinder()
         { from = {0,0,0}, to = {0,0,10}, r1 = 1, r2 = 2, fn = 50, },
     }
     TestCSG.create_objects("cylinder",options,"test/test_read_cylinder.stl");
+end
+--passed
+function TestCSG.test_read_torus()
+    local options = {
+        {}, -- ri = 1, ro = 4
+        { ri = 1.5, ro = 3, },
+        { ri = 0.2 },
+        { fni = 4,  },  -- make inner circle fn = 4 => square
+        { fni = 4, roti = 45, },
+        { fni = 4, fno = 4, roti = 45, },
+        { fni = 4, fno = 5, roti = 45, },
+    }
+    TestCSG.create_objects("torus",options,"test/test_read_torus.stl");
 end
 --passed
 function TestCSG.test_read_polyhedron()
@@ -355,23 +371,13 @@ function TestCSG.test_read_rotate_extrude()
     }
     TestCSG.create_objects("rotate_extrude",options,"test/test_read_rotate_extrude.stl");
 end
+--passed
 function TestCSG.test_read_mirror()
     local options = {
         {
             obj = NplCadEnvironment.read_cube(1),
-            plane = {3,0,0},
+            plane = {10,20,90},
         },
---        {
---            obj = NplCadEnvironment.read_sphere(1),
---            plane = {10,0,0},
---        },
---        {
---            obj = NplCadEnvironment.read_polyhedron({
---                points = { { 0,0,0 }, { 2,0,0 }, { 2,2,0 } },
---                triangles = { { 0,1,2 } }
---            }),
---            plane = {0,0,1},
---        },        
     }
     TestCSG.create_objects("mirror",options,"test/test_read_mirror.stl");
 end
