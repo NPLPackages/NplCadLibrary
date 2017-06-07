@@ -88,11 +88,11 @@ function NplCadEnvironment.read_rectangular_extrude(options,path)
     local h = 1;
     local fn = CSGFactory.defaultResolution2D;
     local closed = false;
-    if(p) then
-        w = p.w or w;
-        h = p.h or h;
-        fn = p.fn or fn;
-        closed = p.closed;
+    if(options) then
+        w = options.w or w;
+        h = options.h or h;
+        fn = options.fn or fn;
+        closed = options.closed;
     end
 	if(is_path(path)) then
 		obj = path;

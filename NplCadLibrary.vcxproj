@@ -56,6 +56,7 @@
     <None Include="Mod\NplCadLibrary\services\interface\Others.lua" />
     <None Include="Mod\NplCadLibrary\services\interface\Primitive2d.lua" />
     <None Include="Mod\NplCadLibrary\services\interface\Primitive3d.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Text.lua" />
     <None Include="Mod\NplCadLibrary\services\interface\Transformation.lua" />
     <None Include="Mod\NplCadLibrary\services\NplCadEnvironment.lua" />
     <None Include="Mod\NplCadLibrary\testcase\TestConnector.lua" />

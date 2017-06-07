@@ -24,6 +24,7 @@ TestCSG.test_read_rectangular_extrude();
 TestCSG.test_read_rotate_extrude();
 TestCSG.test_read_mirror();
 TestCSG.test_read_group();
+TestCSG.test_read_vector_text();
 -------------------------------------------------------
 --]]
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
@@ -124,6 +125,19 @@ function TestCSG.create(type, options, scene, index, last_x, last_y, last_z, str
         local children = options.children;
         local options = options.options;
         node = NplCadEnvironment.read_group(options,unpack(children));
+    elseif(type == "vector_text")then
+        local x = options.x;
+        local y = options.y;
+        local w = options.w;
+        local h = options.h;
+        local text = options.text;
+        local segments = NplCadEnvironment.vector_text(x,y,text);
+	    node = Node.create("");
+        for __,points in ipairs(segments) do
+            local path = NplCadEnvironment.path2d(points);
+            local child = NplCadEnvironment.read_rectangular_extrude({w = w, h = h,},path);
+            node:addChild(child);
+        end
     end
     local next_x;
     if(index ~= 0)then
@@ -393,4 +407,11 @@ function TestCSG.test_read_group()
         },
     }
     TestCSG.create_objects("group",options,"test/test_read_group.stl");
+end
+--passed
+function TestCSG.test_read_vector_text()
+    local options = {
+        { w = 2, h = 2, x = 0, y = 0, text = "Hello NPL!", },
+    }
+    TestCSG.create_objects("vector_text",options,"test/test_vector_text.stl");
 end

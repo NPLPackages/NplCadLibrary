@@ -105,7 +105,7 @@ NPL.load("(gl)Mod/NplCadLibrary/services/interface/Transformation.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/interface/Boolean.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/interface/Extrusion.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/interface/Others.lua");
-
+NPL.load("(gl)Mod/NplCadLibrary/services/interface/Text.lua");
 function NplCadEnvironment:new(params)
 	params = params or {}
 	local o = {
@@ -113,6 +113,8 @@ function NplCadEnvironment:new(params)
 		nodes_stack = {},
 		math = math,
 		string = string,
+        ipairs = ipairs,
+        pairs = pairs,
 		specified_indexs = {},
 
 	};
