@@ -25,6 +25,8 @@ TestCSG.test_read_rotate_extrude();
 TestCSG.test_read_mirror();
 TestCSG.test_read_group();
 TestCSG.test_read_vector_text();
+
+--TODO:test expandToCAG();
 -------------------------------------------------------
 --]]
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
@@ -231,28 +233,15 @@ end
 --passed
 function TestCSG.test_read_polyhedron()
     local options = {
---        {
---        points = { { 10,10,0 }, { 10,-10,0 }, { -10,-10,0 }, { -10,10,0 }, -- the four points at base
---                   { 0,0,10 } },                                           -- the apex point 
---        triangles = { { 0,1,4 }, { 1,2,4 }, { 2,3,4 }, { 3,0,4 },          -- each triangle side
---               { 1,0,3 },{ 2,1,3 } }                                       -- two triangles for square base
---        },
---        { 
---         points = {
---               {0, -10, 60}, {0, 10, 60}, {0, 10, 0}, {0, -10, 0}, {60, -10, 60}, {60, 10, 60}, 
---               {10, -10, 50}, {10, 10, 50}, {10, 10, 30}, {10, -10, 30}, {30, -10, 50}, {30, 10, 50}
---               }, 
---         triangles = {
---                  {0,3,2},  {0,2,1},  {4,0,5},  {5,0,1},  {5,2,4},  {4,2,3},
---                  {6,8,9},  {6,7,8},  {6,10,11},{6,11,7}, {10,8,11},
---                  {10,9,8}, {3,0,9},  {9,0,6},  {10,6, 0},{0,4,10},
---                  {3,9,10}, {3,10,4}, {1,7,11}, {1,11,5}, {1,8,7},  
---                  {2,8,1},  {8,2,11}, {5,11,2}
---                  }
---        },
         {
             points = { { 0,0,0 }, { 2,0,0 }, { 2,2,0 } },
-            triangles = { { 0,1,2 } }
+            triangles = { { 1,2,3 } } -- first index is 1 in lua table
+        },
+        {
+            points = { { 10,10,0 }, { 10,-10,0 }, { -10,-10,0 }, { -10,10,0 }, -- the four points at base
+                { 0,0,10 } },                                           -- the apex point 
+            triangles = { { 1,2,5 }, { 2,3,5 }, { 3,4,5 }, { 4,1,5 },          -- each triangle side
+                    { 2,1,4 },{ 3,2,4 } }                                       -- two triangles for square base
         },
     }
     TestCSG.create_objects("polyhedron",options,"test/test_read_polyhedron.stl");
@@ -272,9 +261,9 @@ function TestCSG.test_read_ellipse()
     local options = {
         {},
         {center = {1,2}, },
-        {radius = 2},
-        {radius = {1,2}, },
-        {center = {1,2}, radius = {1,2}, },
+        {r = 2},
+        {r = {1,2}, },
+        {center = {1,2}, r = {1,2}, },
     }
     TestCSG.create_objects("ellipse",options,"test/test_read_ellipse.stl");
 end
@@ -292,7 +281,7 @@ end
 function TestCSG.test_read_rectangle()
 
     local options = {
-        { center = {0,0}, radius = {1,2}, },
+        { center = {0,0}, r = {1,2}, },
     }
     TestCSG.create_objects("rectangle",options,"test/test_read_rectangle.stl");
 
@@ -300,7 +289,7 @@ end
 --passed
 function TestCSG.test_read_roundedRectangle()
     local options = {
-        { center = {0,0}, radius = {1,2}, roundradius = 1, resolution = 16, },
+        { center = {0,0}, r = {1,2}, roundradius = 1, resolution = 16, },
     }
     TestCSG.create_objects("roundedRectangle",options,"test/test_read_roundedRectangle.stl");
 end
@@ -331,11 +320,11 @@ function TestCSG.test_read_linear_extrude()
             options = { offset = { 0, 0, 10 }, twistangle = 360, twiststeps = 100, },
         },
 --        {
---            shape = NplCadEnvironment.read_rectangle( { center = {0,0}, radius = {3,3}, }),
+--            shape = NplCadEnvironment.read_rectangle( { center = {0,0}, r = {3,3}, }),
 --            options = { offset = { 0, 0, 10 }, twistangle = 360, twiststeps = 100, },
 --        },
 --        {
---            shape = NplCadEnvironment.read_roundedRectangle( { center = {0,0}, radius = {3,3}, }),
+--            shape = NplCadEnvironment.read_roundedRectangle( { center = {0,0}, r = {3,3}, }),
 --            options = { offset = { 0, 0, 10 }, twistangle = 360, twiststeps = 100, },
 --        },
 --        {

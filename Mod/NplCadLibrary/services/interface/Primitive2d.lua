@@ -220,9 +220,9 @@ end
 rectangle();
 rectangle({center = x});
 rectangle({center = {x,y}});
-rectangle({radius = w});
-rectangle({radius = {w,h}});
-rectangle({center = {0,0}, radius = {w,h}});
+rectangle({r = w});
+rectangle({r = {w,h}});
+rectangle({center = {0,0}, r = {w,h}});
 --]]
 function NplCadEnvironment.rectangle(options)
 	local self = getfenv(2);
@@ -253,13 +253,14 @@ function NplCadEnvironment.read_rectangle(p)
 				center[2] = p.center; 				
 			end
 		end
-		if(p.radius)then
-			if(is_array(p.radius))then
-				radius[1] = p.radius[1];
-				radius[2] = p.radius[2]; 
-			elseif(is_number(p.radius)) then
-				radius[1] = p.radius;
-				radius[2] = p.radius; 				
+        local r = p.radius --radius
+		if(r)then
+			if(is_array(r))then
+				radius[1] = r[1];
+				radius[2] = r[2]; 
+			elseif(is_number(r)) then
+				radius[1] = r;
+				radius[2] = r; 				
 			end			
 		end
 	end 
@@ -274,10 +275,10 @@ end
 roundedRectangle();
 roundedRectangle({center = x});
 roundedRectangle({center = {x,y}});
-roundedRectangle({radius = w});
-roundedRectangle({radius = {w,h}});
-roundedRectangle({center = {0,0}, radius = {w,h}});
-roundedRectangle({center = {0,0}, radius = {w,h},roundradius = 1,resolution = 32});
+roundedRectangle({r = w});
+roundedRectangle({r = {w,h}});
+roundedRectangle({center = {0,0}, r = {w,h}});
+roundedRectangle({center = {0,0}, r = {w,h},roundradius = 1,resolution = 32});
 --]]
 function NplCadEnvironment.roundedRectangle(options)
 	local self = getfenv(2);
@@ -310,13 +311,14 @@ function NplCadEnvironment.read_roundedRectangle(p)
 				center[2] = p.center; 				
 			end
 		end
-		if(p.radius)then
+        local r = p.radius -- radius
+		if(r)then
 			if(is_array(p.radius))then
-				radius[1] = p.radius[1];
-				radius[2] = p.radius[2]; 
-			elseif(is_number(p.radius)) then
-				radius[1] = p.radius;
-				radius[2] = p.radius; 				
+				radius[1] = r[1];
+				radius[2] = r[2]; 
+			elseif(is_number(r)) then
+				radius[1] = r;
+				radius[2] = r; 				
 			end			
 		end
 		if(p.roundradius and is_number(p.roundradius))then
@@ -337,9 +339,9 @@ end
 ellipse();
 ellipse({center = x});
 ellipse({center = {x,y}});
-ellipse({radius = w});
-ellipse({radius = {w,h}});
-ellipse({center = {0,0}, radius = {w,h}});
+ellipse({r = w});
+ellipse({r = {w,h}});
+ellipse({center = {0,0}, r = {w,h}});
 --]]
 function NplCadEnvironment.ellipse(options)
 	local self = getfenv(2);
@@ -370,13 +372,14 @@ function NplCadEnvironment.read_ellipse(p)
 				center[2] = p.center; 				
 			end
 		end
-		if(p.radius)then
-			if(is_array(p.radius))then
-				radius[1] = p.radius[1]/2;
-				radius[2] = p.radius[2]/2; 
-			elseif(is_number(p.radius)) then
-				radius[1] = p.radius/2;
-				radius[2] = p.radius/2; 				
+        local r = p.r; --radius
+		if(r)then
+			if(is_array(r))then
+				radius[1] = r[1]/2;
+				radius[2] = r[2]/2; 
+			elseif(is_number(r)) then
+				radius[1] = r/2;
+				radius[2] = r/2; 				
 			end			
 		end
 	end 

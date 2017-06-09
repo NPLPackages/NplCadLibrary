@@ -496,24 +496,7 @@ end
 function CSGFactory.polyhedron(options)
         options = options or {};
 
-        if (options.points == nil) then
-			local errorMessage = "polyhedron needs 'points' arrays";
-			LOG.std(nil, "error", "CSGFactory.polyhedron", errorMessage);
-			error(errorMessage);
-        end
-
-		if ((options.polygons or options.triangles) == nil) then
-			local errorMessage = "polyhedron needs 'polygons' or 'triangles' arrays";
-			LOG.std(nil, "error", "CSGFactory.polyhedron", errorMessage);
-			error(errorMessage);
-		end
-        
-		local polyField = "triangles";
-		if(options.triangles == nil) then
-			polyField = polygons;
-		end
-
-		local points = CSGFactory.parseOptionAs3DVectorList(options, "points", {
+        local points = CSGFactory.parseOptionAs3DVectorList(options, "points", {
                 {1, 1, 0},
                 {1, -1, 0},
                 {-1, -1, 0},
@@ -525,22 +508,42 @@ function CSGFactory.polyhedron(options)
 			table.insert(vertices,CSGVertex:new():init(pt));
 		end
 
-        local polys = CSGFactory.parseOption(options, polyField, {
-                {0, 1, 4},
-                {1, 2, 4},
-                {2, 3, 4},
-                {3, 0, 4},
-                {1, 0, 3},
-                {2, 1, 3}
-            });
+        local polys = CSGFactory.parseOption(options, "triangles", {
+            {1, 2, 5},
+            {2, 3, 5},
+            {3, 4, 5},
+            {4, 1, 5},
+            {2, 1, 4},
+            {3, 2, 4}
+        });
 
+--        if (options.points == nil) then
+--			local errorMessage = "polyhedron needs 'points' arrays";
+--			LOG.std(nil, "error", "CSGFactory.polyhedron", errorMessage);
+--			error(errorMessage);
+--        end
+--
+--		if ((options.polygons or options.triangles) == nil) then
+--			local errorMessage = "polyhedron needs 'polygons' or 'triangles' arrays";
+--			LOG.std(nil, "error", "CSGFactory.polyhedron", errorMessage);
+--			error(errorMessage);
+--		end
+--        
+--		local polyField = "triangles";
+--		if(options.triangles == nil) then
+--			polyField = polygons;
+--		end
+
+		
+
+        
 		local polygons ={};
         -- openscad convention defines inward normals - so we have to invert here
 		for kf,face in ipairs(polys) do
 			face = CSGFactory.reverseTable(face);
 			local vs = {};
 			for _,index in ipairs(face) do
-				table.insert(vs,vertices[index+1]);
+				table.insert(vs,vertices[index]);
 			end
 			table.insert(polygons,CSGPolygon:new():init(vs));
 		end
