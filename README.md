@@ -12,7 +12,6 @@
     * [Scale](#scale)
     * [Rotate](#rotate)
     * [Translate](#translate)
-    * [Center](#center)
     * [Mirror](#mirror)
     * [Union](#union)
     * [Intersection](#intersection)
@@ -291,8 +290,7 @@ math.ult
 ```
 ## Including Files
 ```lua
-include("a.npl")
-include("b/c.npl")
+--TODO
 ```
 ## Interactive Parametric Models
 ```lua
