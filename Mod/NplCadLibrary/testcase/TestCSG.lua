@@ -140,6 +140,14 @@ function TestCSG.create(type, options, scene, index, last_x, last_y, last_z, str
             local child = NplCadEnvironment.read_rectangular_extrude({w = w, h = h,},path);
             node:addChild(child);
         end
+    elseif(type == "import_stl")then
+        local filename = options;
+        node = NplCadEnvironment.read_import_stl(filename);
+    elseif(type == "import_bmax")then
+        node = NplCadEnvironment.read_import_bmax(options);
+    elseif(type == "import_svg")then
+        local filename = options;
+        node = NplCadEnvironment.read_import_svg(filename);
     end
     local next_x;
     if(index ~= 0)then
@@ -403,4 +411,24 @@ function TestCSG.test_read_vector_text()
         { w = 2, h = 2, x = 0, y = 0, text = "Hello NPL!", },
     }
     TestCSG.create_objects("vector_text",options,"test/test_vector_text.stl");
+end
+function TestCSG.test_read_import_stl()
+    local options = {
+        "a.stl",
+    }
+    TestCSG.create_objects("import_stl",options,"test/test_import_stl.stl");
+end
+--passed
+function TestCSG.test_read_import_bmax()
+    local options = {
+        { path = "test/a.bmax", },
+--        { path = "test/a.bmax", version = 2},
+    }
+    TestCSG.create_objects("import_bmax",options,"test/test_import_bmax.stl");
+end
+function TestCSG.test_read_import_svg()
+    local options = {
+        "a.svg",
+    }
+    TestCSG.create_objects("import_svg",options,"test/test_import_svg.stl");
 end

@@ -241,5 +241,14 @@
     <None Include="Mod\NplCadLibrary\services\interface\Text.lua">
       <Filter>Mod\NplCadLibrary\services\interface</Filter>
     </None>
+    <None Include="Mod\NplCadLibrary\services\interface\Import_bmax.lua">
+      <Filter>Mod\NplCadLibrary\services\interface</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\services\interface\Import_stl.lua">
+      <Filter>Mod\NplCadLibrary\services\interface</Filter>
+    </None>
+    <None Include="Mod\NplCadLibrary\services\interface\Import_svg.lua">
+      <Filter>Mod\NplCadLibrary\services\interface</Filter>
+    </None>
   </ItemGroup>
 </Project>

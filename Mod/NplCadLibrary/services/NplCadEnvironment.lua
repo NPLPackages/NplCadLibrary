@@ -106,6 +106,10 @@ NPL.load("(gl)Mod/NplCadLibrary/services/interface/Boolean.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/interface/Extrusion.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/interface/Others.lua");
 NPL.load("(gl)Mod/NplCadLibrary/services/interface/Text.lua");
+NPL.load("(gl)Mod/NplCadLibrary/services/interface/Import_stl.lua");
+NPL.load("(gl)Mod/NplCadLibrary/services/interface/Import_bmax.lua");
+NPL.load("(gl)Mod/NplCadLibrary/services/interface/Import_svg.lua");
+
 function NplCadEnvironment:new(params)
 	params = params or {}
 	local o = {
