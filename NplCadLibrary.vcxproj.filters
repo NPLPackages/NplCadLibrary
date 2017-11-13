@@ -250,5 +250,8 @@
     <None Include="Mod\NplCadLibrary\services\interface\Import_svg.lua">
       <Filter>Mod\NplCadLibrary\services\interface</Filter>
     </None>
+    <None Include="Mod\NplCadLibrary\utils\SVGHelpers.lua">
+      <Filter>Mod\NplCadLibrary\utils</Filter>
+    </None>
   </ItemGroup>
 </Project>
