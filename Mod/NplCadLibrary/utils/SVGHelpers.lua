@@ -23,7 +23,7 @@ function SVGHelpers.svg2cagX(v, svgUnitsPmm)
 end
 
 function SVGHelpers.svg2cagY(v, svgUnitsPmm)
-	return -(v / svgUnitsPmm[2])
+	return 0 - (v / svgUnitsPmm[2])
 end
 
 function SVGHelpers.cagLengthX(css, svgUnitsPmm, svgUnitsX)
@@ -104,6 +104,18 @@ function SVGHelpers.cssStyle(xmlNode, name)
 		v = string.match(style, name.."%s*:%s*(.-);")
 	end
 	return v
+end
+
+function SVGHelpers.reflect(x, y, px, py)
+	local ox = x - px
+	local oy = y - py
+	if (x == px and y == py) then return x, y end
+	if (x == px) then return x, py - oy end
+	if (y == py) then return px - ox, y end
+	return px - ox, py - oy
+end
+
+function SVGHelpers.groupValue(svgGroups, name)
 end
 
 function SVGHelpers.parseFloat(str)
