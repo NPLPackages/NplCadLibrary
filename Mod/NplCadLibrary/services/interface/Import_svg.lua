@@ -55,79 +55,48 @@ function NplCadEnvironment.read_import_svg(filename)
 	if (not ParaIO.DoesFileExist(filename, false)) then
 		commonlib.echo("File "..filename.." not exist!")
 	else
-		node = NplCadEnvironment.SVGParser(filename)
+		local xmlRoot
+		local file = ParaIO.open(filename, "r")
+		if (file:IsValid()) then
+			local svgXml = file:GetText()
+			file:close();
+			local s, e = string.find(svgXml, "<svg")
+			svgXml = string.sub(svgXml, s)
+			xmlRoot = ParaXML.LuaXML_ParseString(svgXml)
+		end
+		node = NplCadEnvironment.SVGParser(xmlRoot)
 	end
 
 	return node;
 end
 
-function NplCadEnvironment.SVGParser(filename)
-	local xmlRoot
-	local file = ParaIO.open(filename, "r")
-	if (file:IsValid()) then
-		local svgXml = file:GetText()
-		file:close();
-		local s, e = string.find(svgXml, "<svg")
-		svgXml = string.sub(svgXml, s)
-		xmlRoot = ParaXML.LuaXML_ParseString(svgXml)
-	end
-
+function NplCadEnvironment.SVGParser(xmlRoot)
+	local node = Node.create("")
 	if not xmlRoot then
 		return node
 	end
 
-	--[[
-	local svgObjectMap = {
-		["svg"] = NplCadEnvironment.svgGroup,
-		["rect"] = NplCadEnvironment.svgRect,
-		["circle"] = NplCadEnvironment.svgCircle,
-		["ellipse"] = NplCadEnvironment.svgEllipse,
-		["line"] = NplCadEnvironment.svgLine,
-		["polyline"] = NplCadEnvironment.svgPolyline,
-		["polygon"] = NplCadEnvironment.svgPolygon,
-		["path"] = NplCadEnvironment.svgPath,
-		["use"] = NplCadEnvironment.svgUse,
-		["defs"] = NplCadEnvironment.svgIgnored,
-		["desc"] = NplCadEnvironment.svgIgnored,
-		["title"] = NplCadEnvironment.svgIgnored,
-		["style"] = NplCadEnvironment.svgIgnored,
-	}
 	for __, v in ipairs(xmlRoot) do
-		
-		for k, shape in ipairs(v) do
-			commonlib.echo(k)
-			commonlib.echo(shape)
+		local svgObj = NplCadEnvironment.svgSvg(v.name, v.attr)
+		if svgObj then
+			node = NplCadEnvironment.svgGroup(v, svgObj)
+			break
 		end
-	end
-	]]
-
-	local node = Node.create("")
-	local svgObj = NplCadEnvironment.svgSvg(xmlRoot)
-	if svgObj then
-		node = NplCadEnvironment.svgGroup(xmlRoot) or node
-		NplCadEnvironment.svgRect(xmlRoot, svgObj, node)
-		NplCadEnvironment.svgCircle(xmlRoot, svgObj, node)
-		NplCadEnvironment.svgEllipse(xmlRoot, svgObj, node)
-		NplCadEnvironment.svgLine(xmlRoot, svgObj, node)
-		NplCadEnvironment.svgPolyline(xmlRoot, svgObj, node)
-		NplCadEnvironment.svgPolygon(xmlRoot, svgObj, node)
-		NplCadEnvironment.svgPath(xmlRoot, svgObj, node)
 	end
 
 	return node
 end
 
-function NplCadEnvironment.svgSvg(xmlRoot)
+function NplCadEnvironment.svgSvg(name, attr)
 	local svgObj
-	local svgNode = XPath.selectNode(xmlRoot, "/svg")
-	if (svgNode and svgNode.attr) then
+	if (name == "svg" and attr) then
 		svgObj = svgObj or {}
-		svgObj.pxPmm = svgNode.attr.pxpmm or SVGHelpers.pxPmm
+		svgObj.pxPmm = attr.pxpmm or SVGHelpers.pxPmm
 		svgObj.unitsPmm = {svgObj.pxPmm, svgObj.pxPmm}
-		svgObj.width= svgNode.attr.width
-		svgObj.height= svgNode.attr.height
+		svgObj.width= attr.width
+		svgObj.height= attr.height
 
-		local viewBox = svgNode.attr.viewBox
+		local viewBox = attr.viewBox
 		if viewBox then
 			local v1, v2, v3, v4 = string.match(viewBox, "[%s]*(.-)[%s,]+(.-)[%s,]+(.-)[%s,]+(.+)[%s,]*")
 			svgObj.viewX = SVGHelpers.parseFloat(v1)
@@ -163,210 +132,255 @@ function NplCadEnvironment.svgSvg(xmlRoot)
 	return svgObj
 end
 
-function NplCadEnvironment.svgGroup(xmlRoot, svgObj, node)
-end
+function NplCadEnvironment.svgGroup(group, svgObj)
+	local node = Node.create("")
+	local svgObjectMap = {
+		["rect"] = NplCadEnvironment.svgRect,
+		["circle"] = NplCadEnvironment.svgCircle,
+		["ellipse"] = NplCadEnvironment.svgEllipse,
+		["line"] = NplCadEnvironment.svgLine,
+		["polyline"] = NplCadEnvironment.svgPolyline,
+		["polygon"] = NplCadEnvironment.svgPolygon,
+		["path"] = NplCadEnvironment.svgPath,
+		["use"] = NplCadEnvironment.svgUse,
+		["desc"] = NplCadEnvironment.svgIgnored,
+		["defs"] = NplCadEnvironment.svgIgnored,
+		["title"] = NplCadEnvironment.svgIgnored,
+		["style"] = NplCadEnvironment.svgIgnored,
+	}
 
-function NplCadEnvironment.svgRect(xmlRoot, svgObj, nodeGroup)
-	for xmlNode in XPath.eachNode(xmlRoot, "/svg/rect") do
-		if (xmlNode.attr) then
-			local x = SVGHelpers.cagLengthX(xmlNode.attr.x, svgObj.unitsPmm, svgObj.viewW)
-			local y = 0 - SVGHelpers.cagLengthY(xmlNode.attr.y, svgObj.unitsPmm, svgObj.viewH)
-			local w = SVGHelpers.cagLengthX(xmlNode.attr.width, svgObj.unitsPmm, svgObj.viewW)
-			local h = SVGHelpers.cagLengthY(xmlNode.attr.height, svgObj.unitsPmm, svgObj.viewH)
-			local rx = SVGHelpers.cagLengthX(xmlNode.attr.rx, svgObj.unitsPmm, svgObj.viewW)
-			local ry = SVGHelpers.cagLengthY(xmlNode.attr.ry, svgObj.unitsPmm, svgObj.viewH)
-			if (w > 0 and h > 0) then
-				x = x + w / 2
-				y = y - h / 2
-				if (rx > 0 and ry > 0) then
-					rx = math.min(rx, ry)
+	for k, shape in ipairs(group) do
+		if (shape.name == "g") then
+			local child = NplCadEnvironment.svgGroup(shape, svgObj)
+			if (shape.attr) then
+				NplCadEnvironment.svgTransforms(shape.attr, svgObj, child)
+				NplCadEnvironment.svgCore(shape.attr, svgObj, child)
+				NplCadEnvironment.svgPresentation(shape.attr, svgObj, child)
+			end
+			node:addChild(child)
+		else
+			if (shape.name and shape.attr) then
+				if (svgObjectMap[shape.name]) then
+					local child = svgObjectMap[shape.name](shape.attr, svgObj)
+					if (child) then node:addChild(child) end
 				else
-					rx = math.max(rx, ry)
+					commonlib.echo("Warning: Unsupported SVG element: "..shape.name)
 				end
-				local options = {center = {x, y}, radius = {w/2, h/2}, roundradius = rx, resolution = 32}
-				local node = NplCadEnvironment.read_roundedRectangle(options)
-				NplCadEnvironment.svgTransform(xmlNode, svgObj, node)
-				nodeGroup:addChild(node)
 			end
 		end
 	end
+
+	return node
 end
 
-function NplCadEnvironment.svgCircle(xmlRoot, svgObj, nodeGroup)
-	for xmlNode in XPath.eachNode(xmlRoot, "/svg/circle") do
-		if (xmlNode.attr) then
-			local x1 = SVGHelpers.cagLengthX(xmlNode.attr.cx, svgObj.unitsPmm, svgObj.viewW)
-			local y1 = 0 - SVGHelpers.cagLengthY(xmlNode.attr.cy, svgObj.unitsPmm, svgObj.viewH)
-			local radius = SVGHelpers.cagLengthP(xmlNode.attr.r, svgObj.unitsPmm, svgObj.viewP)
-
-			if (radius > 0) then
-				local options = {r = radius, center = {x1, y1}}
-				local node = NplCadEnvironment.read_circle(options)
-				NplCadEnvironment.svgTransform(xmlNode, svgObj, node)
-				nodeGroup:addChild(node)
-			end
-		end
-	end
-end
-
-function NplCadEnvironment.svgEllipse(xmlRoot, svgObj, nodeGroup)
-	for xmlNode in XPath.eachNode(xmlRoot, "/svg/ellipse") do
-		if (xmlNode.attr) then
-			local x1 = SVGHelpers.cagLengthX(xmlNode.attr.cx, svgObj.unitsPmm, svgObj.viewW)
-			local y1 = 0 - SVGHelpers.cagLengthY(xmlNode.attr.cy, svgObj.unitsPmm, svgObj.viewH)
-			local rx = SVGHelpers.cagLengthP(xmlNode.attr.rx, svgObj.unitsPmm, svgObj.viewW)
-			local ry = SVGHelpers.cagLengthP(xmlNode.attr.ry, svgObj.unitsPmm, svgObj.viewH)
-
-			if (rx> 0 and ry > 0) then
-				local options = {center = {x1, y1}, radius = {rx, ry}}
-				commonlib.echo(options)
-				local node = NplCadEnvironment.read_ellipse(options)
-				NplCadEnvironment.svgTransform(xmlNode, svgObj, node)
-				nodeGroup:addChild(node)
-			end
-		end
-	end
-end
-
-function NplCadEnvironment.svgLine(xmlRoot, svgObj, nodeGroup)
-	for xmlNode in XPath.eachNode(xmlRoot, "/svg/line") do
-		if (xmlNode.attr) then
-			local x1 = SVGHelpers.cagLengthX(xmlNode.attr.x1, svgObj.unitsPmm, svgObj.viewW)
-			local y1 = 0 - SVGHelpers.cagLengthY(xmlNode.attr.y1, svgObj.unitsPmm, svgObj.viewH)
-			local x2 = SVGHelpers.cagLengthX(xmlNode.attr.x2, svgObj.unitsPmm, svgObj.viewW)
-			local y2 = 0 - SVGHelpers.cagLengthY(xmlNode.attr.y2, svgObj.unitsPmm, svgObj.viewH)
-
-			local r = SVGHelpers.cssPxUnit
-			if (xmlNode.attr["stroke-width"]) then
-				r = SVGHelpers.cagLengthP(xmlNode.attr["stroke-width"], svgObj.unitsPmm, svgObj.viewP) / 2
+function NplCadEnvironment.svgRect(attr, svgObj)
+	if (attr) then
+		local x = SVGHelpers.cagLengthX(attr.x, svgObj.unitsPmm, svgObj.viewW)
+		local y = 0 - SVGHelpers.cagLengthY(attr.y, svgObj.unitsPmm, svgObj.viewH)
+		local w = SVGHelpers.cagLengthX(attr.width, svgObj.unitsPmm, svgObj.viewW)
+		local h = SVGHelpers.cagLengthY(attr.height, svgObj.unitsPmm, svgObj.viewH)
+		local rx = SVGHelpers.cagLengthX(attr.rx, svgObj.unitsPmm, svgObj.viewW)
+		local ry = SVGHelpers.cagLengthY(attr.ry, svgObj.unitsPmm, svgObj.viewH)
+		if (w > 0 and h > 0) then
+			x = x + w / 2
+			y = y - h / 2
+			if (rx > 0 and ry > 0) then
+				rx = math.min(rx, ry)
 			else
-				
+				rx = math.max(rx, ry)
 			end
-			local options = {{x1, y1}, {x2, y2}}
-			local node = NplCadEnvironment.read_expandToCAG(r, NplCadEnvironment.path2d(options))
-			NplCadEnvironment.svgTransform(xmlNode, svgObj, node)
-			nodeGroup:addChild(node)
+			local options = {center = {x, y}, radius = {w/2, h/2}, roundradius = rx, resolution = 32}
+			local node = NplCadEnvironment.read_roundedRectangle(options)
+			NplCadEnvironment.svgTransforms(attr, svgObj, node)
+			NplCadEnvironment.svgCore(attr, svgObj, node)
+			NplCadEnvironment.svgPresentation(attr, svgObj, node)
+			return node
 		end
 	end
+	return nil
 end
 
-function NplCadEnvironment.svgPolyline(xmlRoot, svgObj, nodeGroup)
-	for xmlNode in XPath.eachNode(xmlRoot, "/svg/polyline") do
-		if (xmlNode.attr and xmlNode.attr.points) then
-			commonlib.echo(xmlNode.attr.points)
-			local options = {}
-			local points = commonlib.split(xmlNode.attr.points, " ")
-			for i = 0, #points do
-				local v = commonlib.split(points[i], ",")
-				local x = tonumber(v[1])
-				local y = tonumber(v[2])
-				if (x and y) then
-					x = SVGHelpers.cagLengthX(x, svgObj.unitsPmm, svgObj.viewW)
-					y = 0 - SVGHelpers.cagLengthY(y, svgObj.unitsPmm, svgObj.viewH)
-					table.insert(options, {x, y})	
-				end
-			end
+function NplCadEnvironment.svgCircle(attr, svgObj)
+	if (attr) then
+		local x1 = SVGHelpers.cagLengthX(attr.cx, svgObj.unitsPmm, svgObj.viewW)
+		local y1 = 0 - SVGHelpers.cagLengthY(attr.cy, svgObj.unitsPmm, svgObj.viewH)
+		local radius = SVGHelpers.cagLengthP(attr.r, svgObj.unitsPmm, svgObj.viewP)
 
-			local r = SVGHelpers.cssPxUnit
-			if (xmlNode.attr["stroke-width"]) then
-				r = SVGHelpers.cagLengthP(xmlNode.attr["stroke-width"], svgObj.unitsPmm, svgObj.viewP) / 2
-			else
-				
-			end
-			local node = NplCadEnvironment.read_expandToCAG(r, NplCadEnvironment.path2d(options))
-			NplCadEnvironment.svgTransform(xmlNode, svgObj, node)
-			nodeGroup:addChild(node)
+		if (radius > 0) then
+			local options = {r = radius, center = {x1, y1}}
+			local node = NplCadEnvironment.read_circle(options)
+			NplCadEnvironment.svgTransforms(attr, svgObj, node)
+			NplCadEnvironment.svgCore(attr, svgObj, node)
+			NplCadEnvironment.svgPresentation(attr, svgObj, node)
+			return node
 		end
 	end
+	return nil
 end
 
-function NplCadEnvironment.svgPolygon(xmlRoot, svgObj, nodeGroup)
-	for xmlNode in XPath.eachNode(xmlRoot, "/svg/polygon") do
-		if (xmlNode.attr and xmlNode.attr.points) then
-			commonlib.echo(xmlNode.attr.points)
-			local options = {}
-			local points = commonlib.split(xmlNode.attr.points, ", ")
-			for i = 1, (#points)-1, 2 do
-				local x = tonumber(points[i])
-				local y = tonumber(points[i + 1])
-				if (x and y) then
-					x = SVGHelpers.cagLengthX(x, svgObj.unitsPmm, svgObj.viewW)
-					y = 0 - SVGHelpers.cagLengthY(y, svgObj.unitsPmm, svgObj.viewH)
-					table.insert(options, {x, y})	
-				end
-			end
+function NplCadEnvironment.svgEllipse(attr, svgObj)
+	if (attr) then
+		local x1 = SVGHelpers.cagLengthX(attr.cx, svgObj.unitsPmm, svgObj.viewW)
+		local y1 = 0 - SVGHelpers.cagLengthY(attr.cy, svgObj.unitsPmm, svgObj.viewH)
+		local rx = SVGHelpers.cagLengthP(attr.rx, svgObj.unitsPmm, svgObj.viewW)
+		local ry = SVGHelpers.cagLengthP(attr.ry, svgObj.unitsPmm, svgObj.viewH)
 
-			local node = NplCadEnvironment.read_innerToCAG(NplCadEnvironment.path2d({points = options, closed = true}))
-			NplCadEnvironment.svgTransform(xmlNode, svgObj, node)
-			nodeGroup:addChild(node)
+		if (rx> 0 and ry > 0) then
+			local options = {center = {x1, y1}, radius = {rx, ry}}
+			commonlib.echo(options)
+			local node = NplCadEnvironment.read_ellipse(options)
+			NplCadEnvironment.svgTransforms(attr, svgObj, node)
+			NplCadEnvironment.svgCore(attr, svgObj, node)
+			NplCadEnvironment.svgPresentation(attr, svgObj, node)
+			return node
 		end
 	end
+	return nil
 end
 
-function NplCadEnvironment.svgPath(xmlRoot, svgObj, nodeGroup)
-	for xmlNode in XPath.eachNode(xmlRoot, "/svg/path") do
-		if (xmlNode.attr and xmlNode.attr.d) then
-			local commands = {}
-			local co
-			local bf = ""
-			for i = 1, #xmlNode.attr.d do
-				local c = string.sub(xmlNode.attr.d, i, i)
-				if (c == '-') then
-					if (#bf > 0) then
-						table.insert(co.points, bf)
-						bf = ""
-					end
-					bf = bf..c
-				elseif (c == '.') then
-					if (#bf > 0 and string.find(bf, "%.")) then
-						table.insert(co.points, bf)
-						bf = ""
-					end
-					bf = bf..c
-				elseif (c >= '0' and c <= '9') then
-					bf = bf..c
-				elseif ((c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z')) then
-					if (co) then
-						if (#bf > 0) then
-						table.insert(co.points, bf)
-							bf = ""
-						end
-						table.insert(commands, co)
-					else
-						co = {}
-					end
-					co = {command = c, points = {}}
-				elseif (c == ',' or c == ' ' or c == '\n') then
-					if (co) then
-						if (#bf > 0) then
-						table.insert(co.points, bf)
-							bf = ""
-						end
-					end
-				else
-					commonlib.echo("warnning: the path has invalid data")
-				end
-			end
+function NplCadEnvironment.svgLine(attr, svgObj)
+	if (attr) then
+		local x1 = SVGHelpers.cagLengthX(attr.x1, svgObj.unitsPmm, svgObj.viewW)
+		local y1 = 0 - SVGHelpers.cagLengthY(attr.y1, svgObj.unitsPmm, svgObj.viewH)
+		local x2 = SVGHelpers.cagLengthX(attr.x2, svgObj.unitsPmm, svgObj.viewW)
+		local y2 = 0 - SVGHelpers.cagLengthY(attr.y2, svgObj.unitsPmm, svgObj.viewH)
 
-			if (co) then
+		local r = SVGHelpers.cssPxUnit
+		if (attr["stroke-width"]) then
+			r = SVGHelpers.cagLengthP(attr["stroke-width"], svgObj.unitsPmm, svgObj.viewP) / 2
+		else
+			
+		end
+		local options = {{x1, y1}, {x2, y2}}
+		local node = NplCadEnvironment.read_expandToCAG(r, NplCadEnvironment.path2d(options))
+		NplCadEnvironment.svgTransforms(attr, svgObj, node)
+		NplCadEnvironment.svgCore(attr, svgObj, node)
+		NplCadEnvironment.svgPresentation(attr, svgObj, node)
+		return node
+	end
+	return nil
+end
+
+function NplCadEnvironment.svgPolyline(attr, svgObj)
+	if (attr and attr.points) then
+		commonlib.echo(attr.points)
+		local options = {}
+		local points = commonlib.split(attr.points, " ")
+		for i = 0, #points do
+			local v = commonlib.split(points[i], ",")
+			local x = tonumber(v[1])
+			local y = tonumber(v[2])
+			if (x and y) then
+				x = SVGHelpers.cagLengthX(x, svgObj.unitsPmm, svgObj.viewW)
+				y = 0 - SVGHelpers.cagLengthY(y, svgObj.unitsPmm, svgObj.viewH)
+				table.insert(options, {x, y})	
+			end
+		end
+
+		local r = SVGHelpers.cssPxUnit
+		if (attr["stroke-width"]) then
+			r = SVGHelpers.cagLengthP(attr["stroke-width"], svgObj.unitsPmm, svgObj.viewP) / 2
+		else
+			
+		end
+		local node = NplCadEnvironment.read_expandToCAG(r, NplCadEnvironment.path2d(options))
+		NplCadEnvironment.svgTransforms(attr, svgObj, node)
+		NplCadEnvironment.svgCore(attr, svgObj, node)
+		NplCadEnvironment.svgPresentation(attr, svgObj, node)
+		return node
+	end
+	return nil
+end
+
+function NplCadEnvironment.svgPolygon(attr, svgObj)
+	if (attr and attr.points) then
+		commonlib.echo(attr.points)
+		local options = {}
+		local points = commonlib.split(attr.points, ", ")
+		for i = 1, (#points)-1, 2 do
+			local x = tonumber(points[i])
+			local y = tonumber(points[i + 1])
+			if (x and y) then
+				x = SVGHelpers.cagLengthX(x, svgObj.unitsPmm, svgObj.viewW)
+				y = 0 - SVGHelpers.cagLengthY(y, svgObj.unitsPmm, svgObj.viewH)
+				table.insert(options, {x, y})	
+			end
+		end
+
+		local node = NplCadEnvironment.read_innerToCAG(NplCadEnvironment.path2d({points = options, closed = true}))
+		NplCadEnvironment.svgTransforms(attr, svgObj, node)
+		NplCadEnvironment.svgCore(attr, svgObj, node)
+		NplCadEnvironment.svgPresentation(attr, svgObj, node)
+		return node
+	end
+	return nil
+end
+
+function NplCadEnvironment.svgPath(attr, svgObj)
+	if (attr and attr.d) then
+		local commands = {}
+		local co
+		local bf = ""
+		for i = 1, #attr.d do
+			local c = string.sub(attr.d, i, i)
+			if (c == '-') then
 				if (#bf > 0) then
 					table.insert(co.points, bf)
+					bf = ""
 				end
-				table.insert(commands, co)
+				bf = bf..c
+			elseif (c == '.') then
+				if (#bf > 0 and string.find(bf, "%.")) then
+					table.insert(co.points, bf)
+					bf = ""
+				end
+				bf = bf..c
+			elseif (c >= '0' and c <= '9') then
+				bf = bf..c
+			elseif ((c >= 'A' and c <= 'Z') or (c >= 'a' and c <= 'z')) then
+				if (co) then
+					if (#bf > 0) then
+					table.insert(co.points, bf)
+						bf = ""
+					end
+					table.insert(commands, co)
+				else
+					co = {}
+				end
+				co = {command = c, points = {}}
+			elseif (c == ',' or c == ' ' or c == '\n') then
+				if (co) then
+					if (#bf > 0) then
+					table.insert(co.points, bf)
+						bf = ""
+					end
+				end
+			else
+				commonlib.echo("warnning: the path has invalid data")
 			end
-
-			local node = NplCadEnvironment.readSvgPath(commands, svgObj)
-			NplCadEnvironment.svgTransform(xmlNode, svgObj, node)
-			nodeGroup:addChild(node)
 		end
+
+		if (co) then
+			if (#bf > 0) then
+				table.insert(co.points, bf)
+			end
+			table.insert(commands, co)
+		end
+
+		local node = NplCadEnvironment.readSvgPath(commands, svgObj)
+		NplCadEnvironment.svgTransforms(attr, svgObj, node)
+		NplCadEnvironment.svgCore(attr, svgObj, node)
+		NplCadEnvironment.svgPresentation(attr, svgObj, node)
+		return node
 	end
+	return nil
 end
 
 function NplCadEnvironment.readSvgPath(obj, svgObj)
 	local r = SVGHelpers.cssPxUnit
 	--[[
-	if (xmlNode.attr["stroke-width"]) then
-		r = SVGHelpers.cagLengthP(xmlNode.attr["stroke-width"], svgObj.unitsPmm, svgObj.viewP) / 2
+	if (attr["stroke-width"]) then
+		r = SVGHelpers.cagLengthP(attr["stroke-width"], svgObj.unitsPmm, svgObj.viewP) / 2
 	else
 	end
 	]]
@@ -442,7 +456,7 @@ function NplCadEnvironment.readSvgPath(obj, svgObj)
 				local sf = (points[index + 4] == "1") -- sweep-flag
 				cx = cx + SVGHelpers.parseFloat(points[index + 5])
 				cy = cy + SVGHelpers.parseFloat(points[index + 6])
-				paths[pi] = paths[pi]:ppendArc(
+				paths[pi] = paths[pi]:appendArc(
 					{SVGHelpers.svg2cagX(cx, svgObj.unitsPmm), SVGHelpers.svg2cagY(cy, svgObj.unitsPmm)},
 					{xradius = SVGHelpers.svg2cagX(rx, svgObj.unitsPmm), yradius = SVGHelpers.svg2cagY(ry, svgObj.unitsPmm), xaxisrotation = ro, clockwise = sf, large = lf}
 				)
@@ -654,21 +668,48 @@ function NplCadEnvironment.readSvgPath(obj, svgObj)
 	end
 
 	if (pi > 0 and (not pc)) then
-		-- table.insert(children, NplCadEnvironment.read_expandToCAG(r, paths[pi]))	
+		table.insert(children, NplCadEnvironment.read_expandToCAG(r, paths[pi]))	
 	end
-	commonlib.echo(children)
 	return NplCadEnvironment.read_group({action = "union"}, unpack(children))
 end
 
-function NplCadEnvironment.svgUse(xmlRoot, svgObj, nodeGroup)
+function NplCadEnvironment.svgUse(attr, svgObj)
+	return nil
 end
 
-function NplCadEnvironment.svgIgnored(xmlRoot, svgObj, nodeGroup)
+function NplCadEnvironment.svgIgnored(attr, svgObj)
+	return nil
 end
 
-function NplCadEnvironment.svgTransform(xmlNode, svgObj, node)
-	local transform = xmlNode.attr.transform
-	transform = transform or SVGHelpers.cssStyle(xmlNode, "transform")
+function NplCadEnvironment.svgCore(attr, svgObj, node)
+	if (node and attr.id) then node:setId(attr.id) end
+end
+
+function NplCadEnvironment.svgPresentation(attr, svgObj, node)
+	if (attr.display and attr.display == "none") then node:setEnabled(false) end
+	if (attr.color) then end
+	if (attr.opacity) then end
+	if (attr.fill) then
+		NplCadEnvironment:color__(SVGHelpers.cagColor(attr.fill), node)		
+	else
+		local s = SVGHelpers.cssStyle(attr, "fill")
+		if (s) then
+			NplCadEnvironment:color__(SVGHelpers.cagColor(s), node)		
+		end
+	end
+	if (attr["fill-opacity"]) then end
+	if (attr["stroke-width"]) then
+	else
+	end	
+	if (attr.stroke) then
+	else
+	end
+	if (attr["stroke-opacity"]) then end
+end
+
+function NplCadEnvironment.svgTransforms(attr, svgObj, node)
+	local transform = attr.transform
+	transform = transform or SVGHelpers.cssStyle(attr, "transform")
 	if (not transform) then return end
 
 	-- do scale
@@ -688,7 +729,7 @@ function NplCadEnvironment.svgTransform(xmlNode, svgObj, node)
 		commonlib.echo(rotate)
 		local x = tonumber(rotate[1])
 		x = x or 0
-		NplCadEnvironment:rotate__({0, 0, x}, node)
+		NplCadEnvironment:rotate__({0, 0, -x}, node)
 	end
 
 	-- do translate
