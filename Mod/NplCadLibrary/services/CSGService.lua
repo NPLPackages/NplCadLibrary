@@ -154,12 +154,13 @@ function CSGService.build(filepathOrText,isFile,property_values_map)
 	env_node.root_scene_node:log("finished render scene in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
 	LOG.std(nil, "info", "CSG", "\n\nfinished render scene in %.3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
 	
-	-- load NplCadRender.dll or libNplCadRender.so to render model to png
+	-- load NplOSRender.dll or libNplOSRender.so to render model to png
 	-- model: file path where to save the png files
 	--[[
-	local dll_name = "osmesa/libNplCadRender.so"
-	if (System.os.GetPlatform() == "win32")
-		dll_name = "osmesa/NplCadRender.dll"
+	local dll_name = "osmesa/libNplOSRender.so"
+	if (System.os.GetPlatform() == "win32") then
+		dll_name = "osmesa/NplOSRender.dll"
+	end
 	NPL.activate(dll_name, {model = "osmesa/cube", width = 400, height = 400, frame = 12, render = render_list});
 	]]
 
