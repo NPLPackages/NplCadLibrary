@@ -121,6 +121,8 @@ function NplCadEnvironment:new(params)
         pairs = pairs,
 		specified_indexs = {},
 
+        CSGBuildContext = CSGBuildContext,
+
 	};
 	-- also expose the _G for explaining npl only. 
 	o._G = o; 
@@ -190,7 +192,7 @@ function NplCadEnvironment.log(...)
 	self:internalLog(...);
 end
 function NplCadEnvironment:internalLog(...)
-	self.root_scene_node:log(...);
+    CSGBuildContext.log(...);
 end
 --defineProperty--------------------------------------------------------------------------------------------
 function NplCadEnvironment.defineProperty(property_list)
@@ -216,58 +218,104 @@ function NplCadEnvironment.findPropertyFromText(text)
 end
 --end defineProperty--------------------------------------------------------------------------------------------
 --include----------------------------------------------------------------------------------------------------
+-- Check if there has a cirle link in nodes
+-- @param {Node} parent_scene_node
+-- @param {string} filepath
+-- @return {bool} True if found a circle link
+function NplCadEnvironment:check_circle(parent_scene_node,filepath)
+    if(not parent_scene_node or not filepath)then
+        return
+    end
+    local parent = parent_scene_node;
+    while(parent)do
+        local path = parent:getTag("included_filepath");
+        if(path == filepath)then
+            return true;
+        end
+        parent = parent:getParent();
+    end
+end
+-- Create a scene node after include a file
+-- @param {Node} parent_scene_node
+-- @param {string} filepath
+-- @param {bool} is_root - If true ignore circle checking
+function NplCadEnvironment:include__(parent_scene_node,filepath,is_root)
+    if(not parent_scene_node or not filepath)then
+        return
+    end
+    CSGBuildContext.log("include:%s",filepath);
+    if(not is_root)then
+        local has_circle = self:check_circle(parent_scene_node,filepath);
+        if(has_circle)then
+            local path = parent_scene_node:getTag("included_filepath");
+	        CSGBuildContext.log("warning:here is a circle link:%s -> %s",path,filepath);
+            return
+        end
+    end
+    local code = NplCadEnvironment.loadFileContent__(filepath);
+    if(not code)then
+        CSGBuildContext.log("warning:the content is empty [%s]",filepath);
+        return
+    end
+    local env_node = NplCadEnvironment:new();
+    env_node.root_scene_node:setTag("included_filepath",filepath);
+    parent_scene_node:addChild(env_node.root_scene_node);
+
+    local code_func, errormsg = loadstring(code);
+    if(code_func)then
+        setfenv(code_func, env_node);
+		local status, err = pcall(code_func);
+        if(not status)then
+            CSGBuildContext.log(string.format("error:%s[%s]",err,filepath));
+        end
+    else
+        CSGBuildContext.log(string.format("error:%s[%s]",errormsg,filepath));
+    end
+end
+
 function NplCadEnvironment.include(filepath)
 	local self = getfenv(2);
-	local node = self:push__();
-	self:include__(node,filepath);
-end
-function NplCadEnvironment:include__(node,filepath)
-	if(not filepath)then return end
-	local full_filepath = CSGBuildContext.input.root .. filepath;
-	--create a new env node
-	local env_node = NplCadEnvironment:new();
-	env_node:buildFile(node,full_filepath);
+	local parent = self:getNode__()
+	self:include__(parent,filepath);
 end
 function NplCadEnvironment.loadFileContent__(filepath)
 	if(not filepath)then
 		return
 	end
-	local full_path = ParaIO.GetCurDirectory(0)..filepath;
-	local file = ParaIO.open(full_path, "r");
+	local file = ParaIO.open(filepath, "r");
 	if(file:IsValid()) then
 		local text = file:GetText();
 		file:close();
 		return text;
 	end
 end
-function NplCadEnvironment:buildFile(parent_scene_node,filepath)
-	local code = NplCadEnvironment.loadFileContent__(filepath);
-	self.root_scene_node:log("start to build file:%s",filepath);
-	self:build(parent_scene_node,code);
+-- Build a project from a main file
+-- if you want to include files,make sure the search path is added
+function NplCadEnvironment:buildFile(scene_node,filepath)
+	self.root_scene_node:setTag("included_filepath",filepath);
+    scene_node:addChild(self.root_scene_node);
+    local parent_env = getfenv(1);
+    setfenv(1, self);
+    self:include__(self.root_scene_node,filepath,true)
+	parent_env.setfenv(1, parent_env);
 end
-function NplCadEnvironment:build(parent_scene_node,code)
-	local code_func, errormsg = loadstring(code);
-	if(code_func) then
-		setfenv(code_func, self);
-		local ok, result = pcall(code_func);
-		if(ok)then
-			if(parent_scene_node)then
-				parent_scene_node:addChild(self.root_scene_node);
-			end
-		end
-		CSGBuildContext.output.successful = ok;
-		CSGBuildContext.output.compile_error = result;
-
-		CSGBuildContext.output.log = CSGBuildContext.output.log or {};
-		local log = table.concat(self.root_scene_node:GetAllLogs() or {}, "\n");
-
-		CSGBuildContext.output.log[#(CSGBuildContext.output.log)+1] = log;
-
-	else
-		CSGBuildContext.output.successful = false;
-		CSGBuildContext.output.compile_error =  errormsg;
-		CSGBuildContext.output.log = errormsg;
-	end
+-- Build a project from a string
+-- if you want to include files,make sure the search path is added
+function NplCadEnvironment:build(scene_node,code)
+    if(not scene_node or not code)then
+        return
+    end
+    local code_func, errormsg = loadstring(code);
+    if(code_func)then
+		scene_node:addChild(self.root_scene_node);
+        setfenv(code_func, self);
+		local status, err = pcall(code_func);
+        if(not status)then
+            CSGBuildContext.log(string.format("error:%s",err));
+        end
+    else
+        CSGBuildContext.log(string.format("error:%s",errormsg));
+    end
 end
 --end include----------------------------------------------------------------------------------------------------
 

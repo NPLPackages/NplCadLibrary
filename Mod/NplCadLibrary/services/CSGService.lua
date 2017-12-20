@@ -58,7 +58,7 @@ function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable
 		cur_drawable_node:applyTransform(cur_transform,cur_world);
 		pre_drawable_node:applyTransform(pre_transform,pre_world);
 
-		CSGService.scene:log("1.finished applyTransform in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
+		CSGBuildContext.log("1.finished applyTransform in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
 		fromTime = ParaGlobal.timeGetTime();
 		
 		-- do action
@@ -76,7 +76,7 @@ function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable
 			--cur_drawable_node = pre_drawable_node:union(cur_drawable_node);
 		end
 
-		CSGService.scene:log("2.finished boolOperation in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
+		CSGBuildContext.log("2.finished boolOperation in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
 
 		fromTime = ParaGlobal.timeGetTime();
 		if bResult then
@@ -86,7 +86,7 @@ function CSGService.operateTwoNodes(pre_drawable_node,cur_drawable_node,drawable
 				cur_drawable_node:applyTransform(nil,new_transform);
 			end
 		end
-		CSGService.scene:log("3.finished applyTransform for new node in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
+		CSGBuildContext.log("3.finished applyTransform for new node in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
 	end
 	return cur_drawable_node,bResult;
 end
@@ -125,7 +125,7 @@ end
 		log = string, 
 	}
 --]]
-function CSGService.build(filepathOrText,isFile,property_values_map)
+function CSGService.build(filepathOrText,isFile,repos_root,property_values_map)
 	if(not filepathOrText)then
 		return
 	end
@@ -135,28 +135,30 @@ function CSGService.build(filepathOrText,isFile,property_values_map)
 	LOG.std(nil, "info", "CSG", "\n------------------------------\nbegin render scene\n");
 	-- 1. create a env node
 	local env_node = NplCadEnvironment:new();
+    local root_scene_node = env_node.root_scene_node;
 	-- 2. create a scene for renderering
 	local scene = Scene.create("nplcad_scene");
+    --scene:addChild(root_scene_node);
 	CSGService.scene = scene;
 	-- 3. building and get the result
+    -- the root location
+	CSGBuildContext.input.root = repos_root or "";
 	if(isFile)then
-		-- the root location
-		CSGBuildContext.input.root = CSGBuildContext.getFileRoot(filepathOrText);
 		env_node:buildFile(scene,filepathOrText);
 	else
 		env_node:build(scene,filepathOrText);
 	end
 
-	env_node.root_scene_node:log("finished compile scene in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
+	CSGBuildContext.log("finished compile scene in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
 	LOG.std(nil, "info", "CSG", "\nfinished compile scene in %.3f seconds\n", (ParaGlobal.timeGetTime()-fromTime)/1000);
 		
 	local render_list = CSGService.getRenderList(scene)
-	env_node.root_scene_node:log("finished render scene in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
+	CSGBuildContext.log("finished render scene in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
 	LOG.std(nil, "info", "CSG", "\n\nfinished render scene in %.3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
 
 
 	CSGBuildContext.output.property_list = CSGBuildContext.getPropertyList()
-	CSGBuildContext.output.log = CSGBuildContext.getLogs();
+	CSGBuildContext.output.log = CSGBuildContext.getLogs(scene);
 	CSGBuildContext.output.csg_node_values = render_list;
 	return CSGBuildContext.output;
 end
