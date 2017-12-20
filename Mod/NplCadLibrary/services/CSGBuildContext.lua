@@ -19,41 +19,57 @@ CSGBuildContext.input = {
 	root = nil,-- the location of first file which is being built.
 };
 CSGBuildContext.output = {
-	successful = nil,
-	compile_error = nil,
 	log = nil,
 	csg_node_values = nil,
 };
 
 function CSGBuildContext.clear()
+    CSGBuildContext.logs = {};
 	CSGBuildContext.input = {};
 	CSGBuildContext.output = {};
 	CSGBuildContext.is_defined = false;
 	CSGBuildContext.property_fields:clear();
 	CSGBuildContext.property_values = {};
 end
-function CSGBuildContext.getFileRoot(filepath)
-	if(not filepath)then return end
-	local index = string.find(filepath, "/[^/]*$")
-	local cur_dir = string.sub(filepath,1,index);
-	return cur_dir;
-end
-
-local function write_logs(log_table)
+local function write_logs__(log_table)
 	local logs = "";
-	local log_table = log_table or {};
+	log_table = log_table or {};
 	local len = #log_table;
-	while( len > 0) do
-		local n = log_table[len];
-		if(n)then
-			logs = logs .. n .. "\n";
-		end
-		len = len - 1;
-	end
+
+    for k = 1, len do
+        local n = log_table[k];
+        if(logs == "")then
+            logs = n;
+        else
+			logs = logs .. "\n" .. n;
+        end
+    end
 	return logs;
 end
+-- write a log line
+-- @param input: any table or formatted string. 
+function CSGBuildContext.log(input, ...)
+	CSGBuildContext.logs = CSGBuildContext.logs or {};
+	local text;
+	if(type(input) == "string") then
+		local args = {...};
+		if(#args == 0) then
+			text = input;
+		else
+			text = string.format(input, ...);
+		end	
+	elseif(type(input) == "table") then	
+		text = commonlib.serialize_compact(input);
+	else
+		text = tostring(input);
+	end
+	LOG.std(nil, "info", "CSG.log", text);
+	CSGBuildContext.logs[#(CSGBuildContext.logs)+1] = tostring(text);
+end
+
+
 function CSGBuildContext.getLogs()
-	return write_logs(CSGBuildContext.output.log);
+    return write_logs__(CSGBuildContext.logs);
 end
 --[[
 	{ type: "text", control: "text", required: ["index", "type", "name"], initial: "" },
