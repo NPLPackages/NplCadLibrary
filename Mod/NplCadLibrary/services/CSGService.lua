@@ -162,6 +162,21 @@ function CSGService.build(filepathOrText,isFile,repos_root,property_values_map)
 	CSGBuildContext.output.csg_node_values = render_list;
 	return CSGBuildContext.output;
 end
+-- Use compiler 2.0 to build nplcad  
+function CSGService.build2(filename)
+	if(not filename)then
+		return
+	end
+	CSGBuildContext.clear();
+	local fromTime = ParaGlobal.timeGetTime();
+	LOG.std(nil, "info", "BREP", "\n------------------------------\nbegin render scene");
+	local module = NPL.load(filename,true);
+	if(module and module.build)then
+		CSGBuildContext.output.csg_node_values = module.build();
+	end
+	LOG.std(nil, "info", "BREP", "\nfinished compile scene in %.3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
+	return CSGBuildContext.output;
+end
 --load xml to build csg
 function CSGService.appendLoadXmlFunction(code)
 	if(code)then
