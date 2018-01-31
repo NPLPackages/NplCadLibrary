@@ -252,6 +252,8 @@ color({r,g,b});		--create a new parent node and set color value
 color({r,g,b},obj);     --set color value with obj 
 color(color_name);	--create a new parent node and set color value with color name
 color(color_name,obj)	--set color value with obj 
+color(hex);         -- #ff0000
+color(hex,obj);         -- #ff0000
 ```
 ## Log
 ```lua
@@ -290,7 +292,7 @@ math.ult
 ```
 ## Including Files
 ```lua
---TODO
+include("a/b.lua")
 ```
 ## Interactive Parametric Models
 ```lua
@@ -301,7 +303,7 @@ defineProperty({
     { name =  'key_int',		type =  'int',			initial =  20, min =  1, max =  100, step =  1, caption =  'Int' }, 
     { name =  'key_float',		type =  'float',		initial =  0, caption =  'Float' }, 
     { name =  'key_checkbox',	type =  'checkbox',		checked =  true, initial =  '20', caption =  'Checkbox' }, 
-    { name =  'key_color',		type =  'color',		initial =  '#FFB431', caption =  'Color' }, 
+    { name =  'key_color',		type =  'color',		initial =  '#ff0000', caption =  'Color' }, 
     { name =  'key_date',		type =  'date',			initial =  '', min =  '1915-01-01', max =  '2015-12-31', caption =  'Date', placeholder =  'YYYY-MM-DD' }, 
     { name =  'key_email',		type =  'email',		initial =  '', caption =  'Email' }, 
     { name =  'key_password',	type =  'password',		initial =  '', caption =  'Password' }, 

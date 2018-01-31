@@ -199,11 +199,11 @@ function NplCadEnvironment.defineProperty(property_list)
 	local self = getfenv(2);
 	CSGBuildContext.defineProperty(property_list)
 end
-function NplCadEnvironment.get(name)
+function NplCadEnvironment.getPropertyValue(name)
 	local self = getfenv(2);
 	return CSGBuildContext.getPropertyValue(name);
 end
-function NplCadEnvironment.set(name,value)
+function NplCadEnvironment.setPropertyValue(name,value)
 	local self = getfenv(2);
 	CSGBuildContext.setPropertyValue(name,vlaue);
 end

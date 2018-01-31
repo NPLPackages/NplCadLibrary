@@ -31,6 +31,9 @@ NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
+NPL.load("(gl)script/ide/System/Core/Color.lua");
+local Color_Core = commonlib.gettable("System.Core.Color");
+
 local Quaternion = commonlib.gettable("mathlib.Quaternion");
 local Transform = commonlib.gettable("Mod.NplCadLibrary.core.Transform");
 local Node = commonlib.gettable("Mod.NplCadLibrary.core.Node");
@@ -145,6 +148,8 @@ color({r,g,b});		--create a new parent node and set color value
 color({r,g,b},obj); --set color value with obj 
 color(color_name);		--create a new parent node and set color value with color name
 color(color_name,obj)		--set color value with obj 
+color(hex);		--#ff0000
+color(hex,obj);		--#ff0000
 --]]
 function NplCadEnvironment.color(options,obj)
 	local self = getfenv(2);
@@ -154,10 +159,18 @@ function NplCadEnvironment:color__(options,obj)
 	if(not options)then return end
 	local r,g,b;
 	if(is_string(options))then
-		local v = Color.getValue(options);
-		r = v[1];
-		g = v[2];
-		b = v[3];
+		if(string.find(options, "#"))then
+			local color = Color_Core.ColorStr_TO_DWORD(options)
+			r,g,b = Color_Core.DWORD_TO_RGBA(color);
+			r = r / 255;
+			g = g / 255;
+			b = b / 255;
+		else
+			local v = Color.getValue(options);
+			r = v[1];
+			g = v[2];
+			b = v[3];
+		end
 	end
 	if(is_array(options))then
 		r = options[1] or 1;
