@@ -5,7 +5,7 @@ local ObjectPool = commonlib.gettable("Mod.NplCadLibrary.utils.ObjectPool");
 commonlib.use_object_pool = false;
 
 function commonlib.create_new_table(baseClass, class_mt)
-	local o = o or {}
+	local o = {}
 	if(baseClass) then
 		-- this ensures that the constructor of all base classes are called. 
 		if(baseClass.new~=nil) then
