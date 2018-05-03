@@ -117,10 +117,11 @@ scale({1,2,3},obj); --set scale value with obj
 ```
 ### Rotate
 ```lua
-rotate(2);	--create a new parent node and set rotation value          
-rotate(2,obj);	--set rotation value with obj          
-rotate({1,2,3}); --create a new parent node and set rotation value          
-rotate({1,2,3},obj); --set rotation value with obj  
+-- 
+rotate(45);	--create a new parent node and set rotation value          
+rotate(45,obj);	--set rotation value with obj          
+rotate({0,0,45}); --create a new parent node and set rotation value          
+rotate({0,0,45},obj); --set rotation value with obj  
 ```
 ### Translate
 ```lua
