@@ -9,7 +9,9 @@ NPL.load("(gl)Mod/NplCadLibrary/utils/SVGHelpers.lua");
 ------------------------------------------------------------
 ]]
 NPL.load("(gl)Mod/NplCadLibrary/utils/mathext.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/Color.lua");
 local mathext = commonlib.gettable("Mod.NplCadLibrary.utils.mathext");
+local Color = commonlib.gettable("Mod.NplCadLibrary.utils.Color");
 local SVGHelpers = commonlib.gettable("Mod.NplCadLibrary.utils.SVGHelpers");
 
 SVGHelpers.pxPmm = 1 / 0.2822222 -- used for scaling SVG coordinates(PX) to CAG coordinates(MM)
@@ -97,9 +99,45 @@ function SVGHelpers.css2cag(css, unit)
 	return v
 end
 
-function SVGHelpers.cssStyle(xmlNode, name)
+function SVGHelpers.cagColor(value)
+	value = string.lower(value)
+	local rgb = Color.color_map[value]
+	if (not rgb) then
+		if (string.sub(value, 1, 1) == "#") then
+			if (#value == 4) then
+				local r = string.sub(value, 2, 2)
+				local g = string.sub(value, 3, 3)
+				local b = string.sub(value, 4, 4)
+				value = "#"..r..r..g..g..b..b
+			end	
+			if (#value == 7) then
+				rgb = {tonumber(string.sub(value, 2, 3), 16) / 255,
+					tonumber(string.sub(value, 4, 5), 16) / 255,
+					tonumber(string.sub(value, 6, 7), 16) / 255}
+			end
+		else
+			local s = string.match(value, "rgb%s*%((.-)%)")
+			if (s) then
+				rgb = commonlib.split(s, ",")
+				if (string.find(s, "%%")) then
+					rgb = {SVGHelpers.parseFloat(rgb[1]) / 100,
+						SVGHelpers.parseFloat(rgb[2]) / 100,
+						SVGHelpers.parseFloat(rgb[3]) / 100}
+				else
+					rgb = {SVGHelpers.parseFloat(rgb[1]) / 255,
+						SVGHelpers.parseFloat(rgb[2]) / 255,
+						SVGHelpers.parseFloat(rgb[3]) / 255}
+				end
+			end
+		end
+	end
+
+	return rgb
+end
+
+function SVGHelpers.cssStyle(attr, name)
 	local v
-	local style = xmlNode.attr.style
+	local style = attr.style
 	if (style) then
 		v = string.match(style, name.."%s*:%s*(.-);")
 	end

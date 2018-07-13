@@ -155,7 +155,16 @@ function CSGService.build(filepathOrText,isFile,repos_root,property_values_map)
 	local render_list = CSGService.getRenderList(scene)
 	CSGBuildContext.log("finished render scene in %.3f seconds", (ParaGlobal.timeGetTime()-fromTime)/1000);
 	LOG.std(nil, "info", "CSG", "\n\nfinished render scene in %.3f seconds\n------------------------------", (ParaGlobal.timeGetTime()-fromTime)/1000);
-
+	
+	-- load NplOSRender.dll or libNplOSRender.so to render model to png
+	-- model: file path where to save the png files
+	--[[
+	local dll_name = "osmesa/libNplOSRender.so"
+	if (System.os.GetPlatform() == "win32") then
+		dll_name = "osmesa/NplOSRender.dll"
+	end
+	NPL.activate(dll_name, {model = "osmesa/cube", width = 400, height = 400, frame = 12, render = render_list});
+	]]
 
 	CSGBuildContext.output.property_list = CSGBuildContext.getPropertyList()
 	CSGBuildContext.output.log = CSGBuildContext.getLogs(scene);
@@ -339,9 +348,9 @@ function CSGService.saveFile(filepath,content)
 end
 -- right hand and z up
 function CSGService.saveAsSTL(scene,output_file_name)
-    if(not scene or not output_file_name)then return end
-    local render_list = CSGService.getRenderList(scene)
-    ParaIO.CreateDirectory(output_file_name);
+	if(not scene or not output_file_name)then return end
+	local render_list = CSGService.getRenderList(scene)
+	ParaIO.CreateDirectory(output_file_name);
 	local function write_face(file,vertex_1,vertex_2,vertex_3)
 		local a = vertex_3 - vertex_1;
 		local b = vertex_3 - vertex_2;
@@ -362,38 +371,38 @@ function CSGService.saveAsSTL(scene,output_file_name)
 		local name = "ParaEngine";
 		file:WriteString(string.format("solid %s\n",name));
 
-        for __,v in ipairs(render_list) do
-            local world_matrix = v.world_matrix;
-            local vertices = v.vertices;
-            local indices = v.indices;
-            local normals = v.normals;
-            local colors = v.colors;
-            if(world_matrix)then
-                for i,vertex in ipairs(vertices) do
-                    local vertex = vector3d:new(vertex);
-                    vertex:transform(world_matrix);
+		for __,v in ipairs(render_list) do
+			local world_matrix = v.world_matrix;
+			local vertices = v.vertices;
+			local indices = v.indices;
+			local normals = v.normals;
+			local colors = v.colors;
+			if(world_matrix)then
+				for i,vertex in ipairs(vertices) do
+					local vertex = vector3d:new(vertex);
+					vertex:transform(world_matrix);
 
-                    vertices[i] = vertex;
-                end
-            end
-		    local size = #indices;
-		    local k;
-		    for k = 1,size do
-			    local t = math.mod(k,3);
-			    if(t == 0)then
-				    local v1 = vertices[indices[k-2]];    
-				    local v2 = vertices[indices[k-1]];  
-				    local v3 = vertices[indices[k]];  
-				    if(v1 and v2 and v3)then
-                    
-                        local a = vector3d:new(v1);
-                        local b = vector3d:new(v2);
-                        local c = vector3d:new(v3);
-					    write_face(file,a,b,c);
-				    end
-			    end
-		    end
-        end
+					vertices[i] = vertex;
+				end
+			end
+			local size = #indices;
+			local k;
+			for k = 1,size do
+				local t = math.mod(k,3);
+				if(t == 0)then
+					local v1 = vertices[indices[k-2]];    
+					local v2 = vertices[indices[k-1]];  
+					local v3 = vertices[indices[k]];  
+					if(v1 and v2 and v3)then
+					
+						local a = vector3d:new(v1);
+						local b = vector3d:new(v2);
+						local c = vector3d:new(v3);
+						write_face(file,a,b,c);
+					end
+				end
+			end
+		end
 		file:WriteString(string.format("endsolid %s\n",name));
 		file:close();
 	end
