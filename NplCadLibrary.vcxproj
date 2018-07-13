@@ -38,6 +38,9 @@
     <None Include="Mod\NplCadLibrary\csg\CSGPath2D.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGPolygon.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGPolygon2D.lua" />
+    <None Include="Mod\NplCadLibrary\csg\csgtree\CSGNode.lua" />
+    <None Include="Mod\NplCadLibrary\csg\csgtree\CSGPolygonTreeNode.lua" />
+    <None Include="Mod\NplCadLibrary\csg\csgtree\CSGTree.lua" />
     <None Include="Mod\NplCadLibrary\csg\CSGVertex.lua" />
     <None Include="Mod\NplCadLibrary\doms\DomBase.lua" />
     <None Include="Mod\NplCadLibrary\doms\DomCSGModel.lua" />
@@ -48,8 +51,19 @@
     <None Include="Mod\NplCadLibrary\drawables\CSGModel.lua" />
     <None Include="Mod\NplCadLibrary\services\CSGBuildContext.lua" />
     <None Include="Mod\NplCadLibrary\services\CSGService.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Boolean.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Extrusion.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Import_bmax.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Import_stl.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Import_svg.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Others.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Primitive2d.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Primitive3d.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Text.lua" />
+    <None Include="Mod\NplCadLibrary\services\interface\Transformation.lua" />
     <None Include="Mod\NplCadLibrary\services\NplCadEnvironment.lua" />
     <None Include="Mod\NplCadLibrary\testcase\TestConnector.lua" />
+    <None Include="Mod\NplCadLibrary\testcase\TestCSG.lua" />
     <None Include="Mod\NplCadLibrary\testcase\TestFrame.lua" />
     <None Include="Mod\NplCadLibrary\testcase\TestLine2D.lua" />
     <None Include="Mod\NplCadLibrary\testcase\TestLine3D.lua" />
@@ -73,6 +87,7 @@
     <None Include="Mod\NplCadLibrary\utils\mathext.lua" />
     <None Include="Mod\NplCadLibrary\utils\matrix_decomp.lua" />
     <None Include="Mod\NplCadLibrary\utils\ObjectPool.lua" />
+    <None Include="Mod\NplCadLibrary\utils\SVGHelpers.lua" />
     <None Include="Mod\NplCadLibrary\utils\tableext.lua" />
     <None Include="README.md" />
   </ItemGroup>

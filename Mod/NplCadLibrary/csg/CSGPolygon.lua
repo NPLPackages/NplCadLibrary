@@ -19,14 +19,20 @@ local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 -------------------------------------------------------
 ]]
 NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
-
+NPL.load("(gl)script/ide/math/vector.lua");
 NPL.load("(gl)script/ide/math/Plane.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
-
+NPL.load("(gl)script/ide/math/Matrix4.lua");
+NPL.load("(gl)Mod/NplCadLibrary/cag/CAG.lua");
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
+local vector3d = commonlib.gettable("mathlib.vector3d");
 local Plane = commonlib.gettable("mathlib.Plane");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
+local Matrix4 = commonlib.gettable("mathlib.Matrix4");
+local CAG = commonlib.gettable("Mod.NplCadLibrary.cag.CAG");
+local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
 
 local CSGPolygon = commonlib.inherit_ex(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon"));
 
@@ -58,7 +64,7 @@ end
 function CSGPolygon:GetPlane()
 	if(not self.plane) then
 		local vertices = self.vertices;
-		self.plane:set(Plane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos));	
+		self.plane = Plane.fromPoints(vertices[1].pos, vertices[2].pos, vertices[3].pos);
 	end
 	return self.plane;
 end
@@ -101,4 +107,108 @@ function CSGPolygon:transform(matrix4x4)
 		self.vertices = tableext.reverse(self.vertices);
     end
     return self;
+end
+function CSGPolygon:translate(offset)
+    return self:transform(Matrix4.translation(offset));
+end
+-- Extrude a polygon into the direction offsetvector
+-- Returns a CSG object
+function CSGPolygon:extrude(offsetvector)
+    local newpolygons = {};
+
+    local polygon1 = self:clone();
+    local direction = polygon1.plane:GetNormal():dot(offsetvector);
+    if (direction > 0) then
+        polygon1 = polygon1:flip();
+    end
+    table.insert(newpolygons,polygon1);
+    local polygon2 = polygon1:clone();
+    polygon2:translate(offsetvector);
+    local numvertices = self:getVertexCnt();
+    for i = 1, numvertices do
+        local sidefacepoints = {};
+        local nexti = 1;
+        if(i < numvertices)then
+            nexti = i + 1;
+        end
+        table.insert(sidefacepoints,polygon1.vertices[i].pos);
+        table.insert(sidefacepoints,polygon2.vertices[i].pos);
+        table.insert(sidefacepoints,polygon2.vertices[nexti].pos);
+        table.insert(sidefacepoints,polygon1.vertices[nexti].pos);
+        local sidefacepolygon = CSGPolygon.createFromPoints(sidefacepoints, self.shared);
+        table.insert(newpolygons,sidefacepolygon);
+    end
+    polygon2 = polygon2:flip();
+    table.insert(newpolygons,polygon2);
+    return CSG.fromPolygons(newpolygons);
+end
+-- project the 3D polygon onto a plane
+function CSGPolygon:projectToOrthoNormalBasis(orthobasis)
+    local points2d = {};
+	for k,vertex in ipairs(self.vertices) do 
+        table.insert(points2d,orthobasis:to2D(vertex.pos));
+    end
+
+    local result = CAG.fromPointsNoCheck(points2d);
+    local area = result:area();
+    local EPS = tonumber("1e-5");
+    if (math.abs(area) < EPS) then
+        -- the polygon was perpendicular to the orthnormal plane. The resulting 2D polygon would be degenerate
+        -- return an empty area instead:
+        result = CAG:new();
+    elseif (area < 0) then
+        result = result:flipped();
+    end
+    return result;
+end
+-- Create a polygon from the given points
+function CSGPolygon.createFromPoints(points, shared, plane)
+    local normal;
+    if(not plane)then
+        normal = vector3d:new(0,0,0);
+    else
+        normal = plane:GetNormal();
+    end
+    
+    local vertices = {};
+    for k,p in ipairs(points) do
+        local vec = vector3d:new(p);
+        local vertex = CSGVertex:new():init(vec,normal);
+        table.insert(vertices,vertex);
+    end
+    local polygon = CSGPolygon:new():init(vertices, shared, plane);
+    return polygon;
+end
+-- returns an array with a CSG.Vector3D (center point) and a radius
+function CSGPolygon:boundingSphere()
+    if (not self.cachedBoundingSphere) then
+        local box = self:boundingBox();
+        local middle = (box[1] + box[2]):MulByFloat(0.5);
+        local radius3 = box[2] - middle;
+        local radius = radius3:length();
+        self.cachedBoundingSphere = {middle, radius};
+    end
+    return self.cachedBoundingSphere;
+end
+-- returns an array of two CSG.Vector3Ds (minimum coordinates and maximum coordinates)
+function CSGPolygon:boundingBox()
+    if (not self.cachedBoundingBox) then
+        local minpoint = vector3d:new(0,0,0);
+        local maxpoint = vector3d:new(0,0,0);
+        local vertices = self.vertices;
+        local numvertices = #vertices;
+        if (numvertices == 0) then
+            minpoint:set(0,0,0);
+        else
+            minpoint:set(vertices[1].pos);
+        end
+        maxpoint:set(minpoint);
+        for i = 2,numvertices do
+            local point = vertices[i].pos;
+            minpoint = minpoint:min(point);
+            maxpoint = maxpoint:max(point);
+        end
+        self.cachedBoundingBox = {minpoint, maxpoint};
+    end
+    return self.cachedBoundingBox;
 end

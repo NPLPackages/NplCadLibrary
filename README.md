@@ -5,28 +5,26 @@
 	* [Cube](#cube)
 	* [Sphere](#sphere)
 	* [Cylinder](#cylinder)
-	* **Todo:** [Torus](#torus)
-	* [Polyedron](#polyedron)
-	* **Todo:**  [Text](#text)
+	* [Torus](#torus)
+	* [Polyhedron](#polyhedron)
+	* [Text](#text)
  - [Transformations 3D](#transformations-3d)
     * [Scale](#scale)
     * [Rotate](#rotate)
     * [Translate](#translate)
-    * [Center](#center)
-    * **Todo:**  [Matrix Operations](#matrix-operations)
-    * **Todo:**  [Mirror](#mirror)
+    * [Mirror](#mirror)
     * [Union](#union)
     * [Intersection](#intersection)
     * [Difference(Subtraction)](#difference)
  - [Primitives 2D](#primitives-2d)
     * [Circle](#circle)
+    * [Ellipse](#ellipse)
     * [Square](#square)
     * [Rectangle](#rectangle)
     * [Polygon](#polygon)
  - [Transformations 2D](#transformations-2d)
  - [Paths 2D](#paths-2d)
- - **Todo:** [Hull](#hull)
- - **Todo:** [Chain Hull](#chain-hull)
+ - [Group](#group)
  - [Extruding / Extrusion](#extruding-extrusion)
    * [Linear Extrude](#linear-extrude)
    * [Rectangular Extrude](#rectangular-extrude)
@@ -37,6 +35,7 @@
  - [Including Files](#including-files)
  - [Interactive Parametric Models](#interactive-parametric-models)
  - [Scene Node Tags](#scene-node-tags)
+ - [Screenshot](#screenshot)
 ## Primitives 3D
 ### Cube
 ```lua
@@ -45,9 +44,10 @@ cube(1);
 cube({size = 1});
 cube({size = {1,2,3}});
 cube({size = 1, center = true}); -- default center:false
-cube({size = 1, center = {true,true,false}}); -- individual axis center true or false
-
-roundedCube();-- todo
+cube({size = 1, center = {false,false,false}}); -- individual axis center true or false
+cube({size = {1,2,3}, round = true, }); -- round cube
+cube({size = {4,4,4}, radius = {1,1,1},}); -- round cube
+cube({size = {1,2,3}, radius = 0.2, fn = 8, }); -- round cube
 ```
 ### Sphere
 ```lua
@@ -67,32 +67,45 @@ cylinder({r = 1, h = 10, center = {true, true, false}});  -- individual x,y,z ce
 cylinder({r1 = 3, r2 = 0, h = 10});
 cylinder({d1 = 1, d2 = 0.5, h = 10});
 cylinder({from = {0,0,0}, to = {0,0,10}, r1 = 1, r2 = 2, fn = 50});
-
-roundedCylinder(); -- todo
+cylinder({r1 = 3, r2 = 0, h = 10, round = true, });
+cylinder({r = 1, h = 10, round = true, fn = 16}); -- round cylinder
 ```
 ### Torus
+- ri = inner radius (default: 1)
+- ro = outer radius (default: 4)
+- fni = inner resolution (default: 16)
+- fno = outer resolution (default: 32)
+- roti = inner rotation (default: 0)
 ```lua
--- todo
+torus(); -- ri = 1, to = 4
+torus({ ri = 1.5, ro = 3, });
+torus({ ri = 0.2 });
+torus({ fni = 4,  }); -- make inner circle fn = 4 => square
+torus({ fni = 4, roti = 45, });
+torus({ fni = 4, fno = 4, roti = 45, });
+torus({ fni = 4, fno = 5, roti = 45, });
 ```
 ### Polyhedron
 ```lua
-polyhedron({ 
-         points = {
-               {0, -10, 60}, {0, 10, 60}, {0, 10, 0}, {0, -10, 0}, {60, -10, 60}, {60, 10, 60}, 
-               {10, -10, 50}, {10, 10, 50}, {10, 10, 30}, {10, -10, 30}, {30, -10, 50}, {30, 10, 50}
-               }, 
-         triangles = {
-                  {0,3,2},  {0,2,1},  {4,0,5},  {5,0,1},  {5,2,4},  {4,2,3},
-                  {6,8,9},  {6,7,8},  {6,10,11},{6,11,7}, {10,8,11},
-                  {10,9,8}, {3,0,9},  {9,0,6},  {10,6, 0},{0,4,10},
-                  {3,9,10}, {3,10,4}, {1,7,11}, {1,11,5}, {1,8,7},  
-                  {2,8,1},  {8,2,11}, {5,11,2}
-                  }
-      });
+polyhedron();
+polyhedron({
+    points = { { 0,0,0 }, { 2,0,0 }, { 2,2,0 } },
+    triangles = { { 1,2,3 } }       -- first index is 1 in lua table                             
+});
+polyhedron({
+    points = { { 10,10,0 }, { 10,-10,0 }, { -10,-10,0 }, { -10,10,0 }, -- the four points at base
+                { 0,0,10 } },                                           -- the apex point 
+    triangles = { { 1,2,5 }, { 2,3,5 }, { 3,4,5 }, { 4,1,5 },          -- each triangle side
+            { 2,1,4 },{ 3,2,4 } }                                       -- two triangles for square base
+});
 ```
 ### Text
 ```lua
--- todo
+local segments = vector_text(0,0,"Hello NPL");
+local k,points;
+for k,points in ipairs(segments) do
+    rectangular_extrude({ w = 3, h = 1, }, path2d(points));
+end
 ```
 ## Transformations 3D
 ### Scale
@@ -114,13 +127,10 @@ rotate({1,2,3},obj); --set rotation value with obj
 translate({0,0,10}); --create a new parent node and set translation value 
 translate({0,0,10},obj);	--set translation value with obj  
 ```
-### Matrix Operations
-```lua
--- todo
-```
 ### Mirror
 ```lua
--- todo
+mirror({1,0,0},cube(1));
+mirror({10,20,90},cube(1));
 ```
 ### Union
 ```lua
@@ -142,38 +152,44 @@ circle(1);
 circle({d= 2, fn=5});
 circle({r= 2, fn=5});
 circle({r= 3, center = true}); -- center: false (default)
-circle({r=3, center = {true, true}}); -- individual x,z center flags
+```
+### Ellipse
+```lua
+ellipse();
+ellipse({center = {1,2}});
+ellipse({r = 2});
+ellipse({r = {1,2}});
+ellipse({center = {1,2}, r = {1,2}, });
 ```
 ### Square
 ```lua
-translate(4,0,0,square());
-translate(4,0,4,square(2));
-translate(4,0,8,square({size = 1.5}));
-translate(4,0,12,square({size = {1,2}}));
-translate(4,0,16,square({size = 1, center = true}));
-translate(4,0,20,square({size = 1, center = {true,true}}));
+square();
+square(1); -- 1x1
+square({2,3}); -- 2x3
+square({size = {2,4}, center = true}); --2x4, center = false is default
 ```
 ### Rectangle
 ```lua
-translate(12,0,0,rectangle());
-translate(12,0,4,rectangle({center = 1}));
-translate(12,0,8,rectangle({center = {1,2}}));
-translate(12,0,12,rectangle({radius = 2}));
-translate(12,0,16,rectangle({radius = {2,4}}));
-translate(12,0,20,rectangle({center = {1,2}, radius = {2,4}}));
+rectangle();
+rectangle({center = 1});
+rectangle({center = {1,2}});
+rectangle({r = 2});
+rectangle({r = {2,4}});
+rectangle({center = {1,2}, r = {2,4}});
 
-translate(16,0,0,roundedRectangle());
-translate(16,0,4,roundedRectangle({center = 1}));
-translate(16,0,8,roundedRectangle({center = {1,2}}));
-translate(16,0,12,roundedRectangle({radius = 2}));
-translate(16,0,16,roundedRectangle({radius = {2,4}}));
-translate(16,0,20,roundedRectangle({center = {1,2}, radius = {2,4}}));
-translate(16,0,24,roundedRectangle({center = {1,2}, radius = {2,4},roundradius = 1,resolution = 32}));
+roundedRectangle();
+roundedRectangle({center = 1});
+roundedRectangle({center = {1,2}});
+roundedRectangle({r = 2});
+roundedRectangle({r = {2,4}});
+roundedRectangle({center = {1,2}, r = {2,4}});
+roundedRectangle({center = {1,2}, r = {2,4},roundradius = 1,resolution = 32});
 ```
 ### Polygon
 ```lua
 polygon({ {0,0},{3,0},{3,3} }); -- openscad like
-translate(0,0,4,polygon({ points = { {0,0},{3,0},{3,3},{0,6} }})); 
+polygon({ points = { {0,0},{3,0},{3,3},{0,6} }});
+polygon({ points = { {0,0},{3,0},{3,3},{0,6} }, paths = { {1,2,3},{2,3,4} } }); -- note: start index is 1 in lua table
 ```
 ## Transformations 2D
 ```lua
@@ -181,46 +197,54 @@ translate(0,0,4,polygon({ points = { {0,0},{3,0},{3,3},{0,6} }}));
 ## Paths 2D
 ```lua
 local path = path2d({ points = { {0,0},{3,0},{3,3},{0,6} }, closed = false});
-translate({1,0,0},expandToCAG(path));
+translate({1,0,0},expandToCAG(0.1,path));
 path = path:appendPoint({-1,5});
-translate({-3,0,0},expandToCAG(path));
+translate({-3,0,0},expandToCAG(0.1,path));
 path = path:appendPoints({{-1,4},{-2,3}});
-translate({-7,0,0},expandToCAG(path));
+translate({-7,0,0},expandToCAG(0.1,path));
 local path2 = path2d({ arc = {center={0,0,0},radius=2,startangle=30,endangle= 270,resolution=16,maketangent=false}, closed = false});
-translate({2,0,-4},expandToCAG(path2));
+translate({2,0,-4},expandToCAG(0.1,path2));
 
 local path3 = path2d( {{0,3},{2,2}});
 path3 = path3:appendBezier({{0,2},{2,1},{2,0},{0,0},{-2,0},{-2,1}},{resolution =16});
-translate({-3,0,-4},expandToCAG(path3));
+translate({-3,0,-4},expandToCAG(0.1,path3));
 ```
-## Hull
+## Group
 ```lua
--- todo
-```
-## Chain Hull
-```lua
--- todo
+local a = square({size = { 1, 4 }, center = true, attach = false,});
+local b = circle({ r = 1, center = true, attach = false, });
+local c = circle({ r = 0.5, center = true, attach = false, });
+
+local node1 = group({attach = false, action = "union", },a,b) -- union/difference/intersection, default is union.
+local node2 = group({attach = false, action = "difference", },node1,c)
+linear_extrude({ offset = { 0, 0, 10 }, twistangle = 360, twiststeps = 100, },node2);
 ```
 ## Extruding Extrusion
 ### Linear Extrude
 ```lua
-translate({5,0,7},linear_extrude(square(1)));
-translate({1,0,7},linear_extrude(square(1),{offset = {0,5,0}, twistangle = 360, twiststeps = 100}));
-translate({-3,0,7},linear_extrude(square(1),{offset = {1,4,1}, twistangle = 90, twiststeps = 16}));
+linear_extrude({ offset = {0,0,10} , } ,square({ size = { 2, 2 }, center = true, attach = false, }));
+linear_extrude({ offset = {0,0,10} , twistangle = 180, twiststeps = 100, } , square({ size = { 2, 2 }, center = true, attach = false, }));
+linear_extrude({ offset = {0,0,10} , twistangle = 360, twiststeps = 100, } , rectangle({ center = {0,0}, r = {1,1}, attach = false, }));
+linear_extrude({ offset = {0,0,10} , twistangle = 360, twiststeps = 100, } , roundedRectangle({ center = {0,0}, r = {1,1}, attach = false, }));
+linear_extrude({ offset = {0,0,10} , twistangle = 360, twiststeps = 100, } , circle({ r = 1, center = true, attach = false, }));
+linear_extrude({ offset = {0,0,10} } , ellipse({ r = {2,4}, attach = false, }));
+linear_extrude({ offset = {0,0,10}, } , polygon({ points = { {0,0},{3,0},{3,3},{0,6} }, attach = false, }));
 ```
 ### Rectangular Extrude
 ```lua
-translate({-7,0,0},rectangular_extrude(path,{width = 0.3, height = 0.4, fn = 16}));
-path.closed = false;
-translate({-11,0,0},rectangular_extrude(path));
+rectangular_extrude({ w = 1, h = 0.2, fn = 64 },path2d({ points = { {0,0},{3,0},{3,3} }, }));
+rectangular_extrude({ w = 0.1, h = 0.2, fn = 64 },path2d({ points = { {0,0},{3,0},{3,3},{0,6} } ,closed = true  } ));
 ```
 ### Rotate Extrude
 ```lua
-translate({-7,2,7},rotate_extrude(polygon({ {1,0},{0,2},{2,2} })));
-translate({-11,2,7},rotate_extrude(polygon({ {1,0},{0,2},{2,2} }),{angle = 270,fn = 12}));
+rotate_extrude({ offset = {4,0,0} , fn = 12, } ,square({ size = { 2, 2 }, attach = false, }));
+rotate_extrude({ offset = {4,0,0}, fn = 160, } ,rectangle({ attach = false, }));
+rotate_extrude({ offset = {4,0,0}, fn = 220, } ,roundedRectangle({ attach = false, }));
+rotate_extrude({ offset = {4,0,0}, } ,circle({r = 1, fn = 30, center = true, attach = false, }));
+rotate_extrude({ offset = {4,0,0}, fn = 160, } ,polygon({ points = { {0,0},{3,0},{3,3} }, attach = false, }));
 ```
 ## Colors
-[svg colors](https://www.w3.org/TR/css3-color/#svg-color)
+Color by names: [svg colors](https://www.w3.org/TR/css3-color/#svg-color)
 ```lua
 color("red")
 color({255/255,0,0})
@@ -266,8 +290,7 @@ math.ult
 ```
 ## Including Files
 ```lua
-include("a.npl")
-include("b/c.npl")
+--TODO
 ```
 ## Interactive Parametric Models
 ```lua
@@ -291,3 +314,5 @@ defineProperty({
 |:----:|:----:|:----:|
 |csg_action|union/intersection/difference
 |color|{r,g,b}|
+## Screenshot
+![image](https://cloud.githubusercontent.com/assets/5885941/26521519/cae75e9c-431c-11e7-916d-792a5df72092.png)

@@ -46,11 +46,17 @@ function CSGBSPNode:init(polygons)
 	self.front = nil;
 	self.back = nil;
 	if (polygons) then
+        self:clearPlane(polygons);
 		self:build(polygons);
 	end
 	return self;
 end
-
+function CSGBSPNode:clearPlane(polygons)
+    if(not polygons)then return end
+    for __,p in ipairs(polygons) do
+        p.plane = nil; 
+    end
+end
 -- this is a copy on write clone
 function CSGBSPNode:clone()
 	local node = CSGBSPNode:new();
@@ -97,7 +103,9 @@ function CSGBSPNode:invert(bInplace)
 	if(self.back)then
 		self.back:invert(bInplace);
 	end
-	self.front, self.back = self.back, self.front;
+	local temp = self.front;
+	self.front = self.back;
+    self.back = temp;
 end
 
 --Recursively remove all polygons in `polygons` that are inside this BSP tree.
@@ -302,11 +310,11 @@ function CSGBSPNode:splitPolygon(polygon, coplanarFront, coplanarBack, front, ba
 		end
 		if(frontCount >= 3)then
 			front = front or {};
-			front[#front+1] = CSGPolygon:new():init(f,polygon.shared,polygon.plane);
+			front[#front+1] = CSGPolygon:new():init(f,polygon.shared);
 		end
 		if(backCount >= 3)then
 			back = back or {};
-			back[#back+1] = CSGPolygon:new():init(b,polygon.shared,polygon.plane);
+			back[#back+1] = CSGPolygon:new():init(b,polygon.shared);
 		end
 	end
 	return front, back, coplanarFront, coplanarBack;

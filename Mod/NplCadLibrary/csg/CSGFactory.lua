@@ -17,6 +17,8 @@ NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGBSPNode.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSG.lua");
+NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
+
 
 local vector3d = commonlib.gettable("mathlib.vector3d");
 local vector2d = commonlib.gettable("mathlib.vector2d");
@@ -26,13 +28,14 @@ local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSGBSPNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode");
 local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
-
+local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
 local math_floor = math.floor;
 local math_mod = math.mod;
 local math_max = math.max;
 local math_ceil = math.ceil;
 local math_sin = math.sin;
 local math_cos = math.cos;
+local math_abs = math.abs;
 local math_pi = 3.1415926;
 local CSGFactory = commonlib.gettable("Mod.NplCadLibrary.csg.CSGFactory");
 CSGFactory.defaultResolution2D = 32;
@@ -101,6 +104,67 @@ function CSGFactory.cube(options)
 	
 	return CSG.fromPolygons(polygons)
 end
+function CSGFactory.sphere(options)
+    options = options or {};
+	local center = CSGFactory.parseOptionAs3DVector(options, "center", {0, 0, 0});
+    local radius = CSGFactory.parseOptionAsFloat(options, "radius", 1);
+    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSG.defaultResolution3D);
+    local xvector, yvector, zvector;
+    if(options.axes and is_array(options.axes))then
+        xvector = vector3d:new(options.axes[0]):normalize():MulByFloat(radius);
+        yvector = vector3d:new(options.axes[1]):normalize():MulByFloat(radius);
+        zvector = vector3d:new(options.axes[2]):normalize():MulByFloat(radius);
+    else
+        xvector = vector3d:new({1,0,0}):MulByFloat(radius);
+        yvector = vector3d:new({0,-1,0}):MulByFloat(radius);
+        zvector = vector3d:new({0,0,1}):MulByFloat(radius);
+    end
+    if (resolution < 4) then
+		resolution = 4;
+	end
+	local qresolution = math_ceil(resolution / 4);
+    local prevcylinderpoint;
+    local polygons = {};
+    for slice1 = 0, resolution do
+        local angle = math_pi * 2.0 * slice1 / resolution;
+        local cylinderpoint = xvector:clone():MulByFloat(math_cos(angle)):add(yvector:clone():MulByFloat(math_sin(angle)));
+         if (slice1 > 0) then
+            -- cylinder vertices:
+            local vertices = {};
+            local prevcospitch, prevsinpitch;
+            for slice2 = 0, qresolution do
+                local pitch = 0.5 * math_pi * slice2 / qresolution;
+                local cospitch = math_cos(pitch);
+                local sinpitch = math_sin(pitch);
+                if (slice2 > 0) then
+                    vertices = {};
+                        
+                    table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(prevcospitch):sub(zvector:clone():MulByFloat(prevsinpitch)))));
+                    table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(prevcospitch):sub(zvector:clone():MulByFloat(prevsinpitch)))));
+                    if (slice2 < qresolution) then
+                        table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(cospitch):sub(zvector:clone():MulByFloat(sinpitch)))));
+                    end
+                    table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(cospitch):sub(zvector:clone():MulByFloat(sinpitch)))));
+                    table.insert(polygons,CSGPolygon:new():init(vertices));
+                    vertices = {};
+                    table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(prevcospitch):add(zvector:clone():MulByFloat(prevsinpitch)))));
+                    table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(prevcospitch):add(zvector:clone():MulByFloat(prevsinpitch)))));
+                    if (slice2 < qresolution) then
+                        table.insert(vertices,CSGVertex:new():init(center:clone():add(cylinderpoint:clone():MulByFloat(cospitch):add(zvector:clone():MulByFloat(sinpitch)))));
+                    end
+                    table.insert(vertices,CSGVertex:new():init(center:clone():add(prevcylinderpoint:clone():MulByFloat(cospitch):add(zvector:clone():MulByFloat(sinpitch)))));
+                    vertices = tableext.reverse(vertices);
+                    table.insert(polygons,CSGPolygon:new():init(vertices));
+                end
+                prevcospitch = cospitch;
+                prevsinpitch = sinpitch;
+            end
+        end
+        prevcylinderpoint = cylinderpoint;
+
+    end
+    return CSG.fromPolygons(polygons);
+end
 --[[
 //	Construct a solid sphere
     //
@@ -120,7 +184,7 @@ end
 http://gamedev.stackexchange.com/questions/16585/how-do-you-programmatically-generate-a-sphere
 --]]
 
-function CSGFactory.sphere(options)
+function CSGFactory.sphere2(options)
 	options = options or {};
 	local c = CSGFactory.parseOptionAs3DVector(options, "center", {0, 0, 0});
     local r = CSGFactory.parseOptionAsFloat(options, "radius", 1);
@@ -261,6 +325,98 @@ function CSGFactory.cylinder(options)
   return CSG.fromPolygons(polygons);
 end
 --[[
+    // Like a cylinder, but with rounded ends instead of flat
+    //
+    // Parameters:
+    //   start: start point of cylinder (default [0, -1, 0])
+    //   end: end point of cylinder (default [0, 1, 0])
+    //   radius: radius of cylinder (default 1), must be a scalar
+    //   resolution: determines the number of polygons per 360 degree revolution (default 12)
+    //   normal: a vector determining the starting angle for tesselation. Should be non-parallel to start.minus(end)
+    //
+    // Example usage:
+    //
+    //     var cylinder = CSG.roundedCylinder({
+    //       start: [0, -1, 0],
+    //       end: [0, 1, 0],
+    //       radius: 1,
+    //       resolution: 16
+    //     });
+--]]
+function CSGFactory.roundedCylinder(options)
+    options = options or {};
+	local p1 = CSGFactory.parseOptionAs3DVector(options, "from", {0, -1, 0});
+    local p2 = CSGFactory.parseOptionAs3DVector(options, "to", {0, 1, 0});
+    local radius = CSGFactory.parseOptionAsFloat(options, "radius", 1);
+    local direction = p2 - p1;
+    local defaultnormal;
+    if (math_abs(direction[1]) > math_abs(direction[2])) then
+        defaultnormal = vector3d:new(0, 1, 0);
+    else
+        defaultnormal = vector3d:new(1, 0, 0);
+    end
+    local normal = CSGFactory.parseOptionAs3DVector(options, "normal", defaultnormal);
+    local resolution = CSGFactory.parseOptionAsInt(options, "resolution", CSGFactory.defaultResolution3D);
+    if (resolution < 4) then resolution = 4; end
+    local polygons = {};
+    local qresolution = math_floor(0.25 * resolution);
+    local length = direction:length();
+    if (length < tonumber("1e-10")) then
+        return CSGFactory.sphere({
+            center =  p1,
+            radius =  radius,
+            resolution = resolution
+        });
+    end
+    local zvector = direction:normalize():MulByFloat(radius);
+    local xvector = zvector:clone():cross(normal):normalize():MulByFloat(radius);
+    local yvector = xvector:clone():cross(zvector):normalize():MulByFloat(radius);
+    local prevcylinderpoint;
+    resolution = resolution - 1;
+    for slice1 = 0, resolution do
+        local angle = math_pi * 2.0 * slice1 / resolution;
+        local cylinderpoint = xvector:clone():MulByFloat(math_cos(angle)) + (yvector:clone():MulByFloat(math_sin(angle)));
+        if (slice1 > 0) then
+            -- cylinder vertices:
+            local vertices = {};
+            table.insert(vertices,CSGVertex:new():init(p1:clone():add(cylinderpoint)));
+            table.insert(vertices,CSGVertex:new():init(p1:clone():add(prevcylinderpoint)));
+            table.insert(vertices,CSGVertex:new():init(p2:clone():add(prevcylinderpoint)));
+            table.insert(vertices,CSGVertex:new():init(p2:clone():add(cylinderpoint)));
+            table.insert(polygons,CSGPolygon:new():init(vertices));
+            local prevcospitch, prevsinpitch;
+            for slice2 = 0, qresolution do
+                local pitch = 0.5 * math_pi * slice2 / qresolution;
+                local cospitch = math_cos(pitch);
+                local sinpitch = math_sin(pitch);
+                if (slice2 > 0) then
+                    vertices = {};
+                    table.insert(vertices,CSGVertex:new():init(p1:clone():add(prevcylinderpoint:clone():MulByFloat(prevcospitch):sub(zvector:clone():MulByFloat(prevsinpitch)))));
+                    table.insert(vertices,CSGVertex:new():init(p1:clone():add(cylinderpoint:clone():MulByFloat(prevcospitch):sub(zvector:clone():MulByFloat(prevsinpitch)))));
+                    if (slice2 < qresolution) then
+                        table.insert(vertices,CSGVertex:new():init(p1:clone():add(cylinderpoint:clone():MulByFloat(cospitch):sub(zvector:clone():MulByFloat(sinpitch)))));
+                    end
+                    table.insert(vertices,CSGVertex:new():init(p1:clone():add(prevcylinderpoint:clone():MulByFloat(cospitch):sub(zvector:clone():MulByFloat(sinpitch)))));
+                    table.insert(polygons,CSGPolygon:new():init(vertices));
+                    vertices = {};
+                    table.insert(vertices,CSGVertex:new():init(p2:clone():add(prevcylinderpoint:clone():MulByFloat(prevcospitch):add(zvector:clone():MulByFloat(prevsinpitch)))));
+                    table.insert(vertices,CSGVertex:new():init(p2:clone():add(cylinderpoint:clone():MulByFloat(prevcospitch):add(zvector:clone():MulByFloat(prevsinpitch)))));
+                    if (slice2 < qresolution) then
+                        table.insert(vertices,CSGVertex:new():init(p2:clone():add(cylinderpoint:clone():MulByFloat(cospitch):add(zvector:clone():MulByFloat(sinpitch)))));
+                    end
+                    table.insert(vertices,CSGVertex:new():init(p2:clone():add(prevcylinderpoint:clone():MulByFloat(cospitch):add(zvector:clone():MulByFloat(sinpitch)))));
+                    tableext.reverse(vertices);
+                    table.insert(polygons,CSGPolygon:new():init(vertices));
+                end
+                prevcospitch = cospitch;
+                prevsinpitch = sinpitch;
+            end
+        end
+        prevcylinderpoint = cylinderpoint;
+    end
+    return CSG.fromPolygons(polygons);
+end
+--[[
 	// Construct an axis-aligned solid rounded cuboid.
     // Parameters:
     //   center: center of cube (default [0,0,0])
@@ -281,7 +437,6 @@ function CSGFactory.roundedCube(options)
 		local EPS = tonumber("1e-5");
         local minRR = tonumber("1e-2"); --minroundradius 1e-3 gives rounding errors already
         local center, cuberadius;
-
         options = options or {};
 		if(options["corner1"] or options["corner2"])then
 			if(options["center"] or options["radius"])then
@@ -308,28 +463,25 @@ function CSGFactory.roundedCube(options)
         local roundradius = CSGFactory.parseOptionAs3DVector(options, "roundradius", {0.2, 0.2, 0.2});
         -- slight hack for now - total radius stays ok
         roundradius = vector3d:new(math_max(roundradius[1], minRR), math_max(roundradius[2], minRR), math_max(roundradius[3], minRR));
+
         local innerradius = cuberadius:sub(roundradius);
         if (innerradius[1] < 0 or innerradius[2] < 0 or innerradius[3] < 0)then
 			LOG.std(nil, "error", "CSGFactory.roundedCube", "roundradius <= radius!");
 			return
         end
         local res = CSGFactory.sphere({radius = 1, resolution = resolution});
-        --res = res:scale(roundradius);
-        --innerradius[1] > EPS && (res = res.stretchAtPlane([1, 0, 0], [0, 0, 0], 2*innerradius[1]));
-        --innerradius[2] > EPS && (res = res.stretchAtPlane([0, 1, 0], [0, 0, 0], 2*innerradius[2]));
-        --innerradius[3] > EPS && (res = res.stretchAtPlane([0, 0, 1], [0, 0, 0], 2*innerradius[3]));
-        --res = res.translate([-innerradius[1]+center[1], -innerradius[2]+center[2], -innerradius[3]+center[3]]);
+        res = res:scale(roundradius);
+        if (innerradius[1] > EPS) then
+            res = res:stretchAtPlane(vector3d:new({1, 0, 0}), vector3d:new({0, 0, 0}), 2*innerradius[1])
+        end
+        if (innerradius[2] > EPS) then
+            res = res:stretchAtPlane(vector3d:new({0, 1, 0}), vector3d:new({0, 0, 0}), 2*innerradius[2]);
+        end
+        if (innerradius[3] > EPS) then
+            res = res:stretchAtPlane(vector3d:new({0, 0, 1}), vector3d:new({0, 0, 0}), 2*innerradius[3]);
+        end
+        res = res:translate(vector3d:new({-innerradius[1]+center[1], -innerradius[2]+center[2], -innerradius[3]+center[3]}));
         --res = res.reTesselated();
-        --res.properties.roundedCube = new CSG.Properties();
-        --res.properties.roundedCube.center = new CSG.Vertex(center);
-        --res.properties.roundedCube.facecenters = [
-            --new CSG.Connector(new CSG.Vector3D([cuberadius[1], 0, 0]).plus(center), [1, 0, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([-cuberadius[1], 0, 0]).plus(center), [-1, 0, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([0, cuberadius[2], 0]).plus(center), [0, 1, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([0, -cuberadius[2], 0]).plus(center), [0, -1, 0], [0, 0, 1]),
-            --new CSG.Connector(new CSG.Vector3D([0, 0, cuberadius[3]]).plus(center), [0, 0, 1], [1, 0, 0]),
-            --new CSG.Connector(new CSG.Vector3D([0, 0, -cuberadius[3]]).plus(center), [0, 0, -1], [1, 0, 0])
-        --];
         return res;
 
 end
@@ -344,24 +496,7 @@ end
 function CSGFactory.polyhedron(options)
         options = options or {};
 
-        if (options.points == nil) then
-			local errorMessage = "polyhedron needs 'points' arrays";
-			LOG.std(nil, "error", "CSGFactory.polyhedron", errorMessage);
-			error(errorMessage);
-        end
-
-		if ((options.polygons or options.triangles) == nil) then
-			local errorMessage = "polyhedron needs 'polygons' or 'triangles' arrays";
-			LOG.std(nil, "error", "CSGFactory.polyhedron", errorMessage);
-			error(errorMessage);
-		end
-        
-		local polyField = "triangles";
-		if(options.triangles == nil) then
-			polyField = polygons;
-		end
-
-		local points = CSGFactory.parseOptionAs3DVectorList(options, "points", {
+        local points = CSGFactory.parseOptionAs3DVectorList(options, "points", {
                 {1, 1, 0},
                 {1, -1, 0},
                 {-1, -1, 0},
@@ -373,22 +508,42 @@ function CSGFactory.polyhedron(options)
 			table.insert(vertices,CSGVertex:new():init(pt));
 		end
 
-        local polys = CSGFactory.parseOption(options, polyField, {
-                {0, 1, 4},
-                {1, 2, 4},
-                {2, 3, 4},
-                {3, 0, 4},
-                {1, 0, 3},
-                {2, 1, 3}
-            });
+        local polys = CSGFactory.parseOption(options, "triangles", {
+            {1, 2, 5},
+            {2, 3, 5},
+            {3, 4, 5},
+            {4, 1, 5},
+            {2, 1, 4},
+            {3, 2, 4}
+        });
 
+--        if (options.points == nil) then
+--			local errorMessage = "polyhedron needs 'points' arrays";
+--			LOG.std(nil, "error", "CSGFactory.polyhedron", errorMessage);
+--			error(errorMessage);
+--        end
+--
+--		if ((options.polygons or options.triangles) == nil) then
+--			local errorMessage = "polyhedron needs 'polygons' or 'triangles' arrays";
+--			LOG.std(nil, "error", "CSGFactory.polyhedron", errorMessage);
+--			error(errorMessage);
+--		end
+--        
+--		local polyField = "triangles";
+--		if(options.triangles == nil) then
+--			polyField = polygons;
+--		end
+
+		
+
+        
 		local polygons ={};
         -- openscad convention defines inward normals - so we have to invert here
 		for kf,face in ipairs(polys) do
 			face = CSGFactory.reverseTable(face);
 			local vs = {};
 			for _,index in ipairs(face) do
-				table.insert(vs,vertices[index+1]);
+				table.insert(vs,vertices[index]);
 			end
 			table.insert(polygons,CSGPolygon:new():init(vs));
 		end
@@ -406,7 +561,7 @@ end
 -- If the option is not present, return the default value
 function CSGFactory.parseOption(options, optionname, defaultvalue)
 	local result = defaultvalue;
-    if (options) then
+    if (options and type(options) == "table") then
         if (options[optionname]) then
             result = options[optionname];
         end
@@ -416,7 +571,12 @@ end
 -- Parse an option and force into a CSG.Vector3D. If a scalar is passed it is converted into a vector with equal x,y,z
 function CSGFactory.parseOptionAs3DVector(options, optionname, defaultvalue)
 	local result = CSGFactory.parseOption(options, optionname, defaultvalue);
-    result = vector3d:new(result);
+    local _type = type(result);
+    if(_type == "number")then
+        result = vector3d:new(result,result,result);
+    else
+        result = vector3d:new(result);
+    end
     return result;
 end
 function CSGFactory.parseOptionAsFloat(options, optionname, defaultvalue)

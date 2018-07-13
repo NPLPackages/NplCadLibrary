@@ -14,26 +14,33 @@ local CSG = commonlib.gettable("Mod.NplCadLibrary.csg.CSG");
 -------------------------------------------------------
 --]]
 NPL.load("(gl)Mod/NplCadLibrary/utils/commonlib_ext.lua");
-
+NPL.load("(gl)script/ide/math/vector2d.lua");
 NPL.load("(gl)script/ide/math/bit.lua");
 NPL.load("(gl)script/ide/math/vector.lua");
 NPL.load("(gl)script/ide/math/Plane.lua");
 NPL.load("(gl)Mod/NplCadLibrary/utils/tableext.lua");
-
+NPL.load("(gl)script/ide/math/Matrix4.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGVertex.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGPolygon.lua");
 NPL.load("(gl)Mod/NplCadLibrary/csg/CSGBSPNode.lua");
-
+NPL.load("(gl)Mod/NplCadLibrary/csg/CSGOrthoNormalBasis.lua");
+NPL.load("(gl)Mod/NplCadLibrary/cag/CAG.lua");
+local vector2d = commonlib.gettable("mathlib.vector2d");
 local vector3d = commonlib.gettable("mathlib.vector3d");
 local Plane = commonlib.gettable("mathlib.Plane");
 local tableext = commonlib.gettable("Mod.NplCadLibrary.utils.tableext");
+local Matrix4 = commonlib.gettable("mathlib.Matrix4");
+
 local CSGPolygon = commonlib.inherit_ex(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon"));
 
 local CSGVertex = commonlib.gettable("Mod.NplCadLibrary.csg.CSGVertex");
 local CSGPolygon = commonlib.gettable("Mod.NplCadLibrary.csg.CSGPolygon");
 local CSGBSPNode = commonlib.gettable("Mod.NplCadLibrary.csg.CSGBSPNode");
+local CSGOrthoNormalBasis = commonlib.gettable("Mod.NplCadLibrary.csg.CSGOrthoNormalBasis");
+local CAG = commonlib.gettable("Mod.NplCadLibrary.cag.CAG");
 local CSG = commonlib.inherit(nil, commonlib.gettable("Mod.NplCadLibrary.csg.CSG"));
 
+CSG.EPSILON = tonumber("1e-5");
 function CSG:ctor()
 	self.polygons = self.polygons or {};
 	tableext.clear(self.polygons);
@@ -191,7 +198,133 @@ function CSG:inverse()
 	end
 	return csg;
 end
+function CSG:transform(matrix4x4)
+    if(not matrix4x4)then
+        return self;
+    end
+	for __,polygon in ipairs(self.polygons) do
+        polygon:transform(matrix4x4);
+    end
+    return self;
+end
+function CSG:scale(v)
+    return self:transform(Matrix4.scaling(v));
+end
+function CSG:translate(v)
+    return self:transform(Matrix4.translation(v));
+end
+function CSG:mirrored(plane)
+    return self:transform(Matrix4.mirroring(plane));
+end
+function CSG:mirroredX()
+    local plane = Plane:new({1,0,0,0});
+    return self:mirrored(plane);
+end
+function CSG:mirroredY()
+    local plane = Plane:new({0,1,0,0});
+    return self:mirrored(plane);
+end
+function CSG:mirroredZ()
+    local plane = Plane:new({0,0,1,0});
+    return self:mirrored(plane);
+end
+function CSG:rotateX(v)
+    return self:transform(Matrix4.rotationX(v));
+end
+function CSG:rotateY(v)
+    return self:transform(Matrix4.rotationY(v));
+end
+function CSG:rotateZ(v)
+    return self:transform(Matrix4.rotationZ(v));
+end
+-- cut the solid at a plane, and stretch the cross-section found along plane normal
+function CSG:stretchAtPlane(normal, point, length)
+    local plane = Plane.fromNormalAndPoint(normal, point);
 
+    local piece1 = self:cutByPlane(plane:clone());
+    local piece2 = self:cutByPlane(plane:clone():inverse());
+
+    local onb = CSGOrthoNormalBasis:new()
+    onb:init(plane);
+    local crosssect = self:sectionCut(onb);
+    local midpiece = crosssect:extrudeInOrthonormalBasis(onb, length);
+
+    local result = piece1:union(midpiece):union(piece2:translate(plane:GetNormal():MulByFloat(length)));
+    return result;
+end
+function CSG:sectionCut(orthobasis)
+    local EPS = tonumber("1e-5");
+    local plane1 = orthobasis.plane:clone();
+    local plane2 = orthobasis.plane:clone():inverse();
+    local w = plane2[4] + 5*EPS;
+    plane2[4] = w;
+    local cut3d = self:cutByPlane(plane1);
+    cut3d = cut3d:cutByPlane(plane2);
+    return cut3d:projectToOrthoNormalBasis(orthobasis);
+end
+-- project the 3D CSG onto a plane
+-- This returns a 2D CAG with the 'shadow' shape of the 3D solid when projected onto the
+-- plane represented by the orthonormal basis
+function CSG:projectToOrthoNormalBasis(orthobasis)
+    local EPS = tonumber("1e-5");
+    local cags = {};
+    local orthobasis_normal = orthobasis.plane:GetNormal();
+	for __,polygon in ipairs(self.polygons) do
+        local normal = polygon.plane:GetNormal();
+        -- only pass polys in plane, others may disturb result
+        local v = normal:sub(orthobasis_normal);
+        v = v:dot(v);
+        
+        if(v < EPS*EPS)then
+            local cag = polygon:projectToOrthoNormalBasis(orthobasis);
+            if (cag:GetSideCount() > 0) then
+                table.insert(cags,cag);
+            end
+        end
+    end
+    local result = CAG:new():union(cags,true);
+    return result;
+end
+-- Cut the solid by a plane. Returns the solid on the back side of the plane
+function CSG:cutByPlane(plane)
+    if (#self.polygons== 0) then
+        return CSG:new();
+    end
+    -- Ideally we would like to do an intersection with a polygon of inifinite size
+    -- but this is not supported by our implementation. As a workaround, we will create
+    -- a cube, with one face on the plane, and a size larger enough so that the entire
+    -- solid fits in the cube.
+    -- find the max distance of any vertex to the center of the plane:
+    local normal = plane:GetNormal();
+    local w = plane[4];
+    local planecenter = normal:MulByFloat(w);
+    local maxdistance = 0;
+	for __,polygon in ipairs(self.polygons) do
+		for __,vertex in ipairs(polygon.vertices) do
+            local distance = vertex.pos:dist2(planecenter);
+            if (distance > maxdistance) then
+                maxdistance = distance;
+            end
+        end
+    end
+    maxdistance = math.sqrt(maxdistance);
+    maxdistance = maxdistance * 1.01; -- make sure it's really larger
+    -- Now build a polygon on the plane, at any point farther than maxdistance from the plane center:
+    local vertices = {};
+    local orthobasis = CSGOrthoNormalBasis:new();
+    orthobasis:init(plane);
+    table.insert(vertices,CSGVertex:new():init(orthobasis:to3D(vector2d:new(maxdistance, -maxdistance))));
+    table.insert(vertices,CSGVertex:new():init(orthobasis:to3D(vector2d:new(-maxdistance, -maxdistance))));
+    table.insert(vertices,CSGVertex:new():init(orthobasis:to3D(vector2d:new(-maxdistance, maxdistance))));
+    table.insert(vertices,CSGVertex:new():init(orthobasis:to3D(vector2d:new(maxdistance, maxdistance))));
+    local polygon = CSGPolygon:new():init(vertices, nil, plane:clone());
+
+    -- and extrude the polygon into a cube, backwards of the plane:
+    local cube = polygon:extrude(plane:GetNormal():MulByFloat(-maxdistance));
+    -- Now we can do the intersection:
+    local result = self:intersect(cube);
+    return result;
+end
 function CSG.toMesh(csg,r,g,b)
 	if(not csg)then return end
 	local vertices = {};
@@ -214,7 +347,7 @@ function CSG.toMesh(csg,r,g,b)
 	end
 	return vertices,indices,normals,colors;
 end
-function CSG.saveAsSTL(csg,output_file_name)
+function CSG.saveAsSTL(csg,output_file_name,isYUp)
 	if(not csg)then return end
 	ParaIO.CreateDirectory(output_file_name);
 	local function write_face(file,vertex_1,vertex_2,vertex_3)
@@ -277,60 +410,3 @@ function CSG.solve2Linear(a, b, c, d, u, v)
     return {x, y};
 end
 
---[[
-function CSG.addTransformationMethodsToPrototype(prot) 
-    prot.mirrored = function(plane) 
-        return this.transform(CSG.Matrix4x4.mirroring(plane));
-    end
-
-    prot.mirroredX = function() {
-        var plane = new CSG.Plane(CSG.Vector3D.Create(1, 0, 0), 0);
-        return this.mirrored(plane);
-    };
-
-    prot.mirroredY = function() {
-        var plane = new CSG.Plane(CSG.Vector3D.Create(0, 1, 0), 0);
-        return this.mirrored(plane);
-    };
-
-    prot.mirroredZ = function() {
-        var plane = new CSG.Plane(CSG.Vector3D.Create(0, 0, 1), 0);
-        return this.mirrored(plane);
-    };
-
-    prot.translate = function(v) {
-        return this.transform(CSG.Matrix4x4.translation(v));
-    };
-
-    prot.scale = function(f) {
-        return this.transform(CSG.Matrix4x4.scaling(f));
-    };
-
-    prot.rotateX = function(deg) {
-        return this.transform(CSG.Matrix4x4.rotationX(deg));
-    };
-
-    prot.rotateY = function(deg) {
-        return this.transform(CSG.Matrix4x4.rotationY(deg));
-    };
-
-    prot.rotateZ = function(deg) {
-        return this.transform(CSG.Matrix4x4.rotationZ(deg));
-    };
-
-    prot.rotate = function(rotationCenter, rotationAxis, degrees) {
-        return this.transform(CSG.Matrix4x4.rotation(rotationCenter, rotationAxis, degrees));
-    };
-
-    prot.rotateEulerAngles = function(alpha, beta, gamma, position) {
-        position = position || [0,0,0];
-
-        var Rz1 = CSG.Matrix4x4.rotationZ(alpha);
-        var Rx  = CSG.Matrix4x4.rotationX(beta);
-        var Rz2 = CSG.Matrix4x4.rotationZ(gamma);
-        var T   = CSG.Matrix4x4.translation(new CSG.Vector3D(position));
-
-        return this.transform(Rz2.multiply(Rx).multiply(Rz1).multiply(T));
-    };
-end
---]]
