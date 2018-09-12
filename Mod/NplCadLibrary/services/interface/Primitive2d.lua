@@ -253,7 +253,7 @@ function NplCadEnvironment.read_rectangle(p)
 				center[2] = p.center; 				
 			end
 		end
-        local r = p.radius --radius
+        local r = p.r --radius
 		if(r)then
 			if(is_array(r))then
 				radius[1] = r[1];
@@ -311,9 +311,9 @@ function NplCadEnvironment.read_roundedRectangle(p)
 				center[2] = p.center; 				
 			end
 		end
-        local r = p.radius -- radius
+        local r = p.r -- radius
 		if(r)then
-			if(is_array(p.radius))then
+			if(is_array(r))then
 				radius[1] = r[1];
 				radius[2] = r[2]; 
 			elseif(is_number(r)) then
